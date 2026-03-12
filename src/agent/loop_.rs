@@ -1971,7 +1971,11 @@ async fn execute_one_tool(
     let args_summary = {
         let raw = call_arguments.to_string();
         if raw.len() > 300 {
-            format!("{}…", &raw[..300])
+            let mut end = 300;
+            while !raw.is_char_boundary(end) {
+                end -= 1;
+            }
+            format!("{}…", &raw[..end])
         } else {
             raw
         }
