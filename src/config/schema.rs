@@ -124,6 +124,31 @@ pub struct Config {
     #[serde(default)]
     pub security: SecurityConfig,
 
+    /// Backup tool configuration (`[backup]`).
+    #[serde(default)]
+    pub backup: BackupConfig,
+
+    /// Data retention and purge configuration (`[data_retention]`).
+    #[serde(default)]
+    pub data_retention: DataRetentionConfig,
+
+    /// Cloud transformation accelerator configuration (`[cloud_ops]`).
+    #[serde(default)]
+    pub cloud_ops: CloudOpsConfig,
+
+    /// Conversational AI agent builder configuration (`[conversational_ai]`).
+    ///
+    /// Experimental / future feature — not yet wired into the agent runtime.
+    /// Omitted from generated config files when disabled (the default).
+    /// Existing configs that already contain this section will continue to
+    /// deserialize correctly thanks to `#[serde(default)]`.
+    #[serde(default, skip_serializing_if = "ConversationalAiConfig::is_disabled")]
+    pub conversational_ai: ConversationalAiConfig,
+
+    /// Managed cybersecurity service configuration (`[security_ops]`).
+    #[serde(default)]
+    pub security_ops: SecurityOpsConfig,
+
     /// Runtime adapter configuration (`[runtime]`). Controls native vs Docker execution.
     #[serde(default)]
     pub runtime: RuntimeConfig,
@@ -188,6 +213,10 @@ pub struct Config {
     #[serde(default)]
     pub composio: ComposioConfig,
 
+    /// Microsoft 365 Graph API integration (`[microsoft365]`).
+    #[serde(default)]
+    pub microsoft365: Microsoft365Config,
+
     /// Secrets encryption configuration (`[secrets]`).
     #[serde(default)]
     pub secrets: SecretsConfig,
@@ -195,6 +224,30 @@ pub struct Config {
     /// Browser automation configuration (`[browser]`).
     #[serde(default)]
     pub browser: BrowserConfig,
+
+    /// Browser delegation configuration (`[browser_delegate]`).
+    ///
+    /// Delegates browser-based tasks to a browser-capable CLI subprocess (e.g.
+    /// Claude Code with `claude-in-chrome` MCP tools). Useful for interacting
+    /// with corporate web apps (Teams, Outlook, Jira, Confluence) that lack
+    /// direct API access. A persistent Chrome profile can be configured so SSO
+    /// sessions survive across invocations.
+    ///
+    /// Fields:
+    /// - `enabled` (`bool`, default `false`) — enable the browser delegation tool.
+    /// - `cli_binary` (`String`, default `"claude"`) — CLI binary to spawn for browser tasks.
+    /// - `chrome_profile_dir` (`String`, default `""`) — Chrome user-data directory for
+    ///   persistent SSO sessions. When empty, a fresh profile is used each invocation.
+    /// - `allowed_domains` (`Vec<String>`, default `[]`) — allowlist of domains the browser
+    ///   may navigate to. Empty means all non-blocked domains are permitted.
+    /// - `blocked_domains` (`Vec<String>`, default `[]`) — denylist of domains. Blocked
+    ///   domains take precedence over allowed domains.
+    /// - `task_timeout_secs` (`u64`, default `120`) — per-task timeout in seconds.
+    ///
+    /// Compatibility: additive and disabled by default; existing configs remain valid when omitted.
+    /// Rollback/migration: remove `[browser_delegate]` or keep `enabled = false` to disable.
+    #[serde(default)]
+    pub browser_delegate: crate::tools::browser_delegate::BrowserDelegateConfig,
 
     /// HTTP request tool configuration (`[http_request]`).
     #[serde(default)]
@@ -211,6 +264,14 @@ pub struct Config {
     /// Web search tool configuration (`[web_search]`).
     #[serde(default)]
     pub web_search: WebSearchConfig,
+
+    /// Project delivery intelligence configuration (`[project_intel]`).
+    #[serde(default)]
+    pub project_intel: ProjectIntelConfig,
+
+    /// Google Workspace CLI (`gws`) tool configuration (`[google_workspace]`).
+    #[serde(default)]
+    pub google_workspace: GoogleWorkspaceConfig,
 
     /// Proxy configuration for outbound HTTP/HTTPS/SOCKS5 traffic (`[proxy]`).
     #[serde(default)]
@@ -259,6 +320,89 @@ pub struct Config {
     /// Dynamic node discovery configuration (`[nodes]`).
     #[serde(default)]
     pub nodes: NodesConfig,
+
+    /// Multi-client workspace isolation configuration (`[workspace]`).
+    #[serde(default)]
+    pub workspace: WorkspaceConfig,
+
+    /// Notion integration configuration (`[notion]`).
+    #[serde(default)]
+    pub notion: NotionConfig,
+
+    /// Secure inter-node transport configuration (`[node_transport]`).
+    #[serde(default)]
+    pub node_transport: NodeTransportConfig,
+
+    /// Knowledge graph configuration (`[knowledge]`).
+    #[serde(default)]
+    pub knowledge: KnowledgeConfig,
+
+    /// LinkedIn integration configuration (`[linkedin]`).
+    #[serde(default)]
+    pub linkedin: LinkedInConfig,
+
+    /// Plugin system configuration (`[plugins]`).
+    #[serde(default)]
+    pub plugins: PluginsConfig,
+
+    /// Locale for tool descriptions (e.g. `"en"`, `"zh-CN"`).
+    ///
+    /// When set, tool descriptions shown in system prompts are loaded from
+    /// `tool_descriptions/<locale>.toml`. Falls back to English, then to
+    /// hardcoded descriptions.
+    ///
+    /// If omitted or empty, the locale is auto-detected from `ZEROCLAW_LOCALE`,
+    /// `LANG`, or `LC_ALL` environment variables (defaulting to `"en"`).
+    #[serde(default)]
+    pub locale: Option<String>,
+}
+
+/// Multi-client workspace isolation configuration.
+///
+/// When enabled, each client engagement gets an isolated workspace with
+/// separate memory, audit, secrets, and tool restrictions.
+#[allow(clippy::struct_excessive_bools)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct WorkspaceConfig {
+    /// Enable workspace isolation. Default: false.
+    #[serde(default)]
+    pub enabled: bool,
+    /// Currently active workspace name.
+    #[serde(default)]
+    pub active_workspace: Option<String>,
+    /// Base directory for workspace profiles.
+    #[serde(default = "default_workspaces_dir")]
+    pub workspaces_dir: String,
+    /// Isolate memory databases per workspace. Default: true.
+    #[serde(default = "default_true")]
+    pub isolate_memory: bool,
+    /// Isolate secrets namespaces per workspace. Default: true.
+    #[serde(default = "default_true")]
+    pub isolate_secrets: bool,
+    /// Isolate audit logs per workspace. Default: true.
+    #[serde(default = "default_true")]
+    pub isolate_audit: bool,
+    /// Allow searching across workspaces. Default: false (security).
+    #[serde(default)]
+    pub cross_workspace_search: bool,
+}
+
+fn default_workspaces_dir() -> String {
+    "~/.zeroclaw/workspaces".to_string()
+}
+
+impl Default for WorkspaceConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            active_workspace: None,
+            workspaces_dir: default_workspaces_dir(),
+            isolate_memory: true,
+            isolate_secrets: true,
+            isolate_audit: true,
+            cross_workspace_search: false,
+        }
+    }
 }
 
 /// Named provider profile definition compatible with Codex app-server style config.
@@ -321,6 +465,14 @@ pub struct DelegateAgentConfig {
     /// Maximum tool-call iterations in agentic mode.
     #[serde(default = "default_max_tool_iterations")]
     pub max_iterations: usize,
+    /// Timeout in seconds for non-agentic provider calls.
+    /// Defaults to 120 when unset. Must be between 1 and 3600.
+    #[serde(default)]
+    pub timeout_secs: Option<u64>,
+    /// Timeout in seconds for agentic sub-agent loops.
+    /// Defaults to 300 when unset. Must be between 1 and 3600.
+    #[serde(default)]
+    pub agentic_timeout_secs: Option<u64>,
 }
 
 // ── Swarms ──────────────────────────────────────────────────────
@@ -398,6 +550,28 @@ where
 {
     let value: f64 = serde::Deserialize::deserialize(deserializer)?;
     validate_temperature(value).map_err(serde::de::Error::custom)
+}
+
+fn normalize_reasoning_effort(value: &str) -> std::result::Result<String, String> {
+    let normalized = value.trim().to_ascii_lowercase();
+    match normalized.as_str() {
+        "minimal" | "low" | "medium" | "high" | "xhigh" => Ok(normalized),
+        _ => Err(format!(
+            "reasoning_effort {value:?} is invalid (expected one of: minimal, low, medium, high, xhigh)"
+        )),
+    }
+}
+
+fn deserialize_reasoning_effort_opt<'de, D>(
+    deserializer: D,
+) -> std::result::Result<Option<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let value: Option<String> = Option::deserialize(deserializer)?;
+    value
+        .map(|raw| normalize_reasoning_effort(&raw).map_err(serde::de::Error::custom))
+        .transpose()
 }
 
 fn default_max_depth() -> u32 {
@@ -492,34 +666,85 @@ fn default_transcription_max_duration_secs() -> u64 {
     120
 }
 
-/// Voice transcription configuration (Whisper API via Groq).
+fn default_transcription_provider() -> String {
+    "groq".into()
+}
+
+fn default_openai_stt_model() -> String {
+    "whisper-1".into()
+}
+
+fn default_deepgram_stt_model() -> String {
+    "nova-2".into()
+}
+
+fn default_google_stt_language_code() -> String {
+    "en-US".into()
+}
+
+/// Voice transcription configuration with multi-provider support.
+///
+/// The top-level `api_url`, `model`, and `api_key` fields remain for backward
+/// compatibility with existing Groq-based configurations.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct TranscriptionConfig {
     /// Enable voice transcription for channels that support it.
     #[serde(default)]
     pub enabled: bool,
-    /// Whisper API endpoint URL.
+    /// Default STT provider: "groq", "openai", "deepgram", "assemblyai", "google".
+    #[serde(default = "default_transcription_provider")]
+    pub default_provider: String,
+    /// API key used for transcription requests (Groq provider).
+    ///
+    /// If unset, runtime falls back to `GROQ_API_KEY` for backward compatibility.
+    #[serde(default)]
+    pub api_key: Option<String>,
+    /// Whisper API endpoint URL (Groq provider).
     #[serde(default = "default_transcription_api_url")]
     pub api_url: String,
-    /// Whisper model name.
+    /// Whisper model name (Groq provider).
     #[serde(default = "default_transcription_model")]
     pub model: String,
-    /// Optional language hint (ISO-639-1, e.g. "en", "ru").
+    /// Optional language hint (ISO-639-1, e.g. "en", "ru") for Groq provider.
     #[serde(default)]
     pub language: Option<String>,
+    /// Optional initial prompt to bias transcription toward expected vocabulary
+    /// (proper nouns, technical terms, etc.). Sent as the `prompt` field in the
+    /// Whisper API request.
+    #[serde(default)]
+    pub initial_prompt: Option<String>,
     /// Maximum voice duration in seconds (messages longer than this are skipped).
     #[serde(default = "default_transcription_max_duration_secs")]
     pub max_duration_secs: u64,
+    /// OpenAI Whisper STT provider configuration.
+    #[serde(default)]
+    pub openai: Option<OpenAiSttConfig>,
+    /// Deepgram STT provider configuration.
+    #[serde(default)]
+    pub deepgram: Option<DeepgramSttConfig>,
+    /// AssemblyAI STT provider configuration.
+    #[serde(default)]
+    pub assemblyai: Option<AssemblyAiSttConfig>,
+    /// Google Cloud Speech-to-Text provider configuration.
+    #[serde(default)]
+    pub google: Option<GoogleSttConfig>,
 }
 
 impl Default for TranscriptionConfig {
     fn default() -> Self {
         Self {
             enabled: false,
+            default_provider: default_transcription_provider(),
+            api_key: None,
             api_url: default_transcription_api_url(),
             model: default_transcription_model(),
             language: None,
+            initial_prompt: None,
             max_duration_secs: default_transcription_max_duration_secs(),
+            openai: None,
+            deepgram: None,
+            assemblyai: None,
+            google: None,
         }
     }
 }
@@ -820,6 +1045,47 @@ pub struct ToolFilterGroup {
     pub keywords: Vec<String>,
 }
 
+/// OpenAI Whisper STT provider configuration (`[transcription.openai]`).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct OpenAiSttConfig {
+    /// OpenAI API key for Whisper transcription.
+    #[serde(default)]
+    pub api_key: Option<String>,
+    /// Whisper model name (default: "whisper-1").
+    #[serde(default = "default_openai_stt_model")]
+    pub model: String,
+}
+
+/// Deepgram STT provider configuration (`[transcription.deepgram]`).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct DeepgramSttConfig {
+    /// Deepgram API key.
+    #[serde(default)]
+    pub api_key: Option<String>,
+    /// Deepgram model name (default: "nova-2").
+    #[serde(default = "default_deepgram_stt_model")]
+    pub model: String,
+}
+
+/// AssemblyAI STT provider configuration (`[transcription.assemblyai]`).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct AssemblyAiSttConfig {
+    /// AssemblyAI API key.
+    #[serde(default)]
+    pub api_key: Option<String>,
+}
+
+/// Google Cloud Speech-to-Text provider configuration (`[transcription.google]`).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct GoogleSttConfig {
+    /// Google Cloud API key.
+    #[serde(default)]
+    pub api_key: Option<String>,
+    /// BCP-47 language code (default: "en-US").
+    #[serde(default = "default_google_stt_language_code")]
+    pub language_code: String,
+}
+
 /// Agent orchestration configuration (`[agent]` section).
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct AgentConfig {
@@ -921,6 +1187,34 @@ pub struct SkillsConfig {
     /// `full` preserves legacy behavior. `compact` keeps context small and loads skills on demand.
     #[serde(default)]
     pub prompt_injection_mode: SkillsPromptInjectionMode,
+    /// Autonomous skill creation from successful multi-step task executions.
+    #[serde(default)]
+    pub skill_creation: SkillCreationConfig,
+}
+
+/// Autonomous skill creation configuration (`[skills.skill_creation]` section).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(default)]
+pub struct SkillCreationConfig {
+    /// Enable automatic skill creation after successful multi-step tasks.
+    /// Default: `false`.
+    pub enabled: bool,
+    /// Maximum number of auto-generated skills to keep.
+    /// When exceeded, the oldest auto-generated skill is removed (LRU eviction).
+    pub max_skills: usize,
+    /// Embedding similarity threshold for deduplication.
+    /// Skills with descriptions more similar than this value are skipped.
+    pub similarity_threshold: f64,
+}
+
+impl Default for SkillCreationConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            max_skills: 500,
+            similarity_threshold: 0.85,
+        }
+    }
 }
 
 /// Multimodal (image) handling configuration (`[multimodal]` section).
@@ -1199,6 +1493,7 @@ impl Default for PeripheralBoardConfig {
 ///
 /// Controls the HTTP gateway for webhook and pairing endpoints.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[allow(clippy::struct_excessive_bools)]
 pub struct GatewayConfig {
     /// Gateway port (default: 42617)
     #[serde(default = "default_gateway_port")]
@@ -1240,6 +1535,18 @@ pub struct GatewayConfig {
     /// Maximum distinct idempotency keys retained in memory.
     #[serde(default = "default_gateway_idempotency_max_keys")]
     pub idempotency_max_keys: usize,
+
+    /// Persist gateway WebSocket chat sessions to SQLite. Default: true.
+    #[serde(default = "default_true")]
+    pub session_persistence: bool,
+
+    /// Auto-archive stale gateway sessions older than N hours. 0 = disabled. Default: 0.
+    #[serde(default)]
+    pub session_ttl_hours: u32,
+
+    /// Pairing dashboard configuration
+    #[serde(default)]
+    pub pairing_dashboard: PairingDashboardConfig,
 }
 
 fn default_gateway_port() -> u16 {
@@ -1274,6 +1581,10 @@ fn default_true() -> bool {
     true
 }
 
+fn default_false() -> bool {
+    false
+}
+
 impl Default for GatewayConfig {
     fn default() -> Self {
         Self {
@@ -1288,6 +1599,118 @@ impl Default for GatewayConfig {
             rate_limit_max_keys: default_gateway_rate_limit_max_keys(),
             idempotency_ttl_secs: default_idempotency_ttl_secs(),
             idempotency_max_keys: default_gateway_idempotency_max_keys(),
+            session_persistence: true,
+            session_ttl_hours: 0,
+            pairing_dashboard: PairingDashboardConfig::default(),
+        }
+    }
+}
+
+/// Pairing dashboard configuration (`[gateway.pairing_dashboard]`).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct PairingDashboardConfig {
+    /// Length of pairing codes (default: 8)
+    #[serde(default = "default_pairing_code_length")]
+    pub code_length: usize,
+    /// Time-to-live for pending pairing codes in seconds (default: 3600)
+    #[serde(default = "default_pairing_ttl")]
+    pub code_ttl_secs: u64,
+    /// Maximum concurrent pending pairing codes (default: 3)
+    #[serde(default = "default_max_pending_codes")]
+    pub max_pending_codes: usize,
+    /// Maximum failed pairing attempts before lockout (default: 5)
+    #[serde(default = "default_max_failed_attempts")]
+    pub max_failed_attempts: u32,
+    /// Lockout duration in seconds after max attempts (default: 300)
+    #[serde(default = "default_pairing_lockout_secs")]
+    pub lockout_secs: u64,
+}
+
+fn default_pairing_code_length() -> usize {
+    8
+}
+fn default_pairing_ttl() -> u64 {
+    3600
+}
+fn default_max_pending_codes() -> usize {
+    3
+}
+fn default_max_failed_attempts() -> u32 {
+    5
+}
+fn default_pairing_lockout_secs() -> u64 {
+    300
+}
+
+impl Default for PairingDashboardConfig {
+    fn default() -> Self {
+        Self {
+            code_length: default_pairing_code_length(),
+            code_ttl_secs: default_pairing_ttl(),
+            max_pending_codes: default_max_pending_codes(),
+            max_failed_attempts: default_max_failed_attempts(),
+            lockout_secs: default_pairing_lockout_secs(),
+        }
+    }
+}
+
+/// Secure transport configuration for inter-node communication (`[node_transport]`).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct NodeTransportConfig {
+    /// Enable the secure transport layer.
+    #[serde(default = "default_node_transport_enabled")]
+    pub enabled: bool,
+    /// Shared secret for HMAC authentication between nodes.
+    #[serde(default)]
+    pub shared_secret: String,
+    /// Maximum age of signed requests in seconds (replay protection).
+    #[serde(default = "default_max_request_age")]
+    pub max_request_age_secs: i64,
+    /// Require HTTPS for all node communication.
+    #[serde(default = "default_require_https")]
+    pub require_https: bool,
+    /// Allow specific node IPs/CIDRs.
+    #[serde(default)]
+    pub allowed_peers: Vec<String>,
+    /// Path to TLS certificate file.
+    #[serde(default)]
+    pub tls_cert_path: Option<String>,
+    /// Path to TLS private key file.
+    #[serde(default)]
+    pub tls_key_path: Option<String>,
+    /// Require client certificates (mutual TLS).
+    #[serde(default)]
+    pub mutual_tls: bool,
+    /// Maximum number of connections per peer.
+    #[serde(default = "default_connection_pool_size")]
+    pub connection_pool_size: usize,
+}
+
+fn default_node_transport_enabled() -> bool {
+    true
+}
+fn default_max_request_age() -> i64 {
+    300
+}
+fn default_require_https() -> bool {
+    true
+}
+fn default_connection_pool_size() -> usize {
+    4
+}
+
+impl Default for NodeTransportConfig {
+    fn default() -> Self {
+        Self {
+            enabled: default_node_transport_enabled(),
+            shared_secret: String::new(),
+            max_request_age_secs: default_max_request_age(),
+            require_https: default_require_https(),
+            allowed_peers: Vec::new(),
+            tls_cert_path: None,
+            tls_key_path: None,
+            mutual_tls: false,
+            connection_pool_size: default_connection_pool_size(),
         }
     }
 }
@@ -1320,6 +1743,78 @@ impl Default for ComposioConfig {
             enabled: false,
             api_key: None,
             entity_id: default_entity_id(),
+        }
+    }
+}
+
+// ── Microsoft 365 (Graph API integration) ───────────────────────
+
+/// Microsoft 365 integration via Microsoft Graph API (`[microsoft365]` section).
+///
+/// Provides access to Outlook mail, Teams messages, Calendar events,
+/// OneDrive files, and SharePoint search.
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+pub struct Microsoft365Config {
+    /// Enable Microsoft 365 integration
+    #[serde(default, alias = "enable")]
+    pub enabled: bool,
+    /// Azure AD tenant ID
+    #[serde(default)]
+    pub tenant_id: Option<String>,
+    /// Azure AD application (client) ID
+    #[serde(default)]
+    pub client_id: Option<String>,
+    /// Azure AD client secret (stored encrypted when secrets.encrypt = true)
+    #[serde(default)]
+    pub client_secret: Option<String>,
+    /// Authentication flow: "client_credentials" or "device_code"
+    #[serde(default = "default_ms365_auth_flow")]
+    pub auth_flow: String,
+    /// OAuth scopes to request
+    #[serde(default = "default_ms365_scopes")]
+    pub scopes: Vec<String>,
+    /// Encrypt the token cache file on disk
+    #[serde(default = "default_true")]
+    pub token_cache_encrypted: bool,
+    /// User principal name or "me" (for delegated flows)
+    #[serde(default)]
+    pub user_id: Option<String>,
+}
+
+fn default_ms365_auth_flow() -> String {
+    "client_credentials".to_string()
+}
+
+fn default_ms365_scopes() -> Vec<String> {
+    vec!["https://graph.microsoft.com/.default".to_string()]
+}
+
+impl std::fmt::Debug for Microsoft365Config {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Microsoft365Config")
+            .field("enabled", &self.enabled)
+            .field("tenant_id", &self.tenant_id)
+            .field("client_id", &self.client_id)
+            .field("client_secret", &self.client_secret.as_ref().map(|_| "***"))
+            .field("auth_flow", &self.auth_flow)
+            .field("scopes", &self.scopes)
+            .field("token_cache_encrypted", &self.token_cache_encrypted)
+            .field("user_id", &self.user_id)
+            .finish()
+    }
+}
+
+impl Default for Microsoft365Config {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            tenant_id: None,
+            client_id: None,
+            client_secret: None,
+            auth_flow: default_ms365_auth_flow(),
+            scopes: default_ms365_scopes(),
+            token_cache_encrypted: true,
+            user_id: None,
         }
     }
 }
@@ -1584,6 +2079,598 @@ impl Default for WebSearchConfig {
             brave_api_key: None,
             max_results: default_web_search_max_results(),
             timeout_secs: default_web_search_timeout_secs(),
+        }
+    }
+}
+
+// ── Project Intelligence ────────────────────────────────────────
+
+/// Project delivery intelligence configuration (`[project_intel]` section).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct ProjectIntelConfig {
+    /// Enable the project_intel tool. Default: false.
+    #[serde(default)]
+    pub enabled: bool,
+    /// Default report language (en, de, fr, it). Default: "en".
+    #[serde(default = "default_project_intel_language")]
+    pub default_language: String,
+    /// Output directory for generated reports.
+    #[serde(default = "default_project_intel_report_dir")]
+    pub report_output_dir: String,
+    /// Optional custom templates directory.
+    #[serde(default)]
+    pub templates_dir: Option<String>,
+    /// Risk detection sensitivity: low, medium, high. Default: "medium".
+    #[serde(default = "default_project_intel_risk_sensitivity")]
+    pub risk_sensitivity: String,
+    /// Include git log data in reports. Default: true.
+    #[serde(default = "default_true")]
+    pub include_git_data: bool,
+    /// Include Jira data in reports. Default: false.
+    #[serde(default)]
+    pub include_jira_data: bool,
+    /// Jira instance base URL (required if include_jira_data is true).
+    #[serde(default)]
+    pub jira_base_url: Option<String>,
+}
+
+fn default_project_intel_language() -> String {
+    "en".into()
+}
+
+fn default_project_intel_report_dir() -> String {
+    "~/.zeroclaw/project-reports".into()
+}
+
+fn default_project_intel_risk_sensitivity() -> String {
+    "medium".into()
+}
+
+impl Default for ProjectIntelConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            default_language: default_project_intel_language(),
+            report_output_dir: default_project_intel_report_dir(),
+            templates_dir: None,
+            risk_sensitivity: default_project_intel_risk_sensitivity(),
+            include_git_data: true,
+            include_jira_data: false,
+            jira_base_url: None,
+        }
+    }
+}
+
+// ── Backup ──────────────────────────────────────────────────────
+
+/// Backup tool configuration (`[backup]` section).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct BackupConfig {
+    /// Enable the `backup` tool.
+    #[serde(default = "default_true")]
+    pub enabled: bool,
+    /// Maximum number of backups to keep (oldest are pruned).
+    #[serde(default = "default_backup_max_keep")]
+    pub max_keep: usize,
+    /// Workspace subdirectories to include in backups.
+    #[serde(default = "default_backup_include_dirs")]
+    pub include_dirs: Vec<String>,
+    /// Output directory for backup archives (relative to workspace root).
+    #[serde(default = "default_backup_destination_dir")]
+    pub destination_dir: String,
+    /// Optional cron expression for scheduled automatic backups.
+    #[serde(default)]
+    pub schedule_cron: Option<String>,
+    /// IANA timezone for `schedule_cron`.
+    #[serde(default)]
+    pub schedule_timezone: Option<String>,
+    /// Compress backup archives.
+    #[serde(default = "default_true")]
+    pub compress: bool,
+    /// Encrypt backup archives (requires a configured secret store key).
+    #[serde(default)]
+    pub encrypt: bool,
+}
+
+fn default_backup_max_keep() -> usize {
+    10
+}
+
+fn default_backup_include_dirs() -> Vec<String> {
+    vec![
+        "config".into(),
+        "memory".into(),
+        "audit".into(),
+        "knowledge".into(),
+    ]
+}
+
+fn default_backup_destination_dir() -> String {
+    "state/backups".into()
+}
+
+impl Default for BackupConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            max_keep: default_backup_max_keep(),
+            include_dirs: default_backup_include_dirs(),
+            destination_dir: default_backup_destination_dir(),
+            schedule_cron: None,
+            schedule_timezone: None,
+            compress: true,
+            encrypt: false,
+        }
+    }
+}
+
+// ── Data Retention ──────────────────────────────────────────────
+
+/// Data retention and purge configuration (`[data_retention]` section).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct DataRetentionConfig {
+    /// Enable the `data_management` tool.
+    #[serde(default)]
+    pub enabled: bool,
+    /// Days of data to retain before purge eligibility.
+    #[serde(default = "default_retention_days")]
+    pub retention_days: u64,
+    /// Preview what would be deleted without actually removing anything.
+    #[serde(default)]
+    pub dry_run: bool,
+    /// Limit retention enforcement to specific data categories (empty = all).
+    #[serde(default)]
+    pub categories: Vec<String>,
+}
+
+fn default_retention_days() -> u64 {
+    90
+}
+
+impl Default for DataRetentionConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            retention_days: default_retention_days(),
+            dry_run: false,
+            categories: Vec::new(),
+        }
+    }
+}
+
+// ── Google Workspace ─────────────────────────────────────────────
+
+/// Google Workspace CLI (`gws`) tool configuration (`[google_workspace]` section).
+///
+/// ## Defaults
+/// - `enabled`: `false` (tool is not registered unless explicitly opted-in).
+/// - `allowed_services`: empty vector, which grants access to the full default
+///   service set: `drive`, `sheets`, `gmail`, `calendar`, `docs`, `slides`,
+///   `tasks`, `people`, `chat`, `classroom`, `forms`, `keep`, `meet`, `events`.
+/// - `credentials_path`: `None` (uses default `gws` credential discovery).
+/// - `default_account`: `None` (uses the `gws` active account).
+/// - `rate_limit_per_minute`: `60`.
+/// - `timeout_secs`: `30`.
+/// - `audit_log`: `false`.
+/// - `credentials_path`: `None` (uses default `gws` credential discovery).
+/// - `default_account`: `None` (uses the `gws` active account).
+/// - `rate_limit_per_minute`: `60`.
+/// - `timeout_secs`: `30`.
+/// - `audit_log`: `false`.
+///
+/// ## Compatibility
+/// Configs that omit the `[google_workspace]` section entirely are treated as
+/// `GoogleWorkspaceConfig::default()` (disabled, all defaults allowed). Adding
+/// the section is purely opt-in and does not affect other config sections.
+///
+/// ## Rollback / Migration
+/// To revert, remove the `[google_workspace]` section from the config file (or
+/// set `enabled = false`). No data migration is required; the tool simply stops
+/// being registered.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct GoogleWorkspaceConfig {
+    /// Enable the `google_workspace` tool. Default: `false`.
+    #[serde(default)]
+    pub enabled: bool,
+    /// Restrict which Google Workspace services the agent can access.
+    ///
+    /// When empty (the default), the full default service set is allowed (see
+    /// struct-level docs). When non-empty, only the listed service IDs are
+    /// permitted. Each entry must be non-empty, lowercase alphanumeric with
+    /// optional underscores/hyphens, and unique.
+    #[serde(default)]
+    pub allowed_services: Vec<String>,
+    /// Path to service account JSON or OAuth client credentials file.
+    ///
+    /// When `None`, the tool relies on the default `gws` credential discovery
+    /// (`gws auth login`). Set this to point at a service-account key or an
+    /// OAuth client-secrets JSON for headless / CI environments.
+    #[serde(default)]
+    pub credentials_path: Option<String>,
+    /// Default Google account email to pass to `gws --account`.
+    ///
+    /// When `None`, the currently active `gws` account is used.
+    #[serde(default)]
+    pub default_account: Option<String>,
+    /// Maximum number of `gws` API calls allowed per minute. Default: `60`.
+    #[serde(default = "default_gws_rate_limit")]
+    pub rate_limit_per_minute: u32,
+    /// Command execution timeout in seconds. Default: `30`.
+    #[serde(default = "default_gws_timeout_secs")]
+    pub timeout_secs: u64,
+    /// Enable audit logging of every `gws` invocation (service, resource,
+    /// method, timestamp). Default: `false`.
+    #[serde(default)]
+    pub audit_log: bool,
+}
+
+fn default_gws_rate_limit() -> u32 {
+    60
+}
+
+fn default_gws_timeout_secs() -> u64 {
+    30
+}
+
+impl Default for GoogleWorkspaceConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            allowed_services: Vec::new(),
+            credentials_path: None,
+            default_account: None,
+            rate_limit_per_minute: default_gws_rate_limit(),
+            timeout_secs: default_gws_timeout_secs(),
+            audit_log: false,
+        }
+    }
+}
+
+// ── Knowledge ───────────────────────────────────────────────────
+
+/// Knowledge graph configuration for capturing and reusing expertise.
+#[allow(clippy::struct_excessive_bools)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct KnowledgeConfig {
+    /// Enable the knowledge graph tool. Default: false.
+    #[serde(default)]
+    pub enabled: bool,
+    /// Path to the knowledge graph SQLite database.
+    #[serde(default = "default_knowledge_db_path")]
+    pub db_path: String,
+    /// Maximum number of knowledge nodes. Default: 100000.
+    #[serde(default = "default_knowledge_max_nodes")]
+    pub max_nodes: usize,
+    /// Automatically capture knowledge from conversations. Default: false.
+    #[serde(default)]
+    pub auto_capture: bool,
+    /// Proactively suggest relevant knowledge on queries. Default: true.
+    #[serde(default = "default_true")]
+    pub suggest_on_query: bool,
+    /// Allow searching across workspaces (disabled by default for client data isolation).
+    #[serde(default)]
+    pub cross_workspace_search: bool,
+}
+
+fn default_knowledge_db_path() -> String {
+    "~/.zeroclaw/knowledge.db".into()
+}
+
+fn default_knowledge_max_nodes() -> usize {
+    100_000
+}
+
+impl Default for KnowledgeConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            db_path: default_knowledge_db_path(),
+            max_nodes: default_knowledge_max_nodes(),
+            auto_capture: false,
+            suggest_on_query: true,
+            cross_workspace_search: false,
+        }
+    }
+}
+
+// ── LinkedIn ────────────────────────────────────────────────────
+
+/// LinkedIn integration configuration (`[linkedin]` section).
+///
+/// When enabled, the `linkedin` tool is registered in the agent tool surface.
+/// Requires `LINKEDIN_*` credentials in the workspace `.env` file.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct LinkedInConfig {
+    /// Enable the LinkedIn tool.
+    #[serde(default)]
+    pub enabled: bool,
+
+    /// LinkedIn REST API version header (YYYYMM format).
+    #[serde(default = "default_linkedin_api_version")]
+    pub api_version: String,
+
+    /// Content strategy for automated posting.
+    #[serde(default)]
+    pub content: LinkedInContentConfig,
+
+    /// Image generation for posts (`[linkedin.image]`).
+    #[serde(default)]
+    pub image: LinkedInImageConfig,
+}
+
+impl Default for LinkedInConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            api_version: default_linkedin_api_version(),
+            content: LinkedInContentConfig::default(),
+            image: LinkedInImageConfig::default(),
+        }
+    }
+}
+
+fn default_linkedin_api_version() -> String {
+    "202602".to_string()
+}
+
+/// Plugin system configuration.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct PluginsConfig {
+    /// Enable the plugin system (default: false)
+    #[serde(default)]
+    pub enabled: bool,
+    /// Directory where plugins are stored
+    #[serde(default = "default_plugins_dir")]
+    pub plugins_dir: String,
+    /// Auto-discover and load plugins on startup
+    #[serde(default)]
+    pub auto_discover: bool,
+    /// Maximum number of plugins that can be loaded
+    #[serde(default = "default_max_plugins")]
+    pub max_plugins: usize,
+}
+
+fn default_plugins_dir() -> String {
+    "~/.zeroclaw/plugins".to_string()
+}
+
+fn default_max_plugins() -> usize {
+    50
+}
+
+impl Default for PluginsConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            plugins_dir: default_plugins_dir(),
+            auto_discover: false,
+            max_plugins: default_max_plugins(),
+        }
+    }
+}
+
+/// Content strategy configuration for LinkedIn auto-posting (`[linkedin.content]`).
+///
+/// The agent reads this via the `linkedin get_content_strategy` action to know
+/// what feeds to check, which repos to highlight, and how to write posts.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
+pub struct LinkedInContentConfig {
+    /// RSS feed URLs to monitor for topic inspiration (titles only).
+    #[serde(default)]
+    pub rss_feeds: Vec<String>,
+
+    /// GitHub usernames whose public activity to reference.
+    #[serde(default)]
+    pub github_users: Vec<String>,
+
+    /// GitHub repositories to highlight (format: `owner/repo`).
+    #[serde(default)]
+    pub github_repos: Vec<String>,
+
+    /// Topics of expertise and interest for post themes.
+    #[serde(default)]
+    pub topics: Vec<String>,
+
+    /// Professional persona description (name, role, expertise).
+    #[serde(default)]
+    pub persona: String,
+
+    /// Freeform posting instructions for the AI agent.
+    #[serde(default)]
+    pub instructions: String,
+}
+
+/// Image generation configuration for LinkedIn posts (`[linkedin.image]`).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct LinkedInImageConfig {
+    /// Enable image generation for posts.
+    #[serde(default)]
+    pub enabled: bool,
+
+    /// Provider priority order. Tried in sequence; first success wins.
+    #[serde(default = "default_image_providers")]
+    pub providers: Vec<String>,
+
+    /// Generate a branded SVG text card when all AI providers fail.
+    #[serde(default = "default_true")]
+    pub fallback_card: bool,
+
+    /// Accent color for the fallback card (CSS hex).
+    #[serde(default = "default_card_accent_color")]
+    pub card_accent_color: String,
+
+    /// Temp directory for generated images, relative to workspace.
+    #[serde(default = "default_image_temp_dir")]
+    pub temp_dir: String,
+
+    /// Stability AI provider settings.
+    #[serde(default)]
+    pub stability: ImageProviderStabilityConfig,
+
+    /// Google Imagen (Vertex AI) provider settings.
+    #[serde(default)]
+    pub imagen: ImageProviderImagenConfig,
+
+    /// OpenAI DALL-E provider settings.
+    #[serde(default)]
+    pub dalle: ImageProviderDalleConfig,
+
+    /// Flux (fal.ai) provider settings.
+    #[serde(default)]
+    pub flux: ImageProviderFluxConfig,
+}
+
+fn default_image_providers() -> Vec<String> {
+    vec![
+        "stability".into(),
+        "imagen".into(),
+        "dalle".into(),
+        "flux".into(),
+    ]
+}
+
+fn default_card_accent_color() -> String {
+    "#0A66C2".into()
+}
+
+fn default_image_temp_dir() -> String {
+    "linkedin/images".into()
+}
+
+impl Default for LinkedInImageConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            providers: default_image_providers(),
+            fallback_card: true,
+            card_accent_color: default_card_accent_color(),
+            temp_dir: default_image_temp_dir(),
+            stability: ImageProviderStabilityConfig::default(),
+            imagen: ImageProviderImagenConfig::default(),
+            dalle: ImageProviderDalleConfig::default(),
+            flux: ImageProviderFluxConfig::default(),
+        }
+    }
+}
+
+/// Stability AI image generation settings (`[linkedin.image.stability]`).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct ImageProviderStabilityConfig {
+    /// Environment variable name holding the API key.
+    #[serde(default = "default_stability_api_key_env")]
+    pub api_key_env: String,
+    /// Stability model identifier.
+    #[serde(default = "default_stability_model")]
+    pub model: String,
+}
+
+fn default_stability_api_key_env() -> String {
+    "STABILITY_API_KEY".into()
+}
+fn default_stability_model() -> String {
+    "stable-diffusion-xl-1024-v1-0".into()
+}
+
+impl Default for ImageProviderStabilityConfig {
+    fn default() -> Self {
+        Self {
+            api_key_env: default_stability_api_key_env(),
+            model: default_stability_model(),
+        }
+    }
+}
+
+/// Google Imagen (Vertex AI) settings (`[linkedin.image.imagen]`).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct ImageProviderImagenConfig {
+    /// Environment variable name holding the API key.
+    #[serde(default = "default_imagen_api_key_env")]
+    pub api_key_env: String,
+    /// Environment variable for the Google Cloud project ID.
+    #[serde(default = "default_imagen_project_id_env")]
+    pub project_id_env: String,
+    /// Vertex AI region.
+    #[serde(default = "default_imagen_region")]
+    pub region: String,
+}
+
+fn default_imagen_api_key_env() -> String {
+    "GOOGLE_VERTEX_API_KEY".into()
+}
+fn default_imagen_project_id_env() -> String {
+    "GOOGLE_CLOUD_PROJECT".into()
+}
+fn default_imagen_region() -> String {
+    "us-central1".into()
+}
+
+impl Default for ImageProviderImagenConfig {
+    fn default() -> Self {
+        Self {
+            api_key_env: default_imagen_api_key_env(),
+            project_id_env: default_imagen_project_id_env(),
+            region: default_imagen_region(),
+        }
+    }
+}
+
+/// OpenAI DALL-E settings (`[linkedin.image.dalle]`).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct ImageProviderDalleConfig {
+    /// Environment variable name holding the OpenAI API key.
+    #[serde(default = "default_dalle_api_key_env")]
+    pub api_key_env: String,
+    /// DALL-E model identifier.
+    #[serde(default = "default_dalle_model")]
+    pub model: String,
+    /// Image dimensions.
+    #[serde(default = "default_dalle_size")]
+    pub size: String,
+}
+
+fn default_dalle_api_key_env() -> String {
+    "OPENAI_API_KEY".into()
+}
+fn default_dalle_model() -> String {
+    "dall-e-3".into()
+}
+fn default_dalle_size() -> String {
+    "1024x1024".into()
+}
+
+impl Default for ImageProviderDalleConfig {
+    fn default() -> Self {
+        Self {
+            api_key_env: default_dalle_api_key_env(),
+            model: default_dalle_model(),
+            size: default_dalle_size(),
+        }
+    }
+}
+
+/// Flux (fal.ai) image generation settings (`[linkedin.image.flux]`).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct ImageProviderFluxConfig {
+    /// Environment variable name holding the fal.ai API key.
+    #[serde(default = "default_flux_api_key_env")]
+    pub api_key_env: String,
+    /// Flux model identifier.
+    #[serde(default = "default_flux_model")]
+    pub model: String,
+}
+
+fn default_flux_api_key_env() -> String {
+    "FAL_API_KEY".into()
+}
+fn default_flux_model() -> String {
+    "fal-ai/flux/schnell".into()
+}
+
+impl Default for ImageProviderFluxConfig {
+    fn default() -> Self {
+        Self {
+            api_key_env: default_flux_api_key_env(),
+            model: default_flux_model(),
         }
     }
 }
@@ -1942,10 +3029,10 @@ fn validate_proxy_url(field: &str, url: &str) -> Result<()> {
         .with_context(|| format!("Invalid {field} URL: '{url}' is not a valid URL"))?;
 
     match parsed.scheme() {
-        "http" | "https" | "socks5" | "socks5h" => {}
+        "http" | "https" | "socks5" | "socks5h" | "socks" => {}
         scheme => {
             anyhow::bail!(
-                "Invalid {field} URL scheme '{scheme}'. Allowed: http, https, socks5, socks5h"
+                "Invalid {field} URL scheme '{scheme}'. Allowed: http, https, socks5, socks5h, socks"
             );
         }
     }
@@ -2274,6 +3361,9 @@ pub struct MemoryConfig {
     /// Max number of cached responses before LRU eviction (default: 5000)
     #[serde(default = "default_response_cache_max")]
     pub response_cache_max_entries: usize,
+    /// Max in-memory hot cache entries for the two-tier response cache (default: 256)
+    #[serde(default = "default_response_cache_hot_entries")]
+    pub response_cache_hot_entries: usize,
 
     // ── Memory Snapshot (soul backup to Markdown) ─────────────
     /// Enable periodic export of core memories to MEMORY_SNAPSHOT.md
@@ -2342,6 +3432,10 @@ fn default_response_cache_max() -> usize {
     5_000
 }
 
+fn default_response_cache_hot_entries() -> usize {
+    256
+}
+
 impl Default for MemoryConfig {
     fn default() -> Self {
         Self {
@@ -2362,6 +3456,7 @@ impl Default for MemoryConfig {
             response_cache_enabled: false,
             response_cache_ttl_minutes: default_response_cache_ttl(),
             response_cache_max_entries: default_response_cache_max(),
+            response_cache_hot_entries: default_response_cache_hot_entries(),
             snapshot_enabled: false,
             snapshot_on_hygiene: false,
             auto_hydrate: true,
@@ -2512,6 +3607,7 @@ impl Default for WebhookAuditConfig {
 /// Controls what the agent is allowed to do: shell commands, filesystem access,
 /// risk approval gates, and per-policy budgets.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(default)]
 pub struct AutonomyConfig {
     /// Autonomy level: `read_only`, `supervised` (default), or `full`.
     pub level: AutonomyLevel,
@@ -2653,6 +3749,9 @@ pub struct RuntimeConfig {
     /// - `Some(false)`: disable reasoning/thinking when supported
     #[serde(default)]
     pub reasoning_enabled: Option<bool>,
+    /// Optional reasoning effort for providers that expose a level control.
+    #[serde(default, deserialize_with = "deserialize_reasoning_effort_opt")]
+    pub reasoning_effort: Option<String>,
 }
 
 /// Docker runtime configuration (`[runtime.docker]` section).
@@ -2727,6 +3826,7 @@ impl Default for RuntimeConfig {
             kind: default_runtime_kind(),
             docker: DockerRuntimeConfig::default(),
             reasoning_enabled: None,
+            reasoning_effort: None,
         }
     }
 }
@@ -2950,7 +4050,8 @@ pub struct ClassificationRule {
 pub struct HeartbeatConfig {
     /// Enable periodic heartbeat pings. Default: `false`.
     pub enabled: bool,
-    /// Interval in minutes between heartbeat pings. Default: `30`.
+    /// Interval in minutes between heartbeat pings. Default: `5`.
+    #[serde(default = "default_heartbeat_interval")]
     pub interval_minutes: u32,
     /// Enable two-phase heartbeat: Phase 1 asks LLM whether to run, Phase 2
     /// executes only when the LLM decides there is work to do. Saves API cost
@@ -2968,21 +4069,68 @@ pub struct HeartbeatConfig {
     /// explicitly set).
     #[serde(default, alias = "recipient")]
     pub to: Option<String>,
+    /// Enable adaptive intervals that back off on failures and speed up for
+    /// high-priority tasks. Default: `false`.
+    #[serde(default)]
+    pub adaptive: bool,
+    /// Minimum interval in minutes when adaptive mode is enabled. Default: `5`.
+    #[serde(default = "default_heartbeat_min_interval")]
+    pub min_interval_minutes: u32,
+    /// Maximum interval in minutes when adaptive mode backs off. Default: `120`.
+    #[serde(default = "default_heartbeat_max_interval")]
+    pub max_interval_minutes: u32,
+    /// Dead-man's switch timeout in minutes. If the heartbeat has not ticked
+    /// within this window, an alert is sent. `0` disables. Default: `0`.
+    #[serde(default)]
+    pub deadman_timeout_minutes: u32,
+    /// Channel for dead-man's switch alerts (e.g. `telegram`). Falls back to
+    /// the heartbeat delivery channel.
+    #[serde(default)]
+    pub deadman_channel: Option<String>,
+    /// Recipient for dead-man's switch alerts. Falls back to `to`.
+    #[serde(default)]
+    pub deadman_to: Option<String>,
+    /// Maximum number of heartbeat run history records to retain. Default: `100`.
+    #[serde(default = "default_heartbeat_max_run_history")]
+    pub max_run_history: u32,
+}
+
+fn default_heartbeat_interval() -> u32 {
+    5
 }
 
 fn default_two_phase() -> bool {
     true
 }
 
+fn default_heartbeat_min_interval() -> u32 {
+    5
+}
+
+fn default_heartbeat_max_interval() -> u32 {
+    120
+}
+
+fn default_heartbeat_max_run_history() -> u32 {
+    100
+}
+
 impl Default for HeartbeatConfig {
     fn default() -> Self {
         Self {
             enabled: false,
-            interval_minutes: 30,
+            interval_minutes: default_heartbeat_interval(),
             two_phase: true,
             message: None,
             target: None,
             to: None,
+            adaptive: false,
+            min_interval_minutes: default_heartbeat_min_interval(),
+            max_interval_minutes: default_heartbeat_max_interval(),
+            deadman_timeout_minutes: 0,
+            deadman_channel: None,
+            deadman_to: None,
+            max_run_history: default_heartbeat_max_run_history(),
         }
     }
 }
@@ -3017,10 +4165,10 @@ impl Default for CronConfig {
 
 /// Tunnel configuration for exposing the gateway publicly (`[tunnel]` section).
 ///
-/// Supported providers: `"none"` (default), `"cloudflare"`, `"tailscale"`, `"ngrok"`, `"custom"`.
+/// Supported providers: `"none"` (default), `"cloudflare"`, `"tailscale"`, `"ngrok"`, `"openvpn"`, `"custom"`.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct TunnelConfig {
-    /// Tunnel provider: `"none"`, `"cloudflare"`, `"tailscale"`, `"ngrok"`, or `"custom"`. Default: `"none"`.
+    /// Tunnel provider: `"none"`, `"cloudflare"`, `"tailscale"`, `"ngrok"`, `"openvpn"`, or `"custom"`. Default: `"none"`.
     pub provider: String,
 
     /// Cloudflare Tunnel configuration (used when `provider = "cloudflare"`).
@@ -3035,6 +4183,10 @@ pub struct TunnelConfig {
     #[serde(default)]
     pub ngrok: Option<NgrokTunnelConfig>,
 
+    /// OpenVPN tunnel configuration (used when `provider = "openvpn"`).
+    #[serde(default)]
+    pub openvpn: Option<OpenVpnTunnelConfig>,
+
     /// Custom tunnel command configuration (used when `provider = "custom"`).
     #[serde(default)]
     pub custom: Option<CustomTunnelConfig>,
@@ -3047,6 +4199,7 @@ impl Default for TunnelConfig {
             cloudflare: None,
             tailscale: None,
             ngrok: None,
+            openvpn: None,
             custom: None,
         }
     }
@@ -3073,6 +4226,36 @@ pub struct NgrokTunnelConfig {
     pub auth_token: String,
     /// Optional custom domain
     pub domain: Option<String>,
+}
+
+/// OpenVPN tunnel configuration (`[tunnel.openvpn]`).
+///
+/// Required when `tunnel.provider = "openvpn"`. Omitting this section entirely
+/// preserves previous behavior. Setting `tunnel.provider = "none"` (or removing
+/// the `[tunnel.openvpn]` block) cleanly reverts to no-tunnel mode.
+///
+/// Defaults: `connect_timeout_secs = 30`.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct OpenVpnTunnelConfig {
+    /// Path to `.ovpn` configuration file (must not be empty).
+    pub config_file: String,
+    /// Optional path to auth credentials file (`--auth-user-pass`).
+    #[serde(default)]
+    pub auth_file: Option<String>,
+    /// Advertised address once VPN is connected (e.g., `"10.8.0.2:42617"`).
+    /// When omitted the tunnel falls back to `http://{local_host}:{local_port}`.
+    #[serde(default)]
+    pub advertise_address: Option<String>,
+    /// Connection timeout in seconds (default: 30, must be > 0).
+    #[serde(default = "default_openvpn_timeout")]
+    pub connect_timeout_secs: u64,
+    /// Extra openvpn CLI arguments forwarded verbatim.
+    #[serde(default)]
+    pub extra_args: Vec<String>,
+}
+
+fn default_openvpn_timeout() -> u64 {
+    30
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -3113,6 +4296,7 @@ impl<T: ChannelConfig> crate::config::traits::ConfigHandle for ConfigWrapper<T> 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct ChannelsConfig {
     /// Enable the CLI interactive channel. Default: `true`.
+    #[serde(default = "default_true")]
     pub cli: bool,
     /// Telegram bot channel configuration.
     pub telegram: Option<TelegramConfig>,
@@ -3152,10 +4336,18 @@ pub struct ChannelsConfig {
     pub wecom: Option<WeComConfig>,
     /// QQ Official Bot channel configuration.
     pub qq: Option<QQConfig>,
+    /// X/Twitter channel configuration.
+    pub twitter: Option<TwitterConfig>,
+    /// Mochat customer service channel configuration.
+    pub mochat: Option<MochatConfig>,
     #[cfg(feature = "channel-nostr")]
     pub nostr: Option<NostrConfig>,
     /// ClawdTalk voice channel configuration.
     pub clawdtalk: Option<crate::channels::ClawdTalkConfig>,
+    /// Reddit channel configuration (OAuth2 bot).
+    pub reddit: Option<RedditConfig>,
+    /// Bluesky channel configuration (AT Protocol).
+    pub bluesky: Option<BlueskyConfig>,
     /// Base timeout in seconds for processing a single channel message (LLM + tools).
     /// Runtime uses this as a per-turn budget that scales with tool-loop depth
     /// (up to 4x, capped) so one slow/retried model call does not consume the
@@ -3169,13 +4361,20 @@ pub struct ChannelsConfig {
     pub ack_reactions: bool,
     /// Whether to send tool-call notification messages (e.g. `🔧 web_search_tool: …`)
     /// to channel users. When `false`, tool calls are still logged server-side but
-    /// not forwarded as individual channel messages. Default: `true`.
-    #[serde(default = "default_true")]
+    /// not forwarded as individual channel messages. Default: `false`.
+    #[serde(default = "default_false")]
     pub show_tool_calls: bool,
     /// Persist channel conversation history to JSONL files so sessions survive
     /// daemon restarts. Files are stored in `{workspace}/sessions/`. Default: `true`.
     #[serde(default = "default_true")]
     pub session_persistence: bool,
+    /// Session persistence backend: `"jsonl"` (legacy) or `"sqlite"` (new default).
+    /// SQLite provides FTS5 search, metadata tracking, and TTL cleanup.
+    #[serde(default = "default_session_backend")]
+    pub session_backend: String,
+    /// Auto-archive stale sessions older than this many hours. `0` disables. Default: `0`.
+    #[serde(default)]
+    pub session_ttl_hours: u32,
 }
 
 impl ChannelsConfig {
@@ -3264,6 +4463,14 @@ impl ChannelsConfig {
                 Box::new(ConfigWrapper::new(self.clawdtalk.as_ref())),
                 self.clawdtalk.is_some(),
             ),
+            (
+                Box::new(ConfigWrapper::new(self.reddit.as_ref())),
+                self.reddit.is_some(),
+            ),
+            (
+                Box::new(ConfigWrapper::new(self.bluesky.as_ref())),
+                self.bluesky.is_some(),
+            ),
         ]
     }
 
@@ -3279,6 +4486,10 @@ impl ChannelsConfig {
 
 fn default_channel_message_timeout_secs() -> u64 {
     300
+}
+
+fn default_session_backend() -> String {
+    "sqlite".into()
 }
 
 impl Default for ChannelsConfig {
@@ -3304,13 +4515,19 @@ impl Default for ChannelsConfig {
             dingtalk: None,
             wecom: None,
             qq: None,
+            twitter: None,
+            mochat: None,
             #[cfg(feature = "channel-nostr")]
             nostr: None,
             clawdtalk: None,
+            reddit: None,
+            bluesky: None,
             message_timeout_secs: default_channel_message_timeout_secs(),
             ack_reactions: true,
-            show_tool_calls: true,
+            show_tool_calls: false,
             session_persistence: true,
+            session_backend: default_session_backend(),
+            session_ttl_hours: 0,
         }
     }
 }
@@ -3351,6 +4568,11 @@ pub struct TelegramConfig {
     /// Direct messages are always processed.
     #[serde(default)]
     pub mention_only: bool,
+    /// Override for the top-level `ack_reactions` setting. When `None`, the
+    /// channel falls back to `[channels_config].ack_reactions`. When set
+    /// explicitly, it takes precedence.
+    #[serde(default)]
+    pub ack_reactions: Option<bool>,
 }
 
 impl ChannelConfig for TelegramConfig {
@@ -3408,6 +4630,10 @@ pub struct SlackConfig {
     /// cancels the in-flight request and starts a fresh response with preserved history.
     #[serde(default)]
     pub interrupt_on_new_message: bool,
+    /// When true, only respond to messages that @-mention the bot in groups.
+    /// Direct messages remain allowed.
+    #[serde(default)]
+    pub mention_only: bool,
 }
 
 impl ChannelConfig for SlackConfig {
@@ -3451,11 +4677,26 @@ impl ChannelConfig for MattermostConfig {
 }
 
 /// Webhook channel configuration.
+///
+/// Receives messages via HTTP POST and sends replies to a configurable outbound URL.
+/// This is the "universal adapter" for any system that supports webhooks.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct WebhookConfig {
     /// Port to listen on for incoming webhooks.
     pub port: u16,
-    /// Optional shared secret for webhook signature verification.
+    /// URL path to listen on (default: `/webhook`).
+    #[serde(default)]
+    pub listen_path: Option<String>,
+    /// URL to POST/PUT outbound messages to.
+    #[serde(default)]
+    pub send_url: Option<String>,
+    /// HTTP method for outbound messages (`POST` or `PUT`). Default: `POST`.
+    #[serde(default)]
+    pub send_method: Option<String>,
+    /// Optional `Authorization` header value for outbound requests.
+    #[serde(default)]
+    pub auth_header: Option<String>,
+    /// Optional shared secret for webhook signature verification (HMAC-SHA256).
     pub secret: Option<String>,
 }
 
@@ -3854,6 +5095,10 @@ pub struct SecurityConfig {
     /// Emergency-stop state machine configuration.
     #[serde(default)]
     pub estop: EstopConfig,
+
+    /// Nevis IAM integration for SSO/MFA authentication and role-based access.
+    #[serde(default)]
+    pub nevis: NevisConfig,
 }
 
 /// OTP validation strategy.
@@ -3900,6 +5145,10 @@ pub struct OtpConfig {
     /// Domain-category presets expanded into `gated_domains`.
     #[serde(default)]
     pub gated_domain_categories: Vec<String>,
+
+    /// Maximum number of OTP challenge attempts before lockout.
+    #[serde(default = "default_otp_challenge_max_attempts")]
+    pub challenge_max_attempts: u32,
 }
 
 fn default_otp_token_ttl_secs() -> u64 {
@@ -3908,6 +5157,10 @@ fn default_otp_token_ttl_secs() -> u64 {
 
 fn default_otp_cache_valid_secs() -> u64 {
     300
+}
+
+fn default_otp_challenge_max_attempts() -> u32 {
+    3
 }
 
 fn default_otp_gated_actions() -> Vec<String> {
@@ -3930,6 +5183,7 @@ impl Default for OtpConfig {
             gated_actions: default_otp_gated_actions(),
             gated_domains: Vec::new(),
             gated_domain_categories: Vec::new(),
+            challenge_max_attempts: default_otp_challenge_max_attempts(),
         }
     }
 }
@@ -3963,6 +5217,163 @@ impl Default for EstopConfig {
             require_otp_to_resume: true,
         }
     }
+}
+
+/// Nevis IAM integration configuration.
+///
+/// When `enabled` is true, ZeroClaw validates incoming requests against a Nevis
+/// Security Suite instance and maps Nevis roles to tool/workspace permissions.
+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NevisConfig {
+    /// Enable Nevis IAM integration. Defaults to false for backward compatibility.
+    #[serde(default)]
+    pub enabled: bool,
+
+    /// Base URL of the Nevis instance (e.g. `https://nevis.example.com`).
+    #[serde(default)]
+    pub instance_url: String,
+
+    /// Nevis realm to authenticate against.
+    #[serde(default = "default_nevis_realm")]
+    pub realm: String,
+
+    /// OAuth2 client ID registered in Nevis.
+    #[serde(default)]
+    pub client_id: String,
+
+    /// OAuth2 client secret. Encrypted via SecretStore when stored on disk.
+    #[serde(default)]
+    pub client_secret: Option<String>,
+
+    /// Token validation strategy: `"local"` (JWKS) or `"remote"` (introspection).
+    #[serde(default = "default_nevis_token_validation")]
+    pub token_validation: String,
+
+    /// JWKS endpoint URL for local token validation.
+    #[serde(default)]
+    pub jwks_url: Option<String>,
+
+    /// Nevis role to ZeroClaw permission mappings.
+    #[serde(default)]
+    pub role_mapping: Vec<NevisRoleMappingConfig>,
+
+    /// Require MFA verification for all Nevis-authenticated requests.
+    #[serde(default)]
+    pub require_mfa: bool,
+
+    /// Session timeout in seconds.
+    #[serde(default = "default_nevis_session_timeout_secs")]
+    pub session_timeout_secs: u64,
+}
+
+impl std::fmt::Debug for NevisConfig {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("NevisConfig")
+            .field("enabled", &self.enabled)
+            .field("instance_url", &self.instance_url)
+            .field("realm", &self.realm)
+            .field("client_id", &self.client_id)
+            .field(
+                "client_secret",
+                &self.client_secret.as_ref().map(|_| "[REDACTED]"),
+            )
+            .field("token_validation", &self.token_validation)
+            .field("jwks_url", &self.jwks_url)
+            .field("role_mapping", &self.role_mapping)
+            .field("require_mfa", &self.require_mfa)
+            .field("session_timeout_secs", &self.session_timeout_secs)
+            .finish()
+    }
+}
+
+impl NevisConfig {
+    /// Validate that required fields are present when Nevis is enabled.
+    ///
+    /// Call at config load time to fail fast on invalid configuration rather
+    /// than deferring errors to the first authentication request.
+    pub fn validate(&self) -> Result<(), String> {
+        if !self.enabled {
+            return Ok(());
+        }
+
+        if self.instance_url.trim().is_empty() {
+            return Err("nevis.instance_url is required when Nevis IAM is enabled".into());
+        }
+
+        if self.client_id.trim().is_empty() {
+            return Err("nevis.client_id is required when Nevis IAM is enabled".into());
+        }
+
+        if self.realm.trim().is_empty() {
+            return Err("nevis.realm is required when Nevis IAM is enabled".into());
+        }
+
+        match self.token_validation.as_str() {
+            "local" | "remote" => {}
+            other => {
+                return Err(format!(
+                    "nevis.token_validation has invalid value '{other}': \
+                     expected 'local' or 'remote'"
+                ));
+            }
+        }
+
+        if self.token_validation == "local" && self.jwks_url.is_none() {
+            return Err("nevis.jwks_url is required when token_validation is 'local'".into());
+        }
+
+        if self.session_timeout_secs == 0 {
+            return Err("nevis.session_timeout_secs must be greater than 0".into());
+        }
+
+        Ok(())
+    }
+}
+
+fn default_nevis_realm() -> String {
+    "master".into()
+}
+
+fn default_nevis_token_validation() -> String {
+    "local".into()
+}
+
+fn default_nevis_session_timeout_secs() -> u64 {
+    3600
+}
+
+impl Default for NevisConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            instance_url: String::new(),
+            realm: default_nevis_realm(),
+            client_id: String::new(),
+            client_secret: None,
+            token_validation: default_nevis_token_validation(),
+            jwks_url: None,
+            role_mapping: Vec::new(),
+            require_mfa: false,
+            session_timeout_secs: default_nevis_session_timeout_secs(),
+        }
+    }
+}
+
+/// Maps a Nevis role to ZeroClaw tool permissions and workspace access.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct NevisRoleMappingConfig {
+    /// Nevis role name (case-insensitive).
+    pub nevis_role: String,
+
+    /// Tool names this role can access. Use `"all"` for unrestricted tool access.
+    #[serde(default)]
+    pub zeroclaw_permissions: Vec<String>,
+
+    /// Workspace names this role can access. Use `"all"` for unrestricted.
+    #[serde(default)]
+    pub workspace_access: Vec<String>,
 }
 
 /// Sandbox configuration for OS-level isolation
@@ -4161,6 +5572,97 @@ impl ChannelConfig for QQConfig {
     }
 }
 
+/// X/Twitter channel configuration (Twitter API v2)
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct TwitterConfig {
+    /// Twitter API v2 Bearer Token (OAuth 2.0)
+    pub bearer_token: String,
+    /// Allowed usernames or user IDs. Empty = deny all, "*" = allow all
+    #[serde(default)]
+    pub allowed_users: Vec<String>,
+}
+
+impl ChannelConfig for TwitterConfig {
+    fn name() -> &'static str {
+        "X/Twitter"
+    }
+    fn desc() -> &'static str {
+        "X/Twitter Bot via API v2"
+    }
+}
+
+/// Mochat channel configuration (Mochat customer service API)
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct MochatConfig {
+    /// Mochat API base URL
+    pub api_url: String,
+    /// Mochat API token
+    pub api_token: String,
+    /// Allowed user IDs. Empty = deny all, "*" = allow all
+    #[serde(default)]
+    pub allowed_users: Vec<String>,
+    /// Poll interval in seconds for new messages. Default: 5
+    #[serde(default = "default_mochat_poll_interval")]
+    pub poll_interval_secs: u64,
+}
+
+fn default_mochat_poll_interval() -> u64 {
+    5
+}
+
+impl ChannelConfig for MochatConfig {
+    fn name() -> &'static str {
+        "Mochat"
+    }
+    fn desc() -> &'static str {
+        "Mochat Customer Service"
+    }
+}
+
+/// Reddit channel configuration (OAuth2 bot).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct RedditConfig {
+    /// Reddit OAuth2 client ID.
+    pub client_id: String,
+    /// Reddit OAuth2 client secret.
+    pub client_secret: String,
+    /// Reddit OAuth2 refresh token for persistent access.
+    pub refresh_token: String,
+    /// Reddit bot username (without `u/` prefix).
+    pub username: String,
+    /// Optional subreddit to filter messages (without `r/` prefix).
+    /// When set, only messages from this subreddit are processed.
+    #[serde(default)]
+    pub subreddit: Option<String>,
+}
+
+impl ChannelConfig for RedditConfig {
+    fn name() -> &'static str {
+        "Reddit"
+    }
+    fn desc() -> &'static str {
+        "Reddit bot (OAuth2)"
+    }
+}
+
+/// Bluesky channel configuration (AT Protocol).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct BlueskyConfig {
+    /// Bluesky handle (e.g. `"mybot.bsky.social"`).
+    pub handle: String,
+    /// App-specific password (from Bluesky settings).
+    pub app_password: String,
+}
+
+impl ChannelConfig for BlueskyConfig {
+    fn name() -> &'static str {
+        "Bluesky"
+    }
+    fn desc() -> &'static str {
+        "AT Protocol"
+    }
+}
+
 /// Nostr channel configuration (NIP-04 + NIP-17 private messages)
 #[cfg(feature = "channel-nostr")]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -4195,6 +5697,310 @@ pub fn default_nostr_relays() -> Vec<String> {
     ]
 }
 
+// -- Notion --
+
+/// Notion integration configuration (`[notion]`).
+///
+/// When `enabled = true`, the agent polls a Notion database for pending tasks
+/// and exposes a `notion` tool for querying, reading, creating, and updating pages.
+/// Requires `api_key` (or the `NOTION_API_KEY` env var) and `database_id`.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct NotionConfig {
+    #[serde(default)]
+    pub enabled: bool,
+    #[serde(default)]
+    pub api_key: String,
+    #[serde(default)]
+    pub database_id: String,
+    #[serde(default = "default_notion_poll_interval")]
+    pub poll_interval_secs: u64,
+    #[serde(default = "default_notion_status_prop")]
+    pub status_property: String,
+    #[serde(default = "default_notion_input_prop")]
+    pub input_property: String,
+    #[serde(default = "default_notion_result_prop")]
+    pub result_property: String,
+    #[serde(default = "default_notion_max_concurrent")]
+    pub max_concurrent: usize,
+    #[serde(default = "default_notion_recover_stale")]
+    pub recover_stale: bool,
+}
+
+fn default_notion_poll_interval() -> u64 {
+    5
+}
+fn default_notion_status_prop() -> String {
+    "Status".into()
+}
+fn default_notion_input_prop() -> String {
+    "Input".into()
+}
+fn default_notion_result_prop() -> String {
+    "Result".into()
+}
+fn default_notion_max_concurrent() -> usize {
+    4
+}
+fn default_notion_recover_stale() -> bool {
+    true
+}
+
+impl Default for NotionConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            api_key: String::new(),
+            database_id: String::new(),
+            poll_interval_secs: default_notion_poll_interval(),
+            status_property: default_notion_status_prop(),
+            input_property: default_notion_input_prop(),
+            result_property: default_notion_result_prop(),
+            max_concurrent: default_notion_max_concurrent(),
+            recover_stale: default_notion_recover_stale(),
+        }
+    }
+}
+
+///
+/// Controls the read-only cloud transformation analysis tools:
+/// IaC review, migration assessment, cost analysis, and architecture review.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct CloudOpsConfig {
+    /// Enable cloud operations tools. Default: false.
+    #[serde(default)]
+    pub enabled: bool,
+    /// Default cloud provider for analysis context. Default: "aws".
+    #[serde(default = "default_cloud_ops_cloud")]
+    pub default_cloud: String,
+    /// Supported cloud providers. Default: [`aws`, `azure`, `gcp`].
+    #[serde(default = "default_cloud_ops_supported_clouds")]
+    pub supported_clouds: Vec<String>,
+    /// Supported IaC tools for review. Default: [`terraform`].
+    #[serde(default = "default_cloud_ops_iac_tools")]
+    pub iac_tools: Vec<String>,
+    /// Monthly USD threshold to flag cost items. Default: 100.0.
+    #[serde(default = "default_cloud_ops_cost_threshold")]
+    pub cost_threshold_monthly_usd: f64,
+    /// Well-Architected Frameworks to check against. Default: [`aws-waf`].
+    #[serde(default = "default_cloud_ops_waf")]
+    pub well_architected_frameworks: Vec<String>,
+}
+
+impl Default for CloudOpsConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            default_cloud: default_cloud_ops_cloud(),
+            supported_clouds: default_cloud_ops_supported_clouds(),
+            iac_tools: default_cloud_ops_iac_tools(),
+            cost_threshold_monthly_usd: default_cloud_ops_cost_threshold(),
+            well_architected_frameworks: default_cloud_ops_waf(),
+        }
+    }
+}
+
+impl CloudOpsConfig {
+    pub fn validate(&self) -> Result<()> {
+        if self.enabled {
+            if self.default_cloud.trim().is_empty() {
+                anyhow::bail!(
+                    "cloud_ops.default_cloud must not be empty when cloud_ops is enabled"
+                );
+            }
+            if self.supported_clouds.is_empty() {
+                anyhow::bail!(
+                    "cloud_ops.supported_clouds must not be empty when cloud_ops is enabled"
+                );
+            }
+            for (i, cloud) in self.supported_clouds.iter().enumerate() {
+                if cloud.trim().is_empty() {
+                    anyhow::bail!("cloud_ops.supported_clouds[{i}] must not be empty");
+                }
+            }
+            if !self.supported_clouds.contains(&self.default_cloud) {
+                anyhow::bail!(
+                    "cloud_ops.default_cloud '{}' is not in cloud_ops.supported_clouds {:?}",
+                    self.default_cloud,
+                    self.supported_clouds
+                );
+            }
+            if self.cost_threshold_monthly_usd < 0.0 {
+                anyhow::bail!(
+                    "cloud_ops.cost_threshold_monthly_usd must be non-negative, got {}",
+                    self.cost_threshold_monthly_usd
+                );
+            }
+            if self.iac_tools.is_empty() {
+                anyhow::bail!("cloud_ops.iac_tools must not be empty when cloud_ops is enabled");
+            }
+        }
+        Ok(())
+    }
+}
+
+fn default_cloud_ops_cloud() -> String {
+    "aws".into()
+}
+
+fn default_cloud_ops_supported_clouds() -> Vec<String> {
+    vec!["aws".into(), "azure".into(), "gcp".into()]
+}
+
+fn default_cloud_ops_iac_tools() -> Vec<String> {
+    vec!["terraform".into()]
+}
+
+fn default_cloud_ops_cost_threshold() -> f64 {
+    100.0
+}
+
+fn default_cloud_ops_waf() -> Vec<String> {
+    vec!["aws-waf".into()]
+}
+
+// ── Conversational AI ──────────────────────────────────────────────
+
+fn default_conversational_ai_language() -> String {
+    "en".into()
+}
+
+fn default_conversational_ai_supported_languages() -> Vec<String> {
+    vec!["en".into(), "de".into(), "fr".into(), "it".into()]
+}
+
+fn default_conversational_ai_escalation_threshold() -> f64 {
+    0.3
+}
+
+fn default_conversational_ai_max_turns() -> usize {
+    50
+}
+
+fn default_conversational_ai_timeout_secs() -> u64 {
+    1800
+}
+
+/// Conversational AI agent builder configuration (`[conversational_ai]` section).
+///
+/// Controls language detection, escalation behavior, conversation limits, and
+/// analytics for conversational agent workflows. Disabled by default.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct ConversationalAiConfig {
+    /// Enable conversational AI features. Default: false.
+    #[serde(default)]
+    pub enabled: bool,
+    /// Default language for conversations (BCP-47 tag). Default: "en".
+    #[serde(default = "default_conversational_ai_language")]
+    pub default_language: String,
+    /// Supported languages for conversations. Default: [`en`, `de`, `fr`, `it`].
+    #[serde(default = "default_conversational_ai_supported_languages")]
+    pub supported_languages: Vec<String>,
+    /// Automatically detect user language from message content. Default: true.
+    #[serde(default = "default_true")]
+    pub auto_detect_language: bool,
+    /// Intent confidence below this threshold triggers escalation. Default: 0.3.
+    #[serde(default = "default_conversational_ai_escalation_threshold")]
+    pub escalation_confidence_threshold: f64,
+    /// Maximum conversation turns before auto-ending. Default: 50.
+    #[serde(default = "default_conversational_ai_max_turns")]
+    pub max_conversation_turns: usize,
+    /// Conversation timeout in seconds (inactivity). Default: 1800.
+    #[serde(default = "default_conversational_ai_timeout_secs")]
+    pub conversation_timeout_secs: u64,
+    /// Enable conversation analytics tracking. Default: false (privacy-by-default).
+    #[serde(default)]
+    pub analytics_enabled: bool,
+    /// Optional tool name for RAG-based knowledge base lookup during conversations.
+    #[serde(default)]
+    pub knowledge_base_tool: Option<String>,
+}
+
+impl ConversationalAiConfig {
+    /// Returns `true` when the feature is disabled (the default).
+    ///
+    /// Used by `#[serde(skip_serializing_if)]` to omit the entire
+    /// `[conversational_ai]` section from newly-generated config files,
+    /// avoiding user confusion over an undocumented / experimental section.
+    pub fn is_disabled(&self) -> bool {
+        !self.enabled
+    }
+}
+
+impl Default for ConversationalAiConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            default_language: default_conversational_ai_language(),
+            supported_languages: default_conversational_ai_supported_languages(),
+            auto_detect_language: true,
+            escalation_confidence_threshold: default_conversational_ai_escalation_threshold(),
+            max_conversation_turns: default_conversational_ai_max_turns(),
+            conversation_timeout_secs: default_conversational_ai_timeout_secs(),
+            analytics_enabled: false,
+            knowledge_base_tool: None,
+        }
+    }
+}
+
+// ── Security ops config ─────────────────────────────────────────
+
+/// Managed Cybersecurity Service (MCSS) dashboard agent configuration (`[security_ops]`).
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct SecurityOpsConfig {
+    /// Enable security operations tools.
+    #[serde(default)]
+    pub enabled: bool,
+    /// Directory containing incident response playbook definitions (JSON).
+    #[serde(default = "default_playbooks_dir")]
+    pub playbooks_dir: String,
+    /// Automatically triage incoming alerts without user prompt.
+    #[serde(default)]
+    pub auto_triage: bool,
+    /// Require human approval before executing playbook actions.
+    #[serde(default = "default_require_approval")]
+    pub require_approval_for_actions: bool,
+    /// Maximum severity level that can be auto-remediated without approval.
+    /// One of: "low", "medium", "high", "critical". Default: "low".
+    #[serde(default = "default_max_auto_severity")]
+    pub max_auto_severity: String,
+    /// Directory for generated security reports.
+    #[serde(default = "default_report_output_dir")]
+    pub report_output_dir: String,
+    /// Optional SIEM webhook URL for alert ingestion.
+    #[serde(default)]
+    pub siem_integration: Option<String>,
+}
+
+fn default_playbooks_dir() -> String {
+    "~/.zeroclaw/playbooks".into()
+}
+
+fn default_require_approval() -> bool {
+    true
+}
+
+fn default_max_auto_severity() -> String {
+    "low".into()
+}
+
+fn default_report_output_dir() -> String {
+    "~/.zeroclaw/security-reports".into()
+}
+
+impl Default for SecurityOpsConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            playbooks_dir: default_playbooks_dir(),
+            auto_triage: false,
+            require_approval_for_actions: true,
+            max_auto_severity: default_max_auto_severity(),
+            report_output_dir: default_report_output_dir(),
+            siem_integration: None,
+        }
+    }
+}
+
 // ── Config impl ──────────────────────────────────────────────────
 
 impl Default for Config {
@@ -4217,7 +6023,12 @@ impl Default for Config {
             extra_headers: HashMap::new(),
             observability: ObservabilityConfig::default(),
             autonomy: AutonomyConfig::default(),
+            backup: BackupConfig::default(),
+            data_retention: DataRetentionConfig::default(),
+            cloud_ops: CloudOpsConfig::default(),
+            conversational_ai: ConversationalAiConfig::default(),
             security: SecurityConfig::default(),
+            security_ops: SecurityOpsConfig::default(),
             runtime: RuntimeConfig::default(),
             reliability: ReliabilityConfig::default(),
             scheduler: SchedulerConfig::default(),
@@ -4233,12 +6044,16 @@ impl Default for Config {
             tunnel: TunnelConfig::default(),
             gateway: GatewayConfig::default(),
             composio: ComposioConfig::default(),
+            microsoft365: Microsoft365Config::default(),
             secrets: SecretsConfig::default(),
             browser: BrowserConfig::default(),
+            browser_delegate: crate::tools::browser_delegate::BrowserDelegateConfig::default(),
             http_request: HttpRequestConfig::default(),
             multimodal: MultimodalConfig::default(),
             web_fetch: WebFetchConfig::default(),
             web_search: WebSearchConfig::default(),
+            project_intel: ProjectIntelConfig::default(),
+            google_workspace: GoogleWorkspaceConfig::default(),
             proxy: ProxyConfig::default(),
             identity: IdentityConfig::default(),
             cost: CostConfig::default(),
@@ -4252,6 +6067,13 @@ impl Default for Config {
             tts: TtsConfig::default(),
             mcp: McpConfig::default(),
             nodes: NodesConfig::default(),
+            workspace: WorkspaceConfig::default(),
+            notion: NotionConfig::default(),
+            node_transport: NodeTransportConfig::default(),
+            knowledge: KnowledgeConfig::default(),
+            linkedin: LinkedInConfig::default(),
+            plugins: PluginsConfig::default(),
+            locale: None,
         }
     }
 }
@@ -4661,6 +6483,45 @@ fn read_codex_openai_api_key() -> Option<String> {
         .map(ToString::to_string)
 }
 
+/// Ensure that essential bootstrap files exist in the workspace directory.
+///
+/// When the workspace is created outside of `zeroclaw onboard` (e.g., non-tty
+/// daemon/cron sessions), these files would otherwise be missing. This function
+/// creates sensible defaults that allow the agent to operate with a basic identity.
+async fn ensure_bootstrap_files(workspace_dir: &Path) -> Result<()> {
+    let defaults: &[(&str, &str)] = &[
+        (
+            "IDENTITY.md",
+            "# IDENTITY.md — Who Am I?\n\n\
+             I am ZeroClaw, an autonomous AI agent.\n\n\
+             ## Traits\n\
+             - Helpful, precise, and safety-conscious\n\
+             - I prioritize clarity and correctness\n",
+        ),
+        (
+            "SOUL.md",
+            "# SOUL.md — Who You Are\n\n\
+             You are ZeroClaw, an autonomous AI agent.\n\n\
+             ## Core Principles\n\
+             - Be helpful and accurate\n\
+             - Respect user intent and boundaries\n\
+             - Ask before taking destructive actions\n\
+             - Prefer safe, reversible operations\n",
+        ),
+    ];
+
+    for (filename, content) in defaults {
+        let path = workspace_dir.join(filename);
+        if !path.exists() {
+            fs::write(&path, content)
+                .await
+                .with_context(|| format!("Failed to create default {filename} in workspace"))?;
+        }
+    }
+
+    Ok(())
+}
+
 impl Config {
     pub async fn load_or_init() -> Result<Self> {
         let (default_zeroclaw_dir, default_workspace_dir) = default_config_and_workspace_dirs()?;
@@ -4676,6 +6537,8 @@ impl Config {
         fs::create_dir_all(&workspace_dir)
             .await
             .context("Failed to create workspace directory")?;
+
+        ensure_bootstrap_files(&workspace_dir).await?;
 
         if config_path.exists() {
             // Warn if config file is world-readable (may contain API keys)
@@ -4727,6 +6590,11 @@ impl Config {
                 &mut config.composio.api_key,
                 "config.composio.api_key",
             )?;
+            decrypt_optional_secret(
+                &store,
+                &mut config.microsoft365.client_secret,
+                "config.microsoft365.client_secret",
+            )?;
 
             decrypt_optional_secret(
                 &store,
@@ -4763,6 +6631,41 @@ impl Config {
             }
             if let Some(ref mut google) = config.tts.google {
                 decrypt_optional_secret(&store, &mut google.api_key, "config.tts.google.api_key")?;
+            }
+
+            // Decrypt nested STT provider API keys
+            decrypt_optional_secret(
+                &store,
+                &mut config.transcription.api_key,
+                "config.transcription.api_key",
+            )?;
+            if let Some(ref mut openai) = config.transcription.openai {
+                decrypt_optional_secret(
+                    &store,
+                    &mut openai.api_key,
+                    "config.transcription.openai.api_key",
+                )?;
+            }
+            if let Some(ref mut deepgram) = config.transcription.deepgram {
+                decrypt_optional_secret(
+                    &store,
+                    &mut deepgram.api_key,
+                    "config.transcription.deepgram.api_key",
+                )?;
+            }
+            if let Some(ref mut assemblyai) = config.transcription.assemblyai {
+                decrypt_optional_secret(
+                    &store,
+                    &mut assemblyai.api_key,
+                    "config.transcription.assemblyai.api_key",
+                )?;
+            }
+            if let Some(ref mut google) = config.transcription.google {
+                decrypt_optional_secret(
+                    &store,
+                    &mut google.api_key,
+                    "config.transcription.google.api_key",
+                )?;
             }
 
             #[cfg(feature = "channel-nostr")]
@@ -4984,6 +6887,18 @@ impl Config {
                 decrypt_secret(&store, token, "config.gateway.paired_tokens[]")?;
             }
 
+            // Decrypt Nevis IAM secret
+            decrypt_optional_secret(
+                &store,
+                &mut config.security.nevis.client_secret,
+                "config.security.nevis.client_secret",
+            )?;
+
+            // Notion API key (top-level, not in ChannelsConfig)
+            if !config.notion.api_key.is_empty() {
+                decrypt_secret(&store, &mut config.notion.api_key, "config.notion.api_key")?;
+            }
+
             config.apply_env_overrides();
             config.validate()?;
             tracing::info!(
@@ -5119,6 +7034,20 @@ impl Config {
     /// Called after TOML deserialization and env-override application to catch
     /// obviously invalid values early instead of failing at arbitrary runtime points.
     pub fn validate(&self) -> Result<()> {
+        // Tunnel — OpenVPN
+        if self.tunnel.provider.trim() == "openvpn" {
+            let openvpn = self.tunnel.openvpn.as_ref().ok_or_else(|| {
+                anyhow::anyhow!("tunnel.provider='openvpn' requires [tunnel.openvpn]")
+            })?;
+
+            if openvpn.config_file.trim().is_empty() {
+                anyhow::bail!("tunnel.openvpn.config_file must not be empty");
+            }
+            if openvpn.connect_timeout_secs == 0 {
+                anyhow::bail!("tunnel.openvpn.connect_timeout_secs must be greater than 0");
+            }
+        }
+
         // Gateway
         if self.gateway.host.trim().is_empty() {
             anyhow::bail!("gateway.host must not be empty");
@@ -5137,6 +7066,9 @@ impl Config {
         }
 
         // Security OTP / estop
+        if self.security.otp.challenge_max_attempts == 0 {
+            anyhow::bail!("security.otp.challenge_max_attempts must be greater than 0");
+        }
         if self.security.otp.token_ttl_secs == 0 {
             anyhow::bail!("security.otp.token_ttl_secs must be greater than 0");
         }
@@ -5275,17 +7207,214 @@ impl Config {
             }
         }
 
+        // Microsoft 365
+        if self.microsoft365.enabled {
+            let tenant = self
+                .microsoft365
+                .tenant_id
+                .as_deref()
+                .map(str::trim)
+                .filter(|s| !s.is_empty());
+            if tenant.is_none() {
+                anyhow::bail!(
+                    "microsoft365.tenant_id must not be empty when microsoft365 is enabled"
+                );
+            }
+            let client = self
+                .microsoft365
+                .client_id
+                .as_deref()
+                .map(str::trim)
+                .filter(|s| !s.is_empty());
+            if client.is_none() {
+                anyhow::bail!(
+                    "microsoft365.client_id must not be empty when microsoft365 is enabled"
+                );
+            }
+            let flow = self.microsoft365.auth_flow.trim();
+            if flow != "client_credentials" && flow != "device_code" {
+                anyhow::bail!(
+                    "microsoft365.auth_flow must be 'client_credentials' or 'device_code'"
+                );
+            }
+            if flow == "client_credentials"
+                && self
+                    .microsoft365
+                    .client_secret
+                    .as_deref()
+                    .map_or(true, |s| s.trim().is_empty())
+            {
+                anyhow::bail!(
+                    "microsoft365.client_secret must not be empty when auth_flow is 'client_credentials'"
+                );
+            }
+        }
+
+        // Microsoft 365
+        if self.microsoft365.enabled {
+            let tenant = self
+                .microsoft365
+                .tenant_id
+                .as_deref()
+                .map(str::trim)
+                .filter(|s| !s.is_empty());
+            if tenant.is_none() {
+                anyhow::bail!(
+                    "microsoft365.tenant_id must not be empty when microsoft365 is enabled"
+                );
+            }
+            let client = self
+                .microsoft365
+                .client_id
+                .as_deref()
+                .map(str::trim)
+                .filter(|s| !s.is_empty());
+            if client.is_none() {
+                anyhow::bail!(
+                    "microsoft365.client_id must not be empty when microsoft365 is enabled"
+                );
+            }
+            let flow = self.microsoft365.auth_flow.trim();
+            if flow != "client_credentials" && flow != "device_code" {
+                anyhow::bail!("microsoft365.auth_flow must be client_credentials or device_code");
+            }
+            if flow == "client_credentials"
+                && self
+                    .microsoft365
+                    .client_secret
+                    .as_deref()
+                    .map_or(true, |s| s.trim().is_empty())
+            {
+                anyhow::bail!("microsoft365.client_secret must not be empty when auth_flow is client_credentials");
+            }
+        }
+
         // MCP
         if self.mcp.enabled {
             validate_mcp_config(&self.mcp)?;
         }
 
+        // Knowledge graph
+        if self.knowledge.enabled {
+            if self.knowledge.max_nodes == 0 {
+                anyhow::bail!("knowledge.max_nodes must be greater than 0");
+            }
+            if self.knowledge.db_path.trim().is_empty() {
+                anyhow::bail!("knowledge.db_path must not be empty");
+            }
+        }
+
+        // Google Workspace allowed_services validation
+        let mut seen_gws_services = std::collections::HashSet::new();
+        for (i, service) in self.google_workspace.allowed_services.iter().enumerate() {
+            let normalized = service.trim();
+            if normalized.is_empty() {
+                anyhow::bail!("google_workspace.allowed_services[{i}] must not be empty");
+            }
+            if !normalized
+                .chars()
+                .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '_' || c == '-')
+            {
+                anyhow::bail!(
+                    "google_workspace.allowed_services[{i}] contains invalid characters: {normalized}"
+                );
+            }
+            if !seen_gws_services.insert(normalized.to_string()) {
+                anyhow::bail!(
+                    "google_workspace.allowed_services contains duplicate entry: {normalized}"
+                );
+            }
+        }
+
+        // Project intelligence
+        if self.project_intel.enabled {
+            let lang = &self.project_intel.default_language;
+            if !["en", "de", "fr", "it"].contains(&lang.as_str()) {
+                anyhow::bail!(
+                    "project_intel.default_language must be one of: en, de, fr, it (got '{lang}')"
+                );
+            }
+            let sens = &self.project_intel.risk_sensitivity;
+            if !["low", "medium", "high"].contains(&sens.as_str()) {
+                anyhow::bail!(
+                    "project_intel.risk_sensitivity must be one of: low, medium, high (got '{sens}')"
+                );
+            }
+            if let Some(ref tpl_dir) = self.project_intel.templates_dir {
+                let path = std::path::Path::new(tpl_dir);
+                if !path.exists() {
+                    anyhow::bail!("project_intel.templates_dir path does not exist: {tpl_dir}");
+                }
+            }
+        }
+
         // Proxy (delegate to existing validation)
         self.proxy.validate()?;
+        self.cloud_ops.validate()?;
 
-        // MCP servers
-        if self.mcp.enabled {
-            validate_mcp_config(&self.mcp)?;
+        // Notion
+        if self.notion.enabled {
+            if self.notion.database_id.trim().is_empty() {
+                anyhow::bail!("notion.database_id must not be empty when notion.enabled = true");
+            }
+            if self.notion.poll_interval_secs == 0 {
+                anyhow::bail!("notion.poll_interval_secs must be greater than 0");
+            }
+            if self.notion.max_concurrent == 0 {
+                anyhow::bail!("notion.max_concurrent must be greater than 0");
+            }
+            if self.notion.status_property.trim().is_empty() {
+                anyhow::bail!("notion.status_property must not be empty");
+            }
+            if self.notion.input_property.trim().is_empty() {
+                anyhow::bail!("notion.input_property must not be empty");
+            }
+            if self.notion.result_property.trim().is_empty() {
+                anyhow::bail!("notion.result_property must not be empty");
+            }
+        }
+
+        // Nevis IAM — delegate to NevisConfig::validate() for field-level checks
+        if let Err(msg) = self.security.nevis.validate() {
+            anyhow::bail!("security.nevis: {msg}");
+        }
+
+        // Delegate agent timeouts
+        const MAX_DELEGATE_TIMEOUT_SECS: u64 = 3600;
+        for (name, agent) in &self.agents {
+            if let Some(timeout) = agent.timeout_secs {
+                if timeout == 0 {
+                    anyhow::bail!("agents.{name}.timeout_secs must be greater than 0");
+                }
+                if timeout > MAX_DELEGATE_TIMEOUT_SECS {
+                    anyhow::bail!(
+                        "agents.{name}.timeout_secs exceeds max {MAX_DELEGATE_TIMEOUT_SECS}"
+                    );
+                }
+            }
+            if let Some(timeout) = agent.agentic_timeout_secs {
+                if timeout == 0 {
+                    anyhow::bail!("agents.{name}.agentic_timeout_secs must be greater than 0");
+                }
+                if timeout > MAX_DELEGATE_TIMEOUT_SECS {
+                    anyhow::bail!(
+                        "agents.{name}.agentic_timeout_secs exceeds max {MAX_DELEGATE_TIMEOUT_SECS}"
+                    );
+                }
+            }
+        }
+
+        // Transcription
+        {
+            let dp = self.transcription.default_provider.trim();
+            match dp {
+                "groq" | "openai" | "deepgram" | "assemblyai" | "google" => {}
+                other => {
+                    anyhow::bail!(
+                        "transcription.default_provider must be one of: groq, openai, deepgram, assemblyai, google (got '{other}')"
+                    );
+                }
+            }
         }
 
         Ok(())
@@ -5466,6 +7595,16 @@ impl Config {
                 "1" | "true" | "yes" | "on" => self.runtime.reasoning_enabled = Some(true),
                 "0" | "false" | "no" | "off" => self.runtime.reasoning_enabled = Some(false),
                 _ => {}
+            }
+        }
+
+        if let Ok(raw) = std::env::var("ZEROCLAW_REASONING_EFFORT")
+            .or_else(|_| std::env::var("REASONING_EFFORT"))
+            .or_else(|_| std::env::var("ZEROCLAW_CODEX_REASONING_EFFORT"))
+        {
+            match normalize_reasoning_effort(&raw) {
+                Ok(effort) => self.runtime.reasoning_effort = Some(effort),
+                Err(message) => tracing::warn!("Ignoring reasoning effort env override: {message}"),
             }
         }
 
@@ -5654,6 +7793,11 @@ impl Config {
             &mut config_to_save.composio.api_key,
             "config.composio.api_key",
         )?;
+        encrypt_optional_secret(
+            &store,
+            &mut config_to_save.microsoft365.client_secret,
+            "config.microsoft365.client_secret",
+        )?;
 
         encrypt_optional_secret(
             &store,
@@ -5690,6 +7834,41 @@ impl Config {
         }
         if let Some(ref mut google) = config_to_save.tts.google {
             encrypt_optional_secret(&store, &mut google.api_key, "config.tts.google.api_key")?;
+        }
+
+        // Encrypt nested STT provider API keys
+        encrypt_optional_secret(
+            &store,
+            &mut config_to_save.transcription.api_key,
+            "config.transcription.api_key",
+        )?;
+        if let Some(ref mut openai) = config_to_save.transcription.openai {
+            encrypt_optional_secret(
+                &store,
+                &mut openai.api_key,
+                "config.transcription.openai.api_key",
+            )?;
+        }
+        if let Some(ref mut deepgram) = config_to_save.transcription.deepgram {
+            encrypt_optional_secret(
+                &store,
+                &mut deepgram.api_key,
+                "config.transcription.deepgram.api_key",
+            )?;
+        }
+        if let Some(ref mut assemblyai) = config_to_save.transcription.assemblyai {
+            encrypt_optional_secret(
+                &store,
+                &mut assemblyai.api_key,
+                "config.transcription.assemblyai.api_key",
+            )?;
+        }
+        if let Some(ref mut google) = config_to_save.transcription.google {
+            encrypt_optional_secret(
+                &store,
+                &mut google.api_key,
+                "config.transcription.google.api_key",
+            )?;
         }
 
         #[cfg(feature = "channel-nostr")]
@@ -5911,6 +8090,22 @@ impl Config {
             encrypt_secret(&store, token, "config.gateway.paired_tokens[]")?;
         }
 
+        // Encrypt Nevis IAM secret
+        encrypt_optional_secret(
+            &store,
+            &mut config_to_save.security.nevis.client_secret,
+            "config.security.nevis.client_secret",
+        )?;
+
+        // Notion API key (top-level, not in ChannelsConfig)
+        if !config_to_save.notion.api_key.is_empty() {
+            encrypt_secret(
+                &store,
+                &mut config_to_save.notion.api_key,
+                "config.notion.api_key",
+            )?;
+        }
+
         let toml_str =
             toml::to_string_pretty(&config_to_save).context("Failed to serialize config")?;
 
@@ -5998,6 +8193,7 @@ impl Config {
     }
 }
 
+#[allow(clippy::unused_async)] // async needed on unix for tokio File I/O; no-op on other platforms
 async fn sync_directory(path: &Path) -> Result<()> {
     #[cfg(unix)]
     {
@@ -6023,6 +8219,7 @@ mod tests {
     #[cfg(unix)]
     use std::os::unix::fs::PermissionsExt;
     use std::path::PathBuf;
+    #[cfg(unix)]
     use tempfile::TempDir;
     use tokio::sync::{Mutex, MutexGuard};
     use tokio::test;
@@ -6159,7 +8356,7 @@ mod tests {
     async fn heartbeat_config_default() {
         let h = HeartbeatConfig::default();
         assert!(!h.enabled);
-        assert_eq!(h.interval_minutes, 30);
+        assert_eq!(h.interval_minutes, 5);
         assert!(h.message.is_none());
         assert!(h.target.is_none());
         assert!(h.to.is_none());
@@ -6242,6 +8439,7 @@ default_temperature = 0.7
         assert!(c.cli);
         assert!(c.telegram.is_none());
         assert!(c.discord.is_none());
+        assert!(!c.show_tool_calls);
     }
 
     // ── Serde round-trip ─────────────────────────────────────
@@ -6279,7 +8477,12 @@ default_temperature = 0.7
                 allowed_roots: vec![],
                 non_cli_excluded_tools: vec![],
             },
+            backup: BackupConfig::default(),
+            data_retention: DataRetentionConfig::default(),
+            cloud_ops: CloudOpsConfig::default(),
+            conversational_ai: ConversationalAiConfig::default(),
             security: SecurityConfig::default(),
+            security_ops: SecurityOpsConfig::default(),
             runtime: RuntimeConfig {
                 kind: "docker".into(),
                 ..RuntimeConfig::default()
@@ -6297,6 +8500,7 @@ default_temperature = 0.7
                 message: Some("Check London time".into()),
                 target: Some("telegram".into()),
                 to: Some("123456".into()),
+                ..HeartbeatConfig::default()
             },
             cron: CronConfig::default(),
             channels_config: ChannelsConfig {
@@ -6308,6 +8512,7 @@ default_temperature = 0.7
                     draft_update_interval_ms: default_draft_update_interval_ms(),
                     interrupt_on_new_message: false,
                     mention_only: false,
+                    ack_reactions: None,
                 }),
                 discord: None,
                 slack: None,
@@ -6327,25 +8532,35 @@ default_temperature = 0.7
                 dingtalk: None,
                 wecom: None,
                 qq: None,
+                twitter: None,
+                mochat: None,
                 #[cfg(feature = "channel-nostr")]
                 nostr: None,
                 clawdtalk: None,
+                reddit: None,
+                bluesky: None,
                 message_timeout_secs: 300,
                 ack_reactions: true,
                 show_tool_calls: true,
                 session_persistence: true,
+                session_backend: default_session_backend(),
+                session_ttl_hours: 0,
             },
             memory: MemoryConfig::default(),
             storage: StorageConfig::default(),
             tunnel: TunnelConfig::default(),
             gateway: GatewayConfig::default(),
             composio: ComposioConfig::default(),
+            microsoft365: Microsoft365Config::default(),
             secrets: SecretsConfig::default(),
             browser: BrowserConfig::default(),
+            browser_delegate: crate::tools::browser_delegate::BrowserDelegateConfig::default(),
             http_request: HttpRequestConfig::default(),
             multimodal: MultimodalConfig::default(),
             web_fetch: WebFetchConfig::default(),
             web_search: WebSearchConfig::default(),
+            project_intel: ProjectIntelConfig::default(),
+            google_workspace: GoogleWorkspaceConfig::default(),
             proxy: ProxyConfig::default(),
             agent: AgentConfig::default(),
             identity: IdentityConfig::default(),
@@ -6359,6 +8574,13 @@ default_temperature = 0.7
             tts: TtsConfig::default(),
             mcp: McpConfig::default(),
             nodes: NodesConfig::default(),
+            workspace: WorkspaceConfig::default(),
+            notion: NotionConfig::default(),
+            node_transport: NodeTransportConfig::default(),
+            knowledge: KnowledgeConfig::default(),
+            linkedin: LinkedInConfig::default(),
+            plugins: PluginsConfig::default(),
+            locale: None,
         };
 
         let toml_str = toml::to_string_pretty(&config).unwrap();
@@ -6554,6 +8776,32 @@ reasoning_enabled = false
     }
 
     #[test]
+    async fn runtime_reasoning_effort_deserializes() {
+        let raw = r#"
+default_temperature = 0.7
+
+[runtime]
+reasoning_effort = "HIGH"
+"#;
+
+        let parsed: Config = toml::from_str(raw).unwrap();
+        assert_eq!(parsed.runtime.reasoning_effort.as_deref(), Some("high"));
+    }
+
+    #[test]
+    async fn runtime_reasoning_effort_rejects_invalid_values() {
+        let raw = r#"
+default_temperature = 0.7
+
+[runtime]
+reasoning_effort = "turbo"
+"#;
+
+        let error = toml::from_str::<Config>(raw).expect_err("invalid value should fail");
+        assert!(error.to_string().contains("reasoning_effort"));
+    }
+
+    #[test]
     async fn agent_config_defaults() {
         let cfg = AgentConfig::default();
         assert!(!cfg.compact_context);
@@ -6616,7 +8864,12 @@ tool_dispatcher = "xml"
             extra_headers: HashMap::new(),
             observability: ObservabilityConfig::default(),
             autonomy: AutonomyConfig::default(),
+            backup: BackupConfig::default(),
+            data_retention: DataRetentionConfig::default(),
+            cloud_ops: CloudOpsConfig::default(),
+            conversational_ai: ConversationalAiConfig::default(),
             security: SecurityConfig::default(),
+            security_ops: SecurityOpsConfig::default(),
             runtime: RuntimeConfig::default(),
             reliability: ReliabilityConfig::default(),
             scheduler: SchedulerConfig::default(),
@@ -6632,12 +8885,16 @@ tool_dispatcher = "xml"
             tunnel: TunnelConfig::default(),
             gateway: GatewayConfig::default(),
             composio: ComposioConfig::default(),
+            microsoft365: Microsoft365Config::default(),
             secrets: SecretsConfig::default(),
             browser: BrowserConfig::default(),
+            browser_delegate: crate::tools::browser_delegate::BrowserDelegateConfig::default(),
             http_request: HttpRequestConfig::default(),
             multimodal: MultimodalConfig::default(),
             web_fetch: WebFetchConfig::default(),
             web_search: WebSearchConfig::default(),
+            project_intel: ProjectIntelConfig::default(),
+            google_workspace: GoogleWorkspaceConfig::default(),
             proxy: ProxyConfig::default(),
             agent: AgentConfig::default(),
             identity: IdentityConfig::default(),
@@ -6651,6 +8908,13 @@ tool_dispatcher = "xml"
             tts: TtsConfig::default(),
             mcp: McpConfig::default(),
             nodes: NodesConfig::default(),
+            workspace: WorkspaceConfig::default(),
+            notion: NotionConfig::default(),
+            node_transport: NodeTransportConfig::default(),
+            knowledge: KnowledgeConfig::default(),
+            linkedin: LinkedInConfig::default(),
+            plugins: PluginsConfig::default(),
+            locale: None,
         };
 
         config.save().await.unwrap();
@@ -6709,6 +8973,8 @@ tool_dispatcher = "xml"
                 agentic: false,
                 allowed_tools: Vec::new(),
                 max_iterations: 10,
+                timeout_secs: None,
+                agentic_timeout_secs: None,
             },
         );
 
@@ -6833,6 +9099,7 @@ tool_dispatcher = "xml"
             draft_update_interval_ms: 500,
             interrupt_on_new_message: true,
             mention_only: false,
+            ack_reactions: None,
         };
         let json = serde_json::to_string(&tc).unwrap();
         let parsed: TelegramConfig = serde_json::from_str(&json).unwrap();
@@ -7045,12 +9312,18 @@ allowed_users = ["@ops:matrix.org"]
             dingtalk: None,
             wecom: None,
             qq: None,
+            twitter: None,
+            mochat: None,
             nostr: None,
             clawdtalk: None,
+            reddit: None,
+            bluesky: None,
             message_timeout_secs: 300,
             ack_reactions: true,
             show_tool_calls: true,
             session_persistence: true,
+            session_backend: default_session_backend(),
+            session_ttl_hours: 0,
         };
         let toml_str = toml::to_string_pretty(&c).unwrap();
         let parsed: ChannelsConfig = toml::from_str(&toml_str).unwrap();
@@ -7090,6 +9363,7 @@ allowed_users = ["@ops:matrix.org"]
         let parsed: SlackConfig = serde_json::from_str(json).unwrap();
         assert!(parsed.allowed_users.is_empty());
         assert!(!parsed.interrupt_on_new_message);
+        assert!(!parsed.mention_only);
     }
 
     #[test]
@@ -7098,6 +9372,15 @@ allowed_users = ["@ops:matrix.org"]
         let parsed: SlackConfig = serde_json::from_str(json).unwrap();
         assert_eq!(parsed.allowed_users, vec!["U111"]);
         assert!(!parsed.interrupt_on_new_message);
+        assert!(!parsed.mention_only);
+    }
+
+    #[test]
+    async fn slack_config_deserializes_with_mention_only() {
+        let json = r#"{"bot_token":"xoxb-tok","mention_only":true}"#;
+        let parsed: SlackConfig = serde_json::from_str(json).unwrap();
+        assert!(parsed.mention_only);
+        assert!(!parsed.interrupt_on_new_message);
     }
 
     #[test]
@@ -7105,6 +9388,7 @@ allowed_users = ["@ops:matrix.org"]
         let json = r#"{"bot_token":"xoxb-tok","interrupt_on_new_message":true}"#;
         let parsed: SlackConfig = serde_json::from_str(json).unwrap();
         assert!(parsed.interrupt_on_new_message);
+        assert!(!parsed.mention_only);
     }
 
     #[test]
@@ -7127,6 +9411,7 @@ channel_id = "C123"
         let parsed: SlackConfig = toml::from_str(toml_str).unwrap();
         assert!(parsed.allowed_users.is_empty());
         assert!(!parsed.interrupt_on_new_message);
+        assert!(!parsed.mention_only);
         assert_eq!(parsed.channel_id.as_deref(), Some("C123"));
     }
 
@@ -7273,12 +9558,18 @@ channel_id = "C123"
             dingtalk: None,
             wecom: None,
             qq: None,
+            twitter: None,
+            mochat: None,
             nostr: None,
             clawdtalk: None,
+            reddit: None,
+            bluesky: None,
             message_timeout_secs: 300,
             ack_reactions: true,
             show_tool_calls: true,
             session_persistence: true,
+            session_backend: default_session_backend(),
+            session_ttl_hours: 0,
         };
         let toml_str = toml::to_string_pretty(&c).unwrap();
         let parsed: ChannelsConfig = toml::from_str(&toml_str).unwrap();
@@ -7363,10 +9654,15 @@ channel_id = "C123"
             rate_limit_max_keys: 2048,
             idempotency_ttl_secs: 600,
             idempotency_max_keys: 4096,
+            session_persistence: true,
+            session_ttl_hours: 0,
+            pairing_dashboard: PairingDashboardConfig::default(),
         };
         let toml_str = toml::to_string(&g).unwrap();
         let parsed: GatewayConfig = toml::from_str(&toml_str).unwrap();
         assert!(parsed.require_pairing);
+        assert!(parsed.session_persistence);
+        assert_eq!(parsed.session_ttl_hours, 0);
         assert!(!parsed.allow_public_bind);
         assert_eq!(parsed.paired_tokens, vec!["zc_test_token"]);
         assert_eq!(parsed.pair_rate_limit_per_minute, 12);
@@ -8142,7 +10438,7 @@ requires_openai_auth = true
         std::env::set_var("HOME", &temp_home);
         std::env::set_var("ZEROCLAW_WORKSPACE", &workspace_dir);
 
-        let config = Config::load_or_init().await.unwrap();
+        let config = Box::pin(Config::load_or_init()).await.unwrap();
 
         assert_eq!(config.workspace_dir, workspace_dir.join("workspace"));
         assert_eq!(config.config_path, workspace_dir.join("config.toml"));
@@ -8169,7 +10465,7 @@ requires_openai_auth = true
         std::env::set_var("HOME", &temp_home);
         std::env::set_var("ZEROCLAW_WORKSPACE", &workspace_dir);
 
-        let config = Config::load_or_init().await.unwrap();
+        let config = Box::pin(Config::load_or_init()).await.unwrap();
 
         assert_eq!(config.workspace_dir, workspace_dir);
         assert_eq!(config.config_path, legacy_config_path);
@@ -8207,7 +10503,7 @@ default_model = "legacy-model"
         std::env::set_var("HOME", &temp_home);
         std::env::set_var("ZEROCLAW_WORKSPACE", &workspace_dir);
 
-        let config = Config::load_or_init().await.unwrap();
+        let config = Box::pin(Config::load_or_init()).await.unwrap();
 
         assert_eq!(config.workspace_dir, workspace_dir);
         assert_eq!(config.config_path, legacy_config_path);
@@ -8251,7 +10547,7 @@ default_model = "legacy-model"
         });
         config.save().await.unwrap();
 
-        let loaded = Config::load_or_init().await.unwrap();
+        let loaded = Box::pin(Config::load_or_init()).await.unwrap();
         let feishu = loaded.channels_config.feishu.as_ref().unwrap();
         assert_eq!(feishu.app_secret, "feishu-secret");
         assert_eq!(feishu.encrypt_key.as_deref(), Some("feishu-encrypt"));
@@ -8288,7 +10584,7 @@ default_model = "legacy-model"
             .await
             .unwrap();
 
-        let config = Config::load_or_init().await.unwrap();
+        let config = Box::pin(Config::load_or_init()).await.unwrap();
 
         assert_eq!(config.config_path, custom_config_dir.join("config.toml"));
         assert_eq!(config.workspace_dir, custom_config_dir.join("workspace"));
@@ -8325,7 +10621,7 @@ default_model = "legacy-model"
             .unwrap();
         std::env::set_var("ZEROCLAW_WORKSPACE", &env_workspace_dir);
 
-        let config = Config::load_or_init().await.unwrap();
+        let config = Box::pin(Config::load_or_init()).await.unwrap();
 
         assert_eq!(config.workspace_dir, env_workspace_dir.join("workspace"));
         assert_eq!(config.config_path, env_workspace_dir.join("config.toml"));
@@ -8494,6 +10790,31 @@ default_model = "legacy-model"
         assert_eq!(config.runtime.reasoning_enabled, Some(false));
 
         std::env::remove_var("ZEROCLAW_REASONING_ENABLED");
+    }
+
+    #[test]
+    async fn env_override_reasoning_effort() {
+        let _env_guard = env_override_lock().await;
+        let mut config = Config::default();
+        assert_eq!(config.runtime.reasoning_effort, None);
+
+        std::env::set_var("ZEROCLAW_REASONING_EFFORT", "HIGH");
+        config.apply_env_overrides();
+        assert_eq!(config.runtime.reasoning_effort.as_deref(), Some("high"));
+
+        std::env::remove_var("ZEROCLAW_REASONING_EFFORT");
+    }
+
+    #[test]
+    async fn env_override_reasoning_effort_legacy_codex_env() {
+        let _env_guard = env_override_lock().await;
+        let mut config = Config::default();
+
+        std::env::set_var("ZEROCLAW_CODEX_REASONING_EFFORT", "minimal");
+        config.apply_env_overrides();
+        assert_eq!(config.runtime.reasoning_effort.as_deref(), Some("minimal"));
+
+        std::env::remove_var("ZEROCLAW_CODEX_REASONING_EFFORT");
     }
 
     #[test]
@@ -9093,6 +11414,7 @@ require_otp_to_resume = true
             draft_update_interval_ms: default_draft_update_interval_ms(),
             interrupt_on_new_message: false,
             mention_only: false,
+            ack_reactions: None,
         });
 
         // Save (triggers encryption)
@@ -9464,5 +11786,293 @@ require_otp_to_resume = true
         assert_eq!(config.agents.len(), 2);
         assert_eq!(config.swarms.len(), 1);
         assert!(config.swarms.contains_key("pipeline"));
+    }
+
+    #[tokio::test]
+    async fn nevis_client_secret_encrypt_decrypt_roundtrip() {
+        let dir = std::env::temp_dir().join(format!(
+            "zeroclaw_test_nevis_secret_{}",
+            uuid::Uuid::new_v4()
+        ));
+        fs::create_dir_all(&dir).await.unwrap();
+
+        let plaintext_secret = "nevis-test-client-secret-value";
+
+        let mut config = Config::default();
+        config.workspace_dir = dir.join("workspace");
+        config.config_path = dir.join("config.toml");
+        config.security.nevis.client_secret = Some(plaintext_secret.into());
+
+        // Save (triggers encryption)
+        config.save().await.unwrap();
+
+        // Read raw TOML and verify plaintext secret is NOT present
+        let raw_toml = tokio::fs::read_to_string(&config.config_path)
+            .await
+            .unwrap();
+        assert!(
+            !raw_toml.contains(plaintext_secret),
+            "Saved TOML must not contain the plaintext client_secret"
+        );
+
+        // Parse stored TOML and verify the value is encrypted
+        let stored: Config = toml::from_str(&raw_toml).unwrap();
+        let stored_secret = stored.security.nevis.client_secret.as_ref().unwrap();
+        assert!(
+            crate::security::SecretStore::is_encrypted(stored_secret),
+            "Stored client_secret must be marked as encrypted"
+        );
+
+        // Decrypt and verify it matches the original plaintext
+        let store = crate::security::SecretStore::new(&dir, true);
+        assert_eq!(store.decrypt(stored_secret).unwrap(), plaintext_secret);
+
+        // Simulate a full load: deserialize then decrypt (mirrors load_or_init logic)
+        let mut loaded: Config = toml::from_str(&raw_toml).unwrap();
+        loaded.config_path = dir.join("config.toml");
+        let load_store = crate::security::SecretStore::new(&dir, loaded.secrets.encrypt);
+        decrypt_optional_secret(
+            &load_store,
+            &mut loaded.security.nevis.client_secret,
+            "config.security.nevis.client_secret",
+        )
+        .unwrap();
+        assert_eq!(
+            loaded.security.nevis.client_secret.as_deref().unwrap(),
+            plaintext_secret,
+            "Loaded client_secret must match the original plaintext after decryption"
+        );
+
+        let _ = fs::remove_dir_all(&dir).await;
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // Nevis config validation tests
+    // ══════════════════════════════════════════════════════════
+
+    #[test]
+    async fn nevis_config_validate_disabled_accepts_empty_fields() {
+        let cfg = NevisConfig::default();
+        assert!(!cfg.enabled);
+        assert!(cfg.validate().is_ok());
+    }
+
+    #[test]
+    async fn nevis_config_validate_rejects_empty_instance_url() {
+        let cfg = NevisConfig {
+            enabled: true,
+            instance_url: String::new(),
+            client_id: "test-client".into(),
+            ..NevisConfig::default()
+        };
+        let err = cfg.validate().unwrap_err();
+        assert!(err.contains("instance_url"));
+    }
+
+    #[test]
+    async fn nevis_config_validate_rejects_empty_client_id() {
+        let cfg = NevisConfig {
+            enabled: true,
+            instance_url: "https://nevis.example.com".into(),
+            client_id: String::new(),
+            ..NevisConfig::default()
+        };
+        let err = cfg.validate().unwrap_err();
+        assert!(err.contains("client_id"));
+    }
+
+    #[test]
+    async fn nevis_config_validate_rejects_empty_realm() {
+        let cfg = NevisConfig {
+            enabled: true,
+            instance_url: "https://nevis.example.com".into(),
+            client_id: "test-client".into(),
+            realm: String::new(),
+            ..NevisConfig::default()
+        };
+        let err = cfg.validate().unwrap_err();
+        assert!(err.contains("realm"));
+    }
+
+    #[test]
+    async fn nevis_config_validate_rejects_local_without_jwks() {
+        let cfg = NevisConfig {
+            enabled: true,
+            instance_url: "https://nevis.example.com".into(),
+            client_id: "test-client".into(),
+            token_validation: "local".into(),
+            jwks_url: None,
+            ..NevisConfig::default()
+        };
+        let err = cfg.validate().unwrap_err();
+        assert!(err.contains("jwks_url"));
+    }
+
+    #[test]
+    async fn nevis_config_validate_rejects_zero_session_timeout() {
+        let cfg = NevisConfig {
+            enabled: true,
+            instance_url: "https://nevis.example.com".into(),
+            client_id: "test-client".into(),
+            token_validation: "remote".into(),
+            session_timeout_secs: 0,
+            ..NevisConfig::default()
+        };
+        let err = cfg.validate().unwrap_err();
+        assert!(err.contains("session_timeout_secs"));
+    }
+
+    #[test]
+    async fn nevis_config_validate_accepts_valid_enabled_config() {
+        let cfg = NevisConfig {
+            enabled: true,
+            instance_url: "https://nevis.example.com".into(),
+            realm: "master".into(),
+            client_id: "test-client".into(),
+            token_validation: "remote".into(),
+            session_timeout_secs: 3600,
+            ..NevisConfig::default()
+        };
+        assert!(cfg.validate().is_ok());
+    }
+
+    #[test]
+    async fn nevis_config_validate_rejects_invalid_token_validation() {
+        let cfg = NevisConfig {
+            enabled: true,
+            instance_url: "https://nevis.example.com".into(),
+            realm: "master".into(),
+            client_id: "test-client".into(),
+            token_validation: "invalid_mode".into(),
+            session_timeout_secs: 3600,
+            ..NevisConfig::default()
+        };
+        let err = cfg.validate().unwrap_err();
+        assert!(
+            err.contains("invalid value 'invalid_mode'"),
+            "Expected invalid token_validation error, got: {err}"
+        );
+    }
+
+    #[test]
+    async fn nevis_config_debug_redacts_client_secret() {
+        let cfg = NevisConfig {
+            client_secret: Some("super-secret".into()),
+            ..NevisConfig::default()
+        };
+        let debug_output = format!("{:?}", cfg);
+        assert!(
+            !debug_output.contains("super-secret"),
+            "Debug output must not contain the raw client_secret"
+        );
+        assert!(
+            debug_output.contains("[REDACTED]"),
+            "Debug output must show [REDACTED] for client_secret"
+        );
+    }
+
+    #[test]
+    async fn telegram_config_ack_reactions_false_deserializes() {
+        let toml_str = r#"
+            bot_token = "123:ABC"
+            allowed_users = ["alice"]
+            ack_reactions = false
+        "#;
+        let cfg: TelegramConfig = toml::from_str(toml_str).unwrap();
+        assert_eq!(cfg.ack_reactions, Some(false));
+    }
+
+    #[test]
+    async fn telegram_config_ack_reactions_true_deserializes() {
+        let toml_str = r#"
+            bot_token = "123:ABC"
+            allowed_users = ["alice"]
+            ack_reactions = true
+        "#;
+        let cfg: TelegramConfig = toml::from_str(toml_str).unwrap();
+        assert_eq!(cfg.ack_reactions, Some(true));
+    }
+
+    #[test]
+    async fn telegram_config_ack_reactions_missing_defaults_to_none() {
+        let toml_str = r#"
+            bot_token = "123:ABC"
+            allowed_users = ["alice"]
+        "#;
+        let cfg: TelegramConfig = toml::from_str(toml_str).unwrap();
+        assert_eq!(cfg.ack_reactions, None);
+    }
+
+    #[test]
+    async fn telegram_config_ack_reactions_channel_overrides_top_level() {
+        let tg_toml = r#"
+            bot_token = "123:ABC"
+            allowed_users = ["alice"]
+            ack_reactions = false
+        "#;
+        let tg: TelegramConfig = toml::from_str(tg_toml).unwrap();
+        let top_level_ack = true;
+        let effective = tg.ack_reactions.unwrap_or(top_level_ack);
+        assert!(
+            !effective,
+            "channel-level false must override top-level true"
+        );
+    }
+
+    #[test]
+    async fn telegram_config_ack_reactions_falls_back_to_top_level() {
+        let tg_toml = r#"
+            bot_token = "123:ABC"
+            allowed_users = ["alice"]
+        "#;
+        let tg: TelegramConfig = toml::from_str(tg_toml).unwrap();
+        let top_level_ack = false;
+        let effective = tg.ack_reactions.unwrap_or(top_level_ack);
+        assert!(
+            !effective,
+            "must fall back to top-level false when channel omits field"
+        );
+    }
+
+    // ── Bootstrap files ─────────────────────────────────────
+
+    #[test]
+    async fn ensure_bootstrap_files_creates_missing_files() {
+        let tmp = TempDir::new().unwrap();
+        let ws = tmp.path().join("workspace");
+        tokio::fs::create_dir_all(&ws).await.unwrap();
+
+        ensure_bootstrap_files(&ws).await.unwrap();
+
+        let soul = tokio::fs::read_to_string(ws.join("SOUL.md")).await.unwrap();
+        let identity = tokio::fs::read_to_string(ws.join("IDENTITY.md"))
+            .await
+            .unwrap();
+        assert!(soul.contains("SOUL.md"));
+        assert!(identity.contains("IDENTITY.md"));
+    }
+
+    #[test]
+    async fn ensure_bootstrap_files_does_not_overwrite_existing() {
+        let tmp = TempDir::new().unwrap();
+        let ws = tmp.path().join("workspace");
+        tokio::fs::create_dir_all(&ws).await.unwrap();
+
+        let custom = "# My custom SOUL";
+        tokio::fs::write(ws.join("SOUL.md"), custom).await.unwrap();
+
+        ensure_bootstrap_files(&ws).await.unwrap();
+
+        let soul = tokio::fs::read_to_string(ws.join("SOUL.md")).await.unwrap();
+        assert_eq!(
+            soul, custom,
+            "ensure_bootstrap_files must not overwrite existing files"
+        );
+
+        // IDENTITY.md should still be created since it was missing
+        let identity = tokio::fs::read_to_string(ws.join("IDENTITY.md"))
+            .await
+            .unwrap();
+        assert!(identity.contains("IDENTITY.md"));
     }
 }
