@@ -22,6 +22,13 @@ pub fn is_non_retryable(err: &anyhow::Error) -> bool {
         return false;
     }
 
+    // Tool schema validation errors are NOT non-retryable — the provider's
+    // built-in fallback in compatible.rs can recover by switching to
+    // prompt-guided tool instructions.
+    if is_tool_schema_error(err) {
+        return false;
+    }
+
     // 4xx errors are generally non-retryable (bad request, auth failure, etc.),
     // except 429 (rate-limit — transient) and 408 (timeout — worth retrying).
     if let Some(reqwest_err) = err.downcast_ref::<reqwest::Error>() {
@@ -73,6 +80,22 @@ pub fn is_non_retryable(err: &anyhow::Error) -> bool {
             || msg_lower.contains("invalid"))
 }
 
+/// Check if an error is a tool schema validation failure (e.g. Groq returning
+/// "tool call validation failed: attempted to call tool '...' which was not in request").
+/// These errors should NOT be classified as non-retryable because the provider's
+/// built-in fallback logic (`compatible.rs::is_native_tool_schema_unsupported`)
+/// can recover by switching to prompt-guided tool instructions.
+pub fn is_tool_schema_error(err: &anyhow::Error) -> bool {
+    let lower = err.to_string().to_lowercase();
+    let hints = [
+        "tool call validation failed",
+        "was not in request",
+        "not found in tool list",
+        "invalid_tool_call",
+    ];
+    hints.iter().any(|hint| lower.contains(hint))
+}
+
 fn is_context_window_exceeded(err: &anyhow::Error) -> bool {
     let lower = err.to_string().to_lowercase();
     let hints = [
@@ -85,6 +108,7 @@ fn is_context_window_exceeded(err: &anyhow::Error) -> bool {
         "token limit exceeded",
         "prompt is too long",
         "input is too long",
+        "prompt exceeds max length",
     ];
 
     hints.iter().any(|hint| lower.contains(hint))
@@ -518,6 +542,25 @@ impl Provider for ReliableProvider {
                                     );
                                     continue; // Retry with truncated messages (counts as an attempt)
                                 }
+                                // Nothing to truncate (system prompt alone exceeds
+                                // the model's context window) — bail immediately
+                                // instead of wasting retry attempts.
+                                let error_detail = compact_error_detail(&e);
+                                push_failure(
+                                    &mut failures,
+                                    provider_name,
+                                    current_model,
+                                    attempt + 1,
+                                    self.max_retries + 1,
+                                    "non_retryable",
+                                    &error_detail,
+                                );
+                                anyhow::bail!(
+                                    "Request exceeds model context window and cannot be reduced further. \
+                                     Try using a model with a larger context window, reducing the number \
+                                     of tools/skills, or enabling compact_context in config. Attempts:\n{}",
+                                    failures.join("\n")
+                                );
                             }
 
                             let non_retryable_rate_limit = is_non_retryable_rate_limit(&e);
@@ -653,6 +696,25 @@ impl Provider for ReliableProvider {
                                     );
                                     continue; // Retry with truncated messages (counts as an attempt)
                                 }
+                                // Nothing to truncate (system prompt alone exceeds
+                                // the model's context window) — bail immediately
+                                // instead of wasting retry attempts.
+                                let error_detail = compact_error_detail(&e);
+                                push_failure(
+                                    &mut failures,
+                                    provider_name,
+                                    current_model,
+                                    attempt + 1,
+                                    self.max_retries + 1,
+                                    "non_retryable",
+                                    &error_detail,
+                                );
+                                anyhow::bail!(
+                                    "Request exceeds model context window and cannot be reduced further. \
+                                     Try using a model with a larger context window, reducing the number \
+                                     of tools/skills, or enabling compact_context in config. Attempts:\n{}",
+                                    failures.join("\n")
+                                );
                             }
 
                             let non_retryable_rate_limit = is_non_retryable_rate_limit(&e);
@@ -775,6 +837,25 @@ impl Provider for ReliableProvider {
                                     );
                                     continue; // Retry with truncated messages (counts as an attempt)
                                 }
+                                // Nothing to truncate (system prompt alone exceeds
+                                // the model's context window) — bail immediately
+                                // instead of wasting retry attempts.
+                                let error_detail = compact_error_detail(&e);
+                                push_failure(
+                                    &mut failures,
+                                    provider_name,
+                                    current_model,
+                                    attempt + 1,
+                                    self.max_retries + 1,
+                                    "non_retryable",
+                                    &error_detail,
+                                );
+                                anyhow::bail!(
+                                    "Request exceeds model context window and cannot be reduced further. \
+                                     Try using a model with a larger context window, reducing the number \
+                                     of tools/skills, or enabling compact_context in config. Attempts:\n{}",
+                                    failures.join("\n")
+                                );
                             }
 
                             let non_retryable_rate_limit = is_non_retryable_rate_limit(&e);
@@ -2188,5 +2269,94 @@ mod tests {
         assert_eq!(result, "recovered after truncation");
         // Should have been called twice: once with full messages, once with truncated
         assert_eq!(calls.load(Ordering::SeqCst), 2);
+    }
+
+    #[tokio::test]
+    async fn context_overflow_with_no_history_to_truncate_bails_immediately() {
+        let calls = Arc::new(AtomicUsize::new(0));
+        let mock = ContextOverflowMock {
+            calls: Arc::clone(&calls),
+            fail_until_attempt: 999, // always fail
+            message_counts: parking_lot::Mutex::new(Vec::new()),
+        };
+
+        let provider = ReliableProvider::new(
+            vec![("local".into(), Box::new(mock) as Box<dyn Provider>)],
+            3,
+            1,
+        );
+
+        // Only system + one user message — nothing to truncate
+        let messages = vec![
+            ChatMessage::system("huge system prompt that exceeds context window"),
+            ChatMessage::user("hello"),
+        ];
+
+        let result = provider
+            .chat_with_history(&messages, "local-model", 0.0)
+            .await;
+        assert!(result.is_err());
+        let err_msg = result.unwrap_err().to_string();
+        assert!(
+            err_msg.contains("cannot be reduced further"),
+            "Should bail with actionable message, got: {err_msg}"
+        );
+        // Should only be called once — no useless retries
+        assert_eq!(
+            calls.load(Ordering::SeqCst),
+            1,
+            "Should not retry when truncation is impossible"
+        );
+    }
+
+    // ── Tool schema error detection tests ───────────────────────────────
+
+    #[test]
+    fn tool_schema_error_detects_groq_validation_failure() {
+        let msg = r#"Groq API error (400 Bad Request): {"error":{"message":"tool call validation failed: attempted to call tool 'memory_recall' which was not in request"}}"#;
+        let err = anyhow::anyhow!("{}", msg);
+        assert!(is_tool_schema_error(&err));
+    }
+
+    #[test]
+    fn tool_schema_error_detects_not_in_request() {
+        let err = anyhow::anyhow!("tool 'search' was not in request");
+        assert!(is_tool_schema_error(&err));
+    }
+
+    #[test]
+    fn tool_schema_error_detects_not_found_in_tool_list() {
+        let err = anyhow::anyhow!("function 'foo' not found in tool list");
+        assert!(is_tool_schema_error(&err));
+    }
+
+    #[test]
+    fn tool_schema_error_detects_invalid_tool_call() {
+        let err = anyhow::anyhow!("invalid_tool_call: no matching function");
+        assert!(is_tool_schema_error(&err));
+    }
+
+    #[test]
+    fn tool_schema_error_ignores_unrelated_errors() {
+        let err = anyhow::anyhow!("invalid api key");
+        assert!(!is_tool_schema_error(&err));
+
+        let err = anyhow::anyhow!("model not found");
+        assert!(!is_tool_schema_error(&err));
+    }
+
+    #[test]
+    fn non_retryable_returns_false_for_tool_schema_400() {
+        // A 400 error with tool schema validation text should NOT be non-retryable.
+        let msg = "400 Bad Request: tool call validation failed: attempted to call tool 'x' which was not in request";
+        let err = anyhow::anyhow!("{}", msg);
+        assert!(!is_non_retryable(&err));
+    }
+
+    #[test]
+    fn non_retryable_returns_true_for_other_400_errors() {
+        // A regular 400 error (e.g. invalid API key) should still be non-retryable.
+        let err = anyhow::anyhow!("400 Bad Request: invalid api key provided");
+        assert!(is_non_retryable(&err));
     }
 }

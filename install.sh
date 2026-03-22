@@ -212,8 +212,11 @@ detect_release_target() {
         echo "aarch64-unknown-linux-gnu"
       fi
       ;;
-    Linux:armv7l|Linux:armv6l)
+    Linux:armv7l)
       echo "armv7-unknown-linux-gnueabihf"
+      ;;
+    Linux:armv6l)
+      echo "arm-unknown-linux-gnueabihf"
       ;;
     Darwin:x86_64)
       echo "x86_64-apple-darwin"
@@ -448,46 +451,32 @@ bool_to_word() {
   fi
 }
 
-guided_input_stream() {
-  # Some constrained containers report interactive stdin (-t 0) but deny
-  # opening /dev/stdin directly. Probe readability before selecting it.
-  if [[ -t 0 ]] && (: </dev/stdin) 2>/dev/null; then
-    echo "/dev/stdin"
+guided_open_input() {
+  # Use stdin directly when it is an interactive terminal (e.g. SSH into LXC).
+  # Subshell probing of /dev/stdin fails in some constrained containers even
+  # when FD 0 is perfectly usable, so skip the probe and trust -t 0.
+  if [[ -t 0 ]]; then
+    GUIDED_FD=0
     return 0
   fi
 
-  if [[ -t 0 ]] && (: </proc/self/fd/0) 2>/dev/null; then
-    echo "/proc/self/fd/0"
-    return 0
-  fi
-
-  if (: </dev/tty) 2>/dev/null; then
-    echo "/dev/tty"
-    return 0
-  fi
-
-  return 1
+  # Non-interactive stdin: try to open /dev/tty as an explicit fd.
+  exec {GUIDED_FD}</dev/tty 2>/dev/null || return 1
 }
 
 guided_read() {
   local __target_var="$1"
   local __prompt="$2"
   local __silent="${3:-false}"
-  local __input_source=""
   local __value=""
 
-  if ! __input_source="$(guided_input_stream)"; then
-    return 1
-  fi
+  [[ -n "${GUIDED_FD:-}" ]] || guided_open_input || return 1
 
   if [[ "$__silent" == true ]]; then
-    if ! read -r -s -p "$__prompt" __value <"$__input_source"; then
-      return 1
-    fi
+    read -r -s -u "$GUIDED_FD" -p "$__prompt" __value || return 1
+    echo
   else
-    if ! read -r -p "$__prompt" __value <"$__input_source"; then
-      return 1
-    fi
+    read -r -u "$GUIDED_FD" -p "$__prompt" __value || return 1
   fi
 
   printf -v "$__target_var" '%s' "$__value"
@@ -578,6 +567,31 @@ Please complete the Xcode Command Line Tools installation dialog,
 then re-run bootstrap.
 MSG
         exit 0
+      fi
+      # Detect un-accepted Xcode/CLT license (causes `cc` to exit 69).
+      # xcrun --show-sdk-path can succeed even without an accepted license,
+      # so we test-compile a trivial C file which reliably triggers the error.
+      _xcode_test_file="$(mktemp /tmp/zeroclaw-xcode-check.XXXXXX.c)"
+      printf 'int main(){return 0;}\n' > "$_xcode_test_file"
+      if ! cc -x c "$_xcode_test_file" -o /dev/null 2>/dev/null; then
+        rm -f "$_xcode_test_file"
+        warn "Xcode/CLT license has not been accepted. Attempting to accept it now..."
+        _xcode_accept_ok=false
+        if [[ "$(id -u)" -eq 0 ]]; then
+          xcodebuild -license accept && _xcode_accept_ok=true
+        elif [[ -c /dev/tty ]] && have_cmd sudo; then
+          sudo xcodebuild -license accept < /dev/tty && _xcode_accept_ok=true
+        fi
+        if [[ "$_xcode_accept_ok" == true ]]; then
+          step_ok "Xcode license accepted"
+        else
+          error "Could not accept Xcode license. Run manually:"
+          error "  sudo xcodebuild -license accept"
+          error "then re-run this installer."
+          exit 1
+        fi
+      else
+        rm -f "$_xcode_test_file"
       fi
       if ! have_cmd git; then
         warn "git is not available. Install git (e.g., Homebrew) and re-run bootstrap."
@@ -708,7 +722,7 @@ prompt_model() {
 run_guided_installer() {
   local os_name="$1"
 
-  if ! guided_input_stream >/dev/null; then
+  if ! guided_open_input >/dev/null; then
     error "guided installer requires an interactive terminal."
     error "Run from a terminal, or pass --no-guided with explicit flags."
     exit 1
@@ -1179,6 +1193,43 @@ else
     install_system_deps
   fi
 
+  # Always check Xcode/CLT license on macOS, regardless of --install-system-deps.
+  # An un-accepted license causes `cc` to exit 69, breaking all Rust builds.
+  if [[ "$OS_NAME" == "Darwin" ]]; then
+    _xcode_test_file="$(mktemp /tmp/zeroclaw-xcode-check.XXXXXX.c)"
+    printf 'int main(){return 0;}\n' > "$_xcode_test_file"
+    if ! cc -x c "$_xcode_test_file" -o /dev/null 2>/dev/null; then
+      rm -f "$_xcode_test_file"
+      warn "Xcode/CLT license has not been accepted. Attempting to accept it now..."
+      # Use /dev/tty so sudo can prompt for a password even in a curl|bash pipe.
+      _xcode_accept_ok=false
+      if [[ "$(id -u)" -eq 0 ]]; then
+        xcodebuild -license accept && _xcode_accept_ok=true
+      elif [[ -c /dev/tty ]] && have_cmd sudo; then
+        sudo xcodebuild -license accept < /dev/tty && _xcode_accept_ok=true
+      fi
+      if [[ "$_xcode_accept_ok" == true ]]; then
+        step_ok "Xcode license accepted"
+        # Re-test compilation to confirm it's fixed.
+        _xcode_test_file="$(mktemp /tmp/zeroclaw-xcode-check.XXXXXX.c)"
+        printf 'int main(){return 0;}\n' > "$_xcode_test_file"
+        if ! cc -x c "$_xcode_test_file" -o /dev/null 2>/dev/null; then
+          rm -f "$_xcode_test_file"
+          error "C compiler still failing after license accept. Check your Xcode/CLT installation."
+          exit 1
+        fi
+        rm -f "$_xcode_test_file"
+      else
+        error "Could not accept Xcode license. Run manually:"
+        error "  sudo xcodebuild -license accept"
+        error "then re-run this installer."
+        exit 1
+      fi
+    else
+      rm -f "$_xcode_test_file"
+    fi
+  fi
+
   if [[ "$INSTALL_RUST" == true ]]; then
     install_rust_toolchain
   fi
@@ -1397,6 +1448,25 @@ else
   step_dot "Skipping install"
 fi
 
+# --- Build web dashboard ---
+if [[ "$SKIP_BUILD" == false && -d "$WORK_DIR/web" ]]; then
+  if have_cmd node && have_cmd npm; then
+    step_dot "Building web dashboard"
+    if (cd "$WORK_DIR/web" && npm ci --ignore-scripts 2>/dev/null && npm run build 2>/dev/null); then
+      step_ok "Web dashboard built"
+    else
+      warn "Web dashboard build failed — dashboard will not be available"
+    fi
+  else
+    warn "node/npm not found — skipping web dashboard build"
+    warn "Install Node.js (>=18) and re-run, or build manually: cd web && npm ci && npm run build"
+  fi
+else
+  if [[ "$SKIP_BUILD" == true ]]; then
+    step_dot "Skipping web dashboard build"
+  fi
+fi
+
 ZEROCLAW_BIN=""
 if [[ -x "$HOME/.cargo/bin/zeroclaw" ]]; then
   ZEROCLAW_BIN="$HOME/.cargo/bin/zeroclaw"
@@ -1471,25 +1541,6 @@ if [[ -n "$ZEROCLAW_BIN" ]]; then
     if "$ZEROCLAW_BIN" service restart 2>/dev/null; then
       step_ok "Gateway service restarted"
 
-      # Fetch and display pairing code from running gateway
-      PAIR_CODE=""
-      for i in 1 2 3 4 5; do
-        sleep 2
-        if PAIR_CODE=$("$ZEROCLAW_BIN" gateway get-paircode 2>/dev/null | grep -oE '[0-9]{6}'); then
-          break
-        fi
-      done
-      if [[ -n "$PAIR_CODE" ]]; then
-        echo
-        echo -e "  ${BOLD_BLUE}🔐 Gateway Pairing Code${RESET}"
-        echo
-        echo -e "  ${BOLD_BLUE}┌──────────────┐${RESET}"
-        echo -e "  ${BOLD_BLUE}│${RESET}  ${BOLD}${PAIR_CODE}${RESET}  ${BOLD_BLUE}│${RESET}"
-        echo -e "  ${BOLD_BLUE}└──────────────┘${RESET}"
-        echo
-        echo -e "  ${DIM}Enter this code in the dashboard to pair your device.${RESET}"
-        echo -e "  ${DIM}Run 'zeroclaw gateway get-paircode --new' anytime to generate a fresh code.${RESET}"
-      fi
     else
       step_fail "Gateway service restart failed — re-run with zeroclaw service start"
     fi
@@ -1536,7 +1587,6 @@ GATEWAY_PORT=42617
 DASHBOARD_URL="http://127.0.0.1:${GATEWAY_PORT}"
 echo
 echo -e "${BOLD}Dashboard URL:${RESET} ${BLUE}${DASHBOARD_URL}${RESET}"
-echo -e "${DIM}  Run 'zeroclaw gateway get-paircode' to get your pairing code.${RESET}"
 
 # --- Copy to clipboard ---
 COPIED_TO_CLIPBOARD=false
