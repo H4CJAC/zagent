@@ -20,6 +20,10 @@ pub struct DiscordChannel {
     typing_handles: Mutex<HashMap<String, tokio::task::JoinHandle<()>>>,
     /// Per-channel proxy URL override.
     proxy_url: Option<String>,
+    /// Voice transcription config — when set, audio attachments are
+    /// downloaded, transcribed, and their text inlined into the message.
+    transcription: Option<crate::config::TranscriptionConfig>,
+    transcription_manager: Option<std::sync::Arc<super::transcription::TranscriptionManager>>,
 }
 
 impl DiscordChannel {
@@ -38,12 +42,33 @@ impl DiscordChannel {
             mention_only,
             typing_handles: Mutex::new(HashMap::new()),
             proxy_url: None,
+            transcription: None,
+            transcription_manager: None,
         }
     }
 
     /// Set a per-channel proxy URL that overrides the global proxy config.
     pub fn with_proxy_url(mut self, proxy_url: Option<String>) -> Self {
         self.proxy_url = proxy_url;
+        self
+    }
+
+    /// Configure voice transcription for audio attachments.
+    pub fn with_transcription(mut self, config: crate::config::TranscriptionConfig) -> Self {
+        if !config.enabled {
+            return self;
+        }
+        match super::transcription::TranscriptionManager::new(&config) {
+            Ok(m) => {
+                self.transcription_manager = Some(std::sync::Arc::new(m));
+                self.transcription = Some(config);
+            }
+            Err(e) => {
+                tracing::warn!(
+                    "transcription manager init failed, voice transcription disabled: {e}"
+                );
+            }
+        }
         self
     }
 
@@ -111,6 +136,88 @@ async fn process_attachments(
         }
     }
     parts.join("\n---\n")
+}
+
+/// Audio file extensions accepted for voice transcription.
+const DISCORD_AUDIO_EXTENSIONS: &[&str] = &[
+    "flac", "mp3", "mpeg", "mpga", "mp4", "m4a", "ogg", "oga", "opus", "wav", "webm",
+];
+
+/// Check if a content type or filename indicates an audio file.
+fn is_discord_audio_attachment(content_type: &str, filename: &str) -> bool {
+    if content_type.starts_with("audio/") {
+        return true;
+    }
+    if let Some(ext) = filename.rsplit('.').next() {
+        return DISCORD_AUDIO_EXTENSIONS.contains(&ext.to_ascii_lowercase().as_str());
+    }
+    false
+}
+
+/// Download and transcribe audio attachments from a Discord message.
+///
+/// Returns transcribed text blocks for any audio attachments found.
+/// Non-audio attachments and failures are silently skipped.
+async fn transcribe_discord_audio_attachments(
+    attachments: &[serde_json::Value],
+    client: &reqwest::Client,
+    manager: &super::transcription::TranscriptionManager,
+) -> String {
+    let mut parts: Vec<String> = Vec::new();
+    for att in attachments {
+        let ct = att
+            .get("content_type")
+            .and_then(|v| v.as_str())
+            .unwrap_or("");
+        let name = att
+            .get("filename")
+            .and_then(|v| v.as_str())
+            .unwrap_or("file");
+
+        if !is_discord_audio_attachment(ct, name) {
+            continue;
+        }
+
+        let Some(url) = att.get("url").and_then(|v| v.as_str()) else {
+            continue;
+        };
+
+        let audio_data = match client.get(url).send().await {
+            Ok(resp) if resp.status().is_success() => match resp.bytes().await {
+                Ok(bytes) => bytes.to_vec(),
+                Err(e) => {
+                    tracing::warn!(name, error = %e, "discord: failed to read audio attachment bytes");
+                    continue;
+                }
+            },
+            Ok(resp) => {
+                tracing::warn!(name, status = %resp.status(), "discord: audio attachment download failed");
+                continue;
+            }
+            Err(e) => {
+                tracing::warn!(name, error = %e, "discord: audio attachment fetch error");
+                continue;
+            }
+        };
+
+        match manager.transcribe(&audio_data, name).await {
+            Ok(text) => {
+                let trimmed = text.trim();
+                if !trimmed.is_empty() {
+                    tracing::info!(
+                        "Discord: transcribed audio attachment {} ({} chars)",
+                        name,
+                        trimmed.len()
+                    );
+                    parts.push(format!("[Voice] {trimmed}"));
+                }
+            }
+            Err(e) => {
+                tracing::warn!(name, error = %e, "discord: voice transcription failed");
+            }
+        }
+    }
+    parts.join("\n")
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -568,7 +675,12 @@ impl Channel for DiscordChannel {
         let ws_url = format!("{gw_url}/?v=10&encoding=json");
         tracing::info!("Discord: connecting to gateway...");
 
-        let (ws_stream, _) = tokio_tungstenite::connect_async(&ws_url).await?;
+        let (ws_stream, _) = crate::config::ws_connect_with_proxy(
+            &ws_url,
+            "channel.discord",
+            self.proxy_url.as_deref(),
+        )
+        .await?;
         let (mut write, mut read) = ws_stream.split();
 
         // Read Hello (opcode 10)
@@ -737,7 +849,28 @@ impl Channel for DiscordChannel {
                             .and_then(|a| a.as_array())
                             .cloned()
                             .unwrap_or_default();
-                        process_attachments(&atts, &self.http_client()).await
+                        let client = self.http_client();
+                        let mut text_parts = process_attachments(&atts, &client).await;
+
+                        // Transcribe audio attachments when transcription is configured
+                        if let Some(ref transcription_manager) = self.transcription_manager {
+                            let voice_text = transcribe_discord_audio_attachments(
+                                &atts,
+                                &client,
+                                transcription_manager,
+                            )
+                            .await;
+                            if !voice_text.is_empty() {
+                                if text_parts.is_empty() {
+                                    text_parts = voice_text;
+                                } else {
+                                    text_parts = format!("{text_parts}
+            {voice_text}");
+                                }
+                            }
+                        }
+
+                        text_parts
                     };
                     let final_content = if attachment_text.is_empty() {
                         clean_content
@@ -799,6 +932,7 @@ impl Channel for DiscordChannel {
                             .as_secs(),
                         thread_ts: None,
                         interruption_scope_id: None,
+                    attachments: vec![],
                     };
 
                     if tx.send(channel_msg).await.is_err() {
