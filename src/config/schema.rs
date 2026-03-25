@@ -5873,6 +5873,8 @@ pub struct ChannelsConfig {
     pub wecom: Option<WeComConfig>,
     /// QQ Official Bot channel configuration.
     pub qq: Option<QQConfig>,
+    /// Seewo Enterprise IM channel configuration.
+    pub seewo: Option<SeewoConfig>,
     /// X/Twitter channel configuration.
     pub twitter: Option<TwitterConfig>,
     /// Mochat customer service channel configuration.
@@ -6066,6 +6068,7 @@ impl Default for ChannelsConfig {
             dingtalk: None,
             wecom: None,
             qq: None,
+            seewo: None,
             twitter: None,
             mochat: None,
             #[cfg(feature = "channel-nostr")]
@@ -7244,6 +7247,36 @@ impl ChannelConfig for WeComConfig {
     }
     fn desc() -> &'static str {
         "WeCom Bot Webhook"
+    }
+}
+
+/// Seewo Enterprise IM channel configuration.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct SeewoConfig {
+    /// Base URL for the Seewo IM API.
+    #[serde(default = "SeewoConfig::default_api_base")]
+    pub api_base: String,
+    /// Application key from Seewo developer console.
+    pub app_key: String,
+    /// Application secret from Seewo developer console.
+    pub app_secret: String,
+    /// Allowed user IDs. Empty = deny all, `"*"` = allow all.
+    #[serde(default)]
+    pub allowed_users: Vec<String>,
+}
+
+impl SeewoConfig {
+    fn default_api_base() -> String {
+        "https://im-api.seewo.com".to_string()
+    }
+}
+
+impl ChannelConfig for SeewoConfig {
+    fn name() -> &'static str {
+        "Seewo"
+    }
+    fn desc() -> &'static str {
+        "Seewo Enterprise IM"
     }
 }
 
@@ -10911,6 +10944,7 @@ default_temperature = 0.7
                 dingtalk: None,
                 wecom: None,
                 qq: None,
+                seewo: None,
                 twitter: None,
                 mochat: None,
                 #[cfg(feature = "channel-nostr")]
@@ -11915,6 +11949,7 @@ allowed_users = ["@ops:matrix.org"]
             dingtalk: None,
             wecom: None,
             qq: None,
+            seewo: None,
             twitter: None,
             mochat: None,
             nostr: None,
@@ -12238,6 +12273,7 @@ channel_id = "C123"
             dingtalk: None,
             wecom: None,
             qq: None,
+            seewo: None,
             twitter: None,
             mochat: None,
             nostr: None,

@@ -39,6 +39,7 @@ pub mod nostr;
 pub mod notion;
 pub mod qq;
 pub mod reddit;
+pub mod seewo;
 pub mod session_backend;
 pub mod session_sqlite;
 pub mod session_store;
@@ -83,6 +84,7 @@ pub use nostr::NostrChannel;
 pub use notion::NotionChannel;
 pub use qq::QQChannel;
 pub use reddit::RedditChannel;
+pub use seewo::SeewoChannel;
 pub use signal::SignalChannel;
 pub use slack::SlackChannel;
 pub use telegram::TelegramChannel;
@@ -4474,6 +4476,18 @@ fn collect_configured_channels(
             channel: Arc::new(VoiceWakeChannel::new(
                 vw.clone(),
                 config.transcription.clone(),
+            )),
+        });
+    }
+
+    if let Some(ref sw) = config.channels_config.seewo {
+        channels.push(ConfiguredChannel {
+            display_name: "Seewo",
+            channel: Arc::new(SeewoChannel::new(
+                sw.api_base.clone(),
+                sw.app_key.clone(),
+                sw.app_secret.clone(),
+                sw.allowed_users.clone(),
             )),
         });
     }
