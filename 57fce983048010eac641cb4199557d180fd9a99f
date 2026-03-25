@@ -1,0 +1,28 @@
+src/config/schema.rs
+  0120b28406331135 5876-5877,6071,7253-7282,10947,11952,12276
+src/channels/mod.rs
+  0120b28406331135 42,87,4483-4494
+src/channels/seewo.rs
+  0120b28406331135 1-139
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.19",
+  "base_commit_sha": "57fce983048010eac641cb4199557d180fd9a99f",
+  "prompts": {
+    "0120b28406331135": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "91796859-4b78-408c-84c4-96c1c74f944b",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hacyou <huangweichao@cvte.com>",
+      "messages": [],
+      "total_additions": 50,
+      "total_deletions": 0,
+      "accepted_lines": 189,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/12f9734c4f5a26ae788df04724df6bc9a4749939b46de3fc2d7a2cb9e8b44ce0"
+    }
+  }
+}
