@@ -129,6 +129,10 @@ pub struct Config {
     #[serde(default)]
     pub autonomy: AutonomyConfig,
 
+    /// Trust scoring and regression detection configuration (`[trust]`).
+    #[serde(default)]
+    pub trust: crate::trust::TrustConfig,
+
     /// Security subsystem configuration (`[security]`).
     #[serde(default)]
     pub security: SecurityConfig,
@@ -1272,7 +1276,9 @@ pub struct LocalWhisperConfig {
     /// HTTP or HTTPS endpoint URL, e.g. `"http://10.10.0.1:8001/v1/transcribe"`.
     pub url: String,
     /// Bearer token for endpoint authentication.
-    pub bearer_token: String,
+    /// Omit for unauthenticated local endpoints.
+    #[serde(default)]
+    pub bearer_token: Option<String>,
     /// Maximum audio file size in bytes accepted by this endpoint.
     /// Defaults to 25 MB — matching the cloud API cap for a safe out-of-the-box
     /// experience. Self-hosted endpoints can accept much larger files; raise this
@@ -4700,10 +4706,10 @@ pub struct StorageProviderSection {
     pub config: StorageProviderConfig,
 }
 
-/// Storage provider backend configuration (e.g. postgres connection details).
+/// Storage provider backend configuration for remote storage backends.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 pub struct StorageProviderConfig {
-    /// Storage engine key (e.g. "postgres", "sqlite").
+    /// Storage engine key (e.g. "sqlite", "qdrant").
     #[serde(default)]
     pub provider: String,
 
@@ -4728,18 +4734,6 @@ pub struct StorageProviderConfig {
     /// Optional connection timeout in seconds for remote providers.
     #[serde(default)]
     pub connect_timeout_secs: Option<u64>,
-
-    /// Enable pgvector extension for hybrid vector+keyword recall.
-    #[serde(default)]
-    pub pgvector_enabled: bool,
-
-    /// Vector dimensions for pgvector embeddings (default: 1536).
-    #[serde(default = "default_pgvector_dimensions")]
-    pub pgvector_dimensions: usize,
-}
-
-fn default_pgvector_dimensions() -> usize {
-    1536
 }
 
 fn default_storage_schema() -> String {
@@ -4758,8 +4752,6 @@ impl Default for StorageProviderConfig {
             schema: default_storage_schema(),
             table: default_storage_table(),
             connect_timeout_secs: None,
-            pgvector_enabled: false,
-            pgvector_dimensions: default_pgvector_dimensions(),
         }
     }
 }
@@ -4816,9 +4808,8 @@ pub enum SearchMode {
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct MemoryConfig {
-    /// "sqlite" | "lucid" | "postgres" | "qdrant" | "markdown" | "none" (`none` = explicit no-op memory)
+    /// "sqlite" | "lucid" | "qdrant" | "markdown" | "none" (`none` = explicit no-op memory)
     ///
-    /// `postgres` requires `[storage.provider.config]` with `db_url` (`dbURL` alias supported).
     /// `qdrant` uses `[memory.qdrant]` config or `QDRANT_URL` env var.
     pub backend: String,
     /// Auto-save user-stated conversation input to memory (assistant output is excluded)
@@ -5203,6 +5194,7 @@ impl Default for WebhookAuditConfig {
 ///
 /// Controls what the agent is allowed to do: shell commands, filesystem access,
 /// risk approval gates, and per-policy budgets.
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(default)]
 pub struct AutonomyConfig {
@@ -6313,10 +6305,21 @@ pub enum StreamMode {
     Off,
     /// Update a draft message with every flush interval.
     Partial,
+    /// Send the response as multiple separate messages at paragraph boundaries.
+    #[serde(rename = "multi_message")]
+    MultiMessage,
 }
 
 fn default_draft_update_interval_ms() -> u64 {
     1000
+}
+
+fn default_multi_message_delay_ms() -> u64 {
+    800
+}
+
+fn default_matrix_draft_update_interval_ms() -> u64 {
+    1500
 }
 
 /// Telegram bot channel configuration.
@@ -6386,6 +6389,19 @@ pub struct DiscordConfig {
     /// Overrides the global `[proxy]` setting for this channel only.
     #[serde(default)]
     pub proxy_url: Option<String>,
+    /// Streaming mode for progressive response delivery.
+    /// `off` (default): single message. `partial`: editable draft updates.
+    /// `multi_message`: split response into separate messages at paragraph boundaries.
+    #[serde(default)]
+    pub stream_mode: StreamMode,
+    /// Minimum interval (ms) between draft message edits to avoid rate limits.
+    /// Only used when `stream_mode = "partial"`.
+    #[serde(default = "default_draft_update_interval_ms")]
+    pub draft_update_interval_ms: u64,
+    /// Delay (ms) between sending each message chunk in multi-message mode.
+    /// Only used when `stream_mode = "multi_message"`.
+    #[serde(default = "default_multi_message_delay_ms")]
+    pub multi_message_delay_ms: u64,
 }
 
 impl ChannelConfig for DiscordConfig {
@@ -6602,6 +6618,17 @@ pub struct MatrixConfig {
     /// Whether to interrupt an in-flight agent response when a new message arrives.
     #[serde(default)]
     pub interrupt_on_new_message: bool,
+    /// Streaming mode for progressive response delivery.
+    /// `"off"` (default): single message. `"partial"`: edit-in-place draft.
+    /// `"multi_message"`: paragraph-split delivery.
+    #[serde(default)]
+    pub stream_mode: StreamMode,
+    /// Minimum interval (ms) between draft message edits in Partial mode.
+    #[serde(default = "default_matrix_draft_update_interval_ms")]
+    pub draft_update_interval_ms: u64,
+    /// Delay (ms) between sending each paragraph in MultiMessage mode.
+    #[serde(default = "default_multi_message_delay_ms")]
+    pub multi_message_delay_ms: u64,
 }
 
 impl ChannelConfig for MatrixConfig {
@@ -6732,6 +6759,18 @@ pub struct WhatsAppConfig {
     /// user's own self-chat (Notes to Self). Defaults to false.
     #[serde(default)]
     pub self_chat_mode: bool,
+    /// Regex patterns for DM mention gating (case-insensitive).
+    /// When non-empty, only direct messages matching at least one pattern are
+    /// processed; matched fragments are stripped from the forwarded content.
+    /// Example: `["@?ZeroClaw", "\\+?15555550123"]`
+    #[serde(default)]
+    pub dm_mention_patterns: Vec<String>,
+    /// Regex patterns for group-chat mention gating (case-insensitive).
+    /// When non-empty, only group messages matching at least one pattern are
+    /// processed; matched fragments are stripped from the forwarded content.
+    /// Example: `["@?ZeroClaw", "\\+?15555550123"]`
+    #[serde(default)]
+    pub group_mention_patterns: Vec<String>,
     /// Per-channel proxy URL (http, https, socks5, socks5h).
     /// Overrides the global `[proxy]` setting for this channel only.
     #[serde(default)]
@@ -8171,6 +8210,7 @@ impl Default for Config {
             extra_headers: HashMap::new(),
             observability: ObservabilityConfig::default(),
             autonomy: AutonomyConfig::default(),
+            trust: crate::trust::TrustConfig::default(),
             backup: BackupConfig::default(),
             data_retention: DataRetentionConfig::default(),
             cloud_ops: CloudOpsConfig::default(),
@@ -8795,61 +8835,28 @@ impl Config {
             // `auto_approve` in the approval decision (see approval/mod.rs).
             config.autonomy.ensure_default_auto_approve();
 
-            // Detect unknown/ignored config keys for diagnostic warnings.
-            // This second pass uses serde_ignored but discards the parsed
-            // result — only the ignored-path list is kept.
-            let mut ignored_paths: Vec<String> = Vec::new();
-            let _: Result<Config, _> = serde_ignored::deserialize(
-                toml::de::Deserializer::parse(&contents)
-                    .unwrap_or_else(|_| unreachable!("already parsed above")),
-                |path| {
-                    ignored_paths.push(path.to_string());
-                },
-            );
-
-            // Warn about each unknown config key.
-            // serde_ignored + #[serde(default)] on nested structs can produce
-            // false positives: parent-level fields get re-reported under the
-            // nested key (e.g. "memory.qdrant.auto_hydrate" even though
-            // auto_hydrate belongs to MemoryConfig, not QdrantConfig).  We
-            // suppress these by checking whether the leaf key is a known field
-            // on the parent struct.
-            let known_memory_fields: &[&str] = &[
-                "backend",
-                "auto_save",
-                "hygiene_enabled",
-                "archive_after_days",
-                "purge_after_days",
-                "conversation_retention_days",
-                "embedding_provider",
-                "embedding_model",
-                "embedding_dimensions",
-                "vector_weight",
-                "keyword_weight",
-                "min_relevance_score",
-                "embedding_cache_size",
-                "chunk_max_tokens",
-                "response_cache_enabled",
-                "response_cache_ttl_minutes",
-                "response_cache_max_entries",
-                "response_cache_hot_entries",
-                "snapshot_enabled",
-                "snapshot_on_hygiene",
-                "auto_hydrate",
-                "sqlite_open_timeout_secs",
-            ];
-            for path in ignored_paths {
-                // Skip false positives from nested memory sub-sections
-                if path.starts_with("memory.qdrant.") {
-                    let leaf = path.rsplit('.').next().unwrap_or("");
-                    if known_memory_fields.contains(&leaf) {
-                        continue;
+            // Detect unknown top-level config keys by comparing the raw
+            // TOML table keys against what Config actually deserializes.
+            // This replaces the previous serde_ignored-based approach which
+            // had false-positive issues with #[serde(default)] nested structs.
+            if let Ok(raw) = contents.parse::<toml::Table>() {
+                // Build the set of known top-level keys from a default Config
+                // serialization round-trip.  This is computed once and cached.
+                static KNOWN_KEYS: OnceLock<Vec<String>> = OnceLock::new();
+                let known = KNOWN_KEYS.get_or_init(|| {
+                    toml::to_string(&Config::default())
+                        .ok()
+                        .and_then(|s| s.parse::<toml::Table>().ok())
+                        .map(|t| t.keys().cloned().collect())
+                        .unwrap_or_default()
+                });
+                for key in raw.keys() {
+                    if !known.contains(key) {
+                        tracing::warn!(
+                            "Unknown config key ignored: \"{key}\". Check config.toml for typos or deprecated options.",
+                        );
                     }
                 }
-                tracing::warn!(
-                    "Unknown config key ignored: \"{}\". Check config.toml for typos or deprecated options.",
-                    path
-                );
             }
             // Set computed paths that are skipped during serialization
             config.config_path = config_path.clone();
@@ -8939,6 +8946,13 @@ impl Config {
                     &store,
                     &mut google.api_key,
                     "config.transcription.google.api_key",
+                )?;
+            }
+            if let Some(ref mut local) = config.transcription.local_whisper {
+                decrypt_optional_secret(
+                    &store,
+                    &mut local.bearer_token,
+                    "config.transcription.local_whisper.bearer_token",
                 )?;
             }
 
@@ -10070,6 +10084,11 @@ impl Config {
             self.gateway.allow_public_bind = val == "1" || val.eq_ignore_ascii_case("true");
         }
 
+        // Require pairing: ZEROCLAW_REQUIRE_PAIRING
+        if let Ok(val) = std::env::var("ZEROCLAW_REQUIRE_PAIRING") {
+            self.gateway.require_pairing = val == "1" || val.eq_ignore_ascii_case("true");
+        }
+
         // Temperature: ZEROCLAW_TEMPERATURE
         if let Ok(temp_str) = std::env::var("ZEROCLAW_TEMPERATURE") {
             match temp_str.parse::<f64>() {
@@ -10394,6 +10413,13 @@ impl Config {
                 &store,
                 &mut google.api_key,
                 "config.transcription.google.api_key",
+            )?;
+        }
+        if let Some(ref mut local) = config_to_save.transcription.local_whisper {
+            encrypt_optional_secret(
+                &store,
+                &mut local.bearer_token,
+                "config.transcription.local_whisper.bearer_token",
             )?;
         }
 
@@ -11272,6 +11298,7 @@ auto_save = true
                 allowed_roots: vec![],
                 non_cli_excluded_tools: vec![],
             },
+            trust: crate::trust::TrustConfig::default(),
             backup: BackupConfig::default(),
             data_retention: DataRetentionConfig::default(),
             cloud_ops: CloudOpsConfig::default(),
@@ -11693,18 +11720,18 @@ default_temperature = 0.7
 default_temperature = 0.7
 
 [storage.provider.config]
-provider = "postgres"
-dbURL = "postgres://postgres:postgres@localhost:5432/zeroclaw"
+provider = "qdrant"
+dbURL = "http://localhost:6333"
 schema = "public"
 table = "memories"
 connect_timeout_secs = 12
 "#;
 
         let parsed = parse_test_config(raw);
-        assert_eq!(parsed.storage.provider.config.provider, "postgres");
+        assert_eq!(parsed.storage.provider.config.provider, "qdrant");
         assert_eq!(
             parsed.storage.provider.config.db_url.as_deref(),
-            Some("postgres://postgres:postgres@localhost:5432/zeroclaw")
+            Some("http://localhost:6333")
         );
         assert_eq!(parsed.storage.provider.config.schema, "public");
         assert_eq!(parsed.storage.provider.config.table, "memories");
@@ -11858,6 +11885,7 @@ default_temperature = 0.7
             extra_headers: HashMap::new(),
             observability: ObservabilityConfig::default(),
             autonomy: AutonomyConfig::default(),
+            trust: crate::trust::TrustConfig::default(),
             backup: BackupConfig::default(),
             data_retention: DataRetentionConfig::default(),
             cloud_ops: CloudOpsConfig::default(),
@@ -12142,6 +12170,9 @@ default_temperature = 0.7
             interrupt_on_new_message: false,
             mention_only: false,
             proxy_url: None,
+            stream_mode: StreamMode::default(),
+            draft_update_interval_ms: 1000,
+            multi_message_delay_ms: 800,
         };
         let json = serde_json::to_string(&dc).unwrap();
         let parsed: DiscordConfig = serde_json::from_str(&json).unwrap();
@@ -12159,6 +12190,9 @@ default_temperature = 0.7
             interrupt_on_new_message: false,
             mention_only: false,
             proxy_url: None,
+            stream_mode: StreamMode::default(),
+            draft_update_interval_ms: 1000,
+            multi_message_delay_ms: 800,
         };
         let json = serde_json::to_string(&dc).unwrap();
         let parsed: DiscordConfig = serde_json::from_str(&json).unwrap();
@@ -12209,6 +12243,9 @@ default_temperature = 0.7
             allowed_users: vec!["@user:matrix.org".into()],
             allowed_rooms: vec![],
             interrupt_on_new_message: false,
+            stream_mode: StreamMode::default(),
+            draft_update_interval_ms: 1500,
+            multi_message_delay_ms: 800,
         };
         let json = serde_json::to_string(&mc).unwrap();
         let parsed: MatrixConfig = serde_json::from_str(&json).unwrap();
@@ -12231,6 +12268,9 @@ default_temperature = 0.7
             allowed_users: vec!["@admin:synapse.local".into(), "*".into()],
             allowed_rooms: vec![],
             interrupt_on_new_message: false,
+            stream_mode: StreamMode::default(),
+            draft_update_interval_ms: 1500,
+            multi_message_delay_ms: 800,
         };
         let toml_str = toml::to_string(&mc).unwrap();
         let parsed: MatrixConfig = toml::from_str(&toml_str).unwrap();
@@ -12325,6 +12365,9 @@ allowed_users = ["@ops:matrix.org"]
                 allowed_users: vec!["@u:m".into()],
                 allowed_rooms: vec![],
                 interrupt_on_new_message: false,
+                stream_mode: StreamMode::default(),
+                draft_update_interval_ms: 1500,
+                multi_message_delay_ms: 800,
             }),
             signal: None,
             whatsapp: None,
@@ -12342,6 +12385,7 @@ allowed_users = ["@ops:matrix.org"]
             seewo: None,
             twitter: None,
             mochat: None,
+            #[cfg(feature = "channel-nostr")]
             nostr: None,
             clawdtalk: None,
             reddit: None,
@@ -12550,6 +12594,8 @@ channel_ids = ["C123", "D456"]
             dm_policy: WhatsAppChatPolicy::default(),
             group_policy: WhatsAppChatPolicy::default(),
             self_chat_mode: false,
+            dm_mention_patterns: vec![],
+            group_mention_patterns: vec![],
             proxy_url: None,
         };
         let json = serde_json::to_string(&wc).unwrap();
@@ -12575,6 +12621,8 @@ channel_ids = ["C123", "D456"]
             dm_policy: WhatsAppChatPolicy::default(),
             group_policy: WhatsAppChatPolicy::default(),
             self_chat_mode: false,
+            dm_mention_patterns: vec![],
+            group_mention_patterns: vec![],
             proxy_url: None,
         };
         let toml_str = toml::to_string(&wc).unwrap();
@@ -12605,6 +12653,8 @@ channel_ids = ["C123", "D456"]
             dm_policy: WhatsAppChatPolicy::default(),
             group_policy: WhatsAppChatPolicy::default(),
             self_chat_mode: false,
+            dm_mention_patterns: vec![],
+            group_mention_patterns: vec![],
             proxy_url: None,
         };
         let toml_str = toml::to_string(&wc).unwrap();
@@ -12627,6 +12677,8 @@ channel_ids = ["C123", "D456"]
             dm_policy: WhatsAppChatPolicy::default(),
             group_policy: WhatsAppChatPolicy::default(),
             self_chat_mode: false,
+            dm_mention_patterns: vec![],
+            group_mention_patterns: vec![],
             proxy_url: None,
         };
         assert!(wc.is_ambiguous_config());
@@ -12648,6 +12700,8 @@ channel_ids = ["C123", "D456"]
             dm_policy: WhatsAppChatPolicy::default(),
             group_policy: WhatsAppChatPolicy::default(),
             self_chat_mode: false,
+            dm_mention_patterns: vec![],
+            group_mention_patterns: vec![],
             proxy_url: None,
         };
         assert!(!wc.is_ambiguous_config());
@@ -12680,6 +12734,8 @@ channel_ids = ["C123", "D456"]
                 dm_policy: WhatsAppChatPolicy::default(),
                 group_policy: WhatsAppChatPolicy::default(),
                 self_chat_mode: false,
+                dm_mention_patterns: vec![],
+                group_mention_patterns: vec![],
                 proxy_url: None,
             }),
             linq: None,
@@ -12696,6 +12752,7 @@ channel_ids = ["C123", "D456"]
             seewo: None,
             twitter: None,
             mochat: None,
+            #[cfg(feature = "channel-nostr")]
             nostr: None,
             clawdtalk: None,
             reddit: None,
@@ -13944,6 +14001,23 @@ default_model = "persisted-profile"
     }
 
     #[test]
+    async fn env_override_require_pairing() {
+        let _env_guard = env_override_lock().await;
+        let mut config = Config::default();
+        assert!(config.gateway.require_pairing);
+
+        std::env::set_var("ZEROCLAW_REQUIRE_PAIRING", "false");
+        config.apply_env_overrides();
+        assert!(!config.gateway.require_pairing);
+
+        std::env::set_var("ZEROCLAW_REQUIRE_PAIRING", "true");
+        config.apply_env_overrides();
+        assert!(config.gateway.require_pairing);
+
+        std::env::remove_var("ZEROCLAW_REQUIRE_PAIRING");
+    }
+
+    #[test]
     async fn env_override_temperature() {
         let _env_guard = env_override_lock().await;
         let mut config = Config::default();
@@ -14096,16 +14170,16 @@ default_model = "persisted-profile"
         let _env_guard = env_override_lock().await;
         let mut config = Config::default();
 
-        std::env::set_var("ZEROCLAW_STORAGE_PROVIDER", "postgres");
-        std::env::set_var("ZEROCLAW_STORAGE_DB_URL", "postgres://example/db");
+        std::env::set_var("ZEROCLAW_STORAGE_PROVIDER", "qdrant");
+        std::env::set_var("ZEROCLAW_STORAGE_DB_URL", "http://localhost:6333");
         std::env::set_var("ZEROCLAW_STORAGE_CONNECT_TIMEOUT_SECS", "15");
 
         config.apply_env_overrides();
 
-        assert_eq!(config.storage.provider.config.provider, "postgres");
+        assert_eq!(config.storage.provider.config.provider, "qdrant");
         assert_eq!(
             config.storage.provider.config.db_url.as_deref(),
-            Some("postgres://example/db")
+            Some("http://localhost:6333")
         );
         assert_eq!(
             config.storage.provider.config.connect_timeout_secs,
