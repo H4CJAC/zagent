@@ -952,12 +952,15 @@ fn parse_proxy_tool_event(line: &str) -> Option<StreamEvent> {
 }
 
 fn extract_sse_text_delta(choice: &StreamChoice) -> Option<String> {
-    if let Some(content) = &choice.delta.content {
-        if !content.is_empty() {
-            return Some(content.clone());
-        }
-    }
+    choice
+        .delta
+        .content
+        .as_ref()
+        .filter(|c| !c.is_empty())
+        .cloned()
+}
 
+fn extract_sse_reasoning_delta(choice: &StreamChoice) -> Option<String> {
     choice
         .delta
         .reasoning_content
@@ -1158,8 +1161,14 @@ fn sse_bytes_to_events(
 
                         let mut should_emit_tool_calls = false;
                         for choice in &chunk.choices {
-                            if let Some(text_delta) = extract_sse_text_delta(choice) {
-                                let mut text_chunk = StreamChunk::delta(text_delta);
+                            let text_delta = extract_sse_text_delta(choice);
+                            let reasoning_delta = extract_sse_reasoning_delta(choice);
+
+                            if text_delta.is_some() || reasoning_delta.is_some() {
+                                let mut text_chunk = StreamChunk::delta(
+                                    text_delta.unwrap_or_default(),
+                                );
+                                text_chunk.reasoning = reasoning_delta;
                                 if count_tokens {
                                     text_chunk = text_chunk.with_token_estimate();
                                 }

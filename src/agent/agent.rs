@@ -1017,6 +1017,7 @@ impl Agent {
             );
 
             let mut streamed_text = String::new();
+            let mut streamed_reasoning = String::new();
             let mut streamed_tool_calls: Vec<crate::providers::traits::ToolCall> = Vec::new();
             let mut got_stream = false;
 
@@ -1026,6 +1027,7 @@ impl Agent {
                         crate::providers::traits::StreamEvent::TextDelta(chunk) => {
                             if let Some(reasoning) = chunk.reasoning {
                                 if !reasoning.is_empty() {
+                                    streamed_reasoning.push_str(&reasoning);
                                     let _ = event_tx
                                         .send(TurnEvent::Thinking { delta: reasoning })
                                         .await;
@@ -1077,12 +1079,15 @@ impl Agent {
             // If streaming produced text, use it as the response and
             // check for tool calls via the dispatcher.
             let response = if got_stream {
-                // Build a synthetic ChatResponse from streamed text
                 crate::providers::ChatResponse {
                     text: Some(streamed_text),
                     tool_calls: streamed_tool_calls,
                     usage: None,
-                    reasoning_content: None,
+                    reasoning_content: if streamed_reasoning.is_empty() {
+                        None
+                    } else {
+                        Some(streamed_reasoning)
+                    },
                 }
             } else {
                 // Fall back to non-streaming chat

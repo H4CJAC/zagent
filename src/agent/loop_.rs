@@ -2000,6 +2000,7 @@ pub(crate) fn is_model_switch_requested(err: &anyhow::Error) -> Option<(String, 
 #[derive(Debug, Default)]
 struct StreamedChatOutcome {
     response_text: String,
+    reasoning_content: String,
     tool_calls: Vec<ToolCall>,
     forwarded_live_deltas: bool,
 }
@@ -2060,6 +2061,12 @@ async fn consume_provider_streaming_response(
                 // do not affect the agent's tool dispatch loop.
             }
             StreamEvent::TextDelta(chunk) => {
+                if let Some(reasoning) = &chunk.reasoning {
+                    if !reasoning.is_empty() {
+                        outcome.reasoning_content.push_str(reasoning);
+                    }
+                }
+
                 if chunk.delta.is_empty() {
                     continue;
                 }
@@ -2556,7 +2563,11 @@ pub(crate) async fn run_tool_call_loop(
                         text: Some(streamed.response_text),
                         tool_calls: streamed.tool_calls,
                         usage: None,
-                        reasoning_content: None,
+                        reasoning_content: if streamed.reasoning_content.is_empty() {
+                            None
+                        } else {
+                            Some(streamed.reasoning_content)
+                        },
                     })
                 }
                 Err(stream_err) => {
