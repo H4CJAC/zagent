@@ -182,10 +182,50 @@ impl SeewoProvider {
             .iter()
             .map(|m| {
                 // Assistant messages with embedded tool_calls JSON.
+                // Stored format: {id, name, arguments} (flat ProviderToolCall)
+                // Seewo API format: {id, type:"function", function:{name, arguments}}
                 if m.role == "assistant" {
                     if let Ok(value) = serde_json::from_str::<serde_json::Value>(&m.content) {
-                        if value.get("tool_calls").is_some() {
-                            return value_with_role("assistant", &value);
+                        if let Some(tc_val) = value.get("tool_calls") {
+                            if let Ok(calls) =
+                                serde_json::from_value::<Vec<ProviderToolCall>>(tc_val.clone())
+                            {
+                                let native_calls: Vec<serde_json::Value> = calls
+                                    .into_iter()
+                                    .map(|tc| {
+                                        serde_json::json!({
+                                            "id": tc.id,
+                                            "type": "function",
+                                            "function": {
+                                                "name": tc.name,
+                                                "arguments": tc.arguments,
+                                            }
+                                        })
+                                    })
+                                    .collect();
+
+                                let content = value
+                                    .get("content")
+                                    .and_then(|v| v.as_str())
+                                    .filter(|s| !s.is_empty());
+                                let reasoning = value
+                                    .get("reasoning_content")
+                                    .and_then(|v| v.as_str())
+                                    .filter(|s| !s.is_empty());
+
+                                let mut msg = serde_json::json!({
+                                    "role": "assistant",
+                                    "tool_calls": native_calls,
+                                });
+                                if let Some(c) = content {
+                                    msg["content"] = serde_json::Value::String(c.to_string());
+                                }
+                                if let Some(r) = reasoning {
+                                    msg["reasoning_content"] =
+                                        serde_json::Value::String(r.to_string());
+                                }
+                                return msg;
+                            }
                         }
                     }
                 }
@@ -306,18 +346,6 @@ fn text_to_content_parts(text: &str) -> Vec<serde_json::Value> {
         parts.push(serde_json::json!({"type": "text", "text": ""}));
     }
     parts
-}
-
-/// Merge `role` into an existing JSON value that already has content/tool_calls fields.
-fn value_with_role(role: &str, value: &serde_json::Value) -> serde_json::Value {
-    let mut v = value.clone();
-    if let Some(obj) = v.as_object_mut() {
-        obj.insert(
-            "role".to_string(),
-            serde_json::Value::String(role.to_string()),
-        );
-    }
-    v
 }
 
 // ── API response types ─────────────────────────────────────────
@@ -608,15 +636,36 @@ mod tests {
     }
 
     #[test]
-    fn convert_messages_assistant_tool_calls() {
+    fn convert_messages_assistant_tool_calls_nested_format() {
         let json = serde_json::json!({
-            "content": "",
-            "tool_calls": [{"id": "c1", "type": "function", "function": {"name": "shell", "arguments": "{}"}}]
+            "content": "Let me check",
+            "tool_calls": [{"id": "c1", "name": "shell", "arguments": "{}"}],
+            "reasoning_content": "thinking..."
         });
         let msg = ChatMessage::assistant(json.to_string());
         let converted = SeewoProvider::convert_messages(&[msg]);
-        assert!(converted[0].get("tool_calls").is_some());
-        assert_eq!(converted[0]["role"], "assistant");
+        let m = &converted[0];
+        assert_eq!(m["role"], "assistant");
+        assert_eq!(m["content"], "Let me check");
+        assert_eq!(m["reasoning_content"], "thinking...");
+
+        let tc = &m["tool_calls"][0];
+        assert_eq!(tc["id"], "c1");
+        assert_eq!(tc["type"], "function");
+        assert_eq!(tc["function"]["name"], "shell");
+        assert_eq!(tc["function"]["arguments"], "{}");
+    }
+
+    #[test]
+    fn convert_messages_assistant_tool_calls_omits_empty_content() {
+        let json = serde_json::json!({
+            "content": "",
+            "tool_calls": [{"id": "c1", "name": "weather", "arguments": "{}"}]
+        });
+        let msg = ChatMessage::assistant(json.to_string());
+        let converted = SeewoProvider::convert_messages(&[msg]);
+        assert!(converted[0].get("content").is_none());
+        assert!(converted[0].get("reasoning_content").is_none());
     }
 
     #[test]
