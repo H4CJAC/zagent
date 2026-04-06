@@ -172,6 +172,11 @@ impl SeewoProvider {
 
     /// Build message list from `ChatMessage` slice, handling tool-call history
     /// and vision content markers.
+    ///
+    /// Seewo accepts `content` as either a plain string or an array of typed
+    /// parts (`[{"type":"text","text":"…"}, {"type":"image_url","image_url":"…"}]`).
+    /// Tool results are always sent in array form; user messages use array form
+    /// when image markers are present.
     fn convert_messages(messages: &[ChatMessage]) -> Vec<serde_json::Value> {
         messages
             .iter()
@@ -185,15 +190,17 @@ impl SeewoProvider {
                     }
                 }
 
-                // Tool result messages.
+                // Tool result messages → content as array of parts.
                 if m.role == "tool" {
                     if let Ok(value) = serde_json::from_str::<serde_json::Value>(&m.content) {
                         let tool_call_id = value.get("tool_call_id").and_then(|v| v.as_str());
-                        let content = value.get("content").and_then(|v| v.as_str());
+                        let raw_content =
+                            value.get("content").and_then(|v| v.as_str()).unwrap_or("");
+                        let content_parts = text_to_content_parts(raw_content);
                         return serde_json::json!({
                             "role": "tool",
                             "tool_call_id": tool_call_id,
-                            "content": content,
+                            "content": content_parts,
                         });
                     }
                 }
@@ -277,6 +284,28 @@ impl SeewoProvider {
             reasoning_content: choice.message.reasoning_content,
         })
     }
+}
+
+/// Convert a text string (possibly containing image markers) into the Seewo
+/// content-parts array: `[{"type":"text","text":"…"}, {"type":"image_url",…}]`.
+fn text_to_content_parts(text: &str) -> Vec<serde_json::Value> {
+    let (cleaned, image_refs) = multimodal::parse_image_markers(text);
+    let mut parts: Vec<serde_json::Value> = image_refs
+        .into_iter()
+        .map(|uri| serde_json::json!({"type": "image_url", "image_url": uri}))
+        .collect();
+    let text_content = if parts.is_empty() {
+        text
+    } else {
+        cleaned.trim()
+    };
+    if !text_content.is_empty() {
+        parts.push(serde_json::json!({"type": "text", "text": text_content}));
+    }
+    if parts.is_empty() {
+        parts.push(serde_json::json!({"type": "text", "text": ""}));
+    }
+    parts
 }
 
 /// Merge `role` into an existing JSON value that already has content/tool_calls fields.
@@ -566,11 +595,16 @@ mod tests {
     }
 
     #[test]
-    fn convert_messages_tool_result() {
+    fn convert_messages_tool_result_uses_array_content() {
         let msg = ChatMessage::tool(r#"{"tool_call_id":"call_abc","content":"done"}"#);
         let converted = SeewoProvider::convert_messages(&[msg]);
         assert_eq!(converted[0]["tool_call_id"], "call_abc");
-        assert_eq!(converted[0]["content"], "done");
+        let content = converted[0]["content"]
+            .as_array()
+            .expect("content should be array");
+        assert_eq!(content.len(), 1);
+        assert_eq!(content[0]["type"], "text");
+        assert_eq!(content[0]["text"], "done");
     }
 
     #[test]
