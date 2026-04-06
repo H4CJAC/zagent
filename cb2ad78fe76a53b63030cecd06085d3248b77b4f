@@ -1,0 +1,24 @@
+src/providers/seewo.rs
+  29dccb33ca9eaaf5 185-186,189-228,639,641-660,663,667-668
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "cb2ad78fe76a53b63030cecd06085d3248b77b4f",
+  "prompts": {
+    "29dccb33ca9eaaf5": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a2be1d93-ec7c-4269-97e5-e1a05185d2b0",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 67,
+      "total_deletions": 18,
+      "accepted_lines": 67,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/8823e2f684c3cd86e0e94259eaab6769ebac7d804a20efa988557c09167e489f"
+    }
+  }
+}
