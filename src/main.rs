@@ -303,6 +303,10 @@ Examples:
         /// Host to bind to; defaults to config gateway.host
         #[arg(long)]
         host: Option<String>,
+
+        /// Start with the built-in Seewo preset configuration
+        #[arg(long)]
+        sw: bool,
     },
 
     /// Manage OS service lifecycle (launchd/systemd user service)
@@ -999,6 +1003,12 @@ async fn main() -> Result<()> {
         return Ok(());
     }
 
+    // Propagate preset hint so Config::load_or_init can pick it up.
+    if matches!(cli.command, Commands::Daemon { sw: true, .. }) {
+        // SAFETY: called early in main before any threads are spawned.
+        unsafe { std::env::set_var("ZEROCLAW_PRESET", "seewo") };
+    }
+
     // All other commands need config loaded first
     let mut config = Box::pin(Config::load_or_init()).await?;
     config.apply_env_overrides();
@@ -1160,7 +1170,7 @@ async fn main() -> Result<()> {
             }
         }
 
-        Commands::Daemon { port, host } => {
+        Commands::Daemon { port, host, .. } => {
             if let Ok(exe) = std::env::current_exe() {
                 let exe_str = exe.to_string_lossy();
                 if exe_str.contains(".cargo/bin") || exe_str.contains("/home/") {

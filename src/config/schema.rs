@@ -8486,6 +8486,15 @@ impl Default for Config {
     }
 }
 
+impl Config {
+    /// Built-in Seewo preset loaded from an embedded TOML file.
+    /// Activated via `zeroclaw daemon --sw` which sets `ZEROCLAW_PRESET=seewo`.
+    pub fn seewo_preset() -> Result<Self> {
+        const TOML: &str = include_str!("presets/seewo.toml");
+        toml::from_str(TOML).context("Failed to parse embedded Seewo preset TOML")
+    }
+}
+
 fn default_config_and_workspace_dirs() -> Result<(PathBuf, PathBuf)> {
     let config_dir = default_config_dir()?;
     Ok((config_dir.clone(), config_dir.join("workspace")))
@@ -9419,7 +9428,12 @@ impl Config {
             );
             Ok(config)
         } else {
-            let mut config = Config::default();
+            let mut config = if std::env::var("ZEROCLAW_PRESET").as_deref() == Ok("seewo") {
+                tracing::info!("Applying built-in Seewo preset configuration");
+                Config::seewo_preset()?
+            } else {
+                Config::default()
+            };
             config.config_path = config_path.clone();
             config.workspace_dir = workspace_dir;
             config.save().await?;
