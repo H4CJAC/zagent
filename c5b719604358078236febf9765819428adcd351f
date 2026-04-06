@@ -1,0 +1,30 @@
+src/config/presets/seewo_user.md
+  29dccb33ca9eaaf5 1-18
+src/config/schema.rs
+  29dccb33ca9eaaf5 8951-8980
+src/config/presets/seewo_identity.md
+  29dccb33ca9eaaf5 1-16
+src/config/presets/seewo_soul.md
+  29dccb33ca9eaaf5 1-23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "c5b719604358078236febf9765819428adcd351f",
+  "prompts": {
+    "29dccb33ca9eaaf5": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a2be1d93-ec7c-4269-97e5-e1a05185d2b0",
+        "model": "claude-4.6-sonnet-medium-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 88,
+      "total_deletions": 20,
+      "accepted_lines": 87,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/14aae4811da3c565fe7c92fa8bae3c44e9c134c3aaa81e54496338705780467d"
+    }
+  }
+}
