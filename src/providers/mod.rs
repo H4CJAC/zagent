@@ -31,6 +31,7 @@ pub mod openai_codex;
 pub mod openrouter;
 pub mod reliable;
 pub mod router;
+pub mod seewo;
 pub mod telnyx;
 pub mod traits;
 
@@ -1223,6 +1224,7 @@ fn create_provider_with_url_and_options(
             )))
         }
         "telnyx" => Ok(Box::new(telnyx::TelnyxProvider::new(key))),
+        "seewo" => Ok(Box::new(seewo::SeewoProvider::new())),
 
         // ── OpenAI-compatible providers ──────────────────────
         "venice" => Ok(compat(
