@@ -248,6 +248,13 @@ impl OpenAiCompatibleProvider {
         self
     }
 
+    /// Merge all system messages into the first user message before sending.
+    /// Unlike `new_merge_system_into_user`, this preserves native tool calling.
+    pub fn with_merge_system_into_user(mut self) -> Self {
+        self.merge_system_into_user = true;
+        self
+    }
+
     /// Override the HTTP request timeout for LLM API calls.
     pub fn with_timeout_secs(mut self, timeout_secs: u64) -> Self {
         self.timeout_secs = timeout_secs;
@@ -446,12 +453,13 @@ impl OpenAiCompatibleProvider {
         tools
             .iter()
             .map(|tool| {
+                let params = crate::tools::SchemaCleanr::clean_for_openai(tool.parameters.clone());
                 serde_json::json!({
                     "type": "function",
                     "function": {
                         "name": tool.name,
                         "description": tool.description,
-                        "parameters": tool.parameters
+                        "parameters": params
                     }
                 })
             })
@@ -952,12 +960,13 @@ fn parse_proxy_tool_event(line: &str) -> Option<StreamEvent> {
 }
 
 fn extract_sse_text_delta(choice: &StreamChoice) -> Option<String> {
-    choice
-        .delta
-        .content
-        .as_ref()
-        .filter(|c| !c.is_empty())
-        .cloned()
+    if let Some(content) = &choice.delta.content {
+        if !content.is_empty() {
+            return Some(content.clone());
+        }
+    }
+
+    None
 }
 
 fn extract_sse_reasoning_delta(choice: &StreamChoice) -> Option<String> {
@@ -1161,14 +1170,18 @@ fn sse_bytes_to_events(
 
                         let mut should_emit_tool_calls = false;
                         for choice in &chunk.choices {
-                            let text_delta = extract_sse_text_delta(choice);
-                            let reasoning_delta = extract_sse_reasoning_delta(choice);
-
-                            if text_delta.is_some() || reasoning_delta.is_some() {
-                                let mut text_chunk = StreamChunk::delta(
-                                    text_delta.unwrap_or_default(),
-                                );
-                                text_chunk.reasoning = reasoning_delta;
+                            if let Some(reasoning_delta) = extract_sse_reasoning_delta(choice) {
+                                let reasoning_chunk = StreamChunk::reasoning(reasoning_delta);
+                                if tx
+                                    .send(Ok(StreamEvent::TextDelta(reasoning_chunk)))
+                                    .await
+                                    .is_err()
+                                {
+                                    return;
+                                }
+                            }
+                            if let Some(text_delta) = extract_sse_text_delta(choice) {
+                                let mut text_chunk = StreamChunk::delta(text_delta);
                                 if count_tokens {
                                     text_chunk = text_chunk.with_token_estimate();
                                 }
@@ -1399,12 +1412,14 @@ impl OpenAiCompatibleProvider {
             items
                 .iter()
                 .map(|tool| {
+                    let params =
+                        crate::tools::SchemaCleanr::clean_for_openai(tool.parameters.clone());
                     serde_json::json!({
                         "type": "function",
                         "function": {
                             "name": tool.name,
                             "description": tool.description,
-                            "parameters": tool.parameters,
+                            "parameters": params,
                         }
                     })
                 })
