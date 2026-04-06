@@ -8948,26 +8948,36 @@ fn read_codex_openai_api_key() -> Option<String> {
 /// daemon/cron sessions), these files would otherwise be missing. This function
 /// creates sensible defaults that allow the agent to operate with a basic identity.
 async fn ensure_bootstrap_files(workspace_dir: &Path) -> Result<()> {
-    let defaults: &[(&str, &str)] = &[
-        (
-            "IDENTITY.md",
-            "# IDENTITY.md — Who Am I?\n\n\
-             I am ZeroClaw, an autonomous AI agent.\n\n\
-             ## Traits\n\
-             - Helpful, precise, and safety-conscious\n\
-             - I prioritize clarity and correctness\n",
-        ),
-        (
-            "SOUL.md",
-            "# SOUL.md — Who You Are\n\n\
-             You are ZeroClaw, an autonomous AI agent.\n\n\
-             ## Core Principles\n\
-             - Be helpful and accurate\n\
-             - Respect user intent and boundaries\n\
-             - Ask before taking destructive actions\n\
-             - Prefer safe, reversible operations\n",
-        ),
-    ];
+    let is_seewo = std::env::var("ZEROCLAW_PRESET").as_deref() == Ok("seewo");
+
+    let defaults: &[(&str, &str)] = if is_seewo {
+        &[
+            ("IDENTITY.md", include_str!("presets/seewo_identity.md")),
+            ("SOUL.md", include_str!("presets/seewo_soul.md")),
+            ("USER.md", include_str!("presets/seewo_user.md")),
+        ]
+    } else {
+        &[
+            (
+                "IDENTITY.md",
+                "# IDENTITY.md — Who Am I?\n\n\
+                 I am ZeroClaw, an autonomous AI agent.\n\n\
+                 ## Traits\n\
+                 - Helpful, precise, and safety-conscious\n\
+                 - I prioritize clarity and correctness\n",
+            ),
+            (
+                "SOUL.md",
+                "# SOUL.md — Who You Are\n\n\
+                 You are ZeroClaw, an autonomous AI agent.\n\n\
+                 ## Core Principles\n\
+                 - Be helpful and accurate\n\
+                 - Respect user intent and boundaries\n\
+                 - Ask before taking destructive actions\n\
+                 - Prefer safe, reversible operations\n",
+            ),
+        ]
+    };
 
     for (filename, content) in defaults {
         let path = workspace_dir.join(filename);
