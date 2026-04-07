@@ -1,6 +1,6 @@
-default_provider = "openai"
+default_provider = "custom:http://ai-open.seewo.com/openai/deployments/ALI_KIMI_SPECIAL_K2_5"
 default_model = "kimi-k2.5"
-api_url = "http://ai-open.seewo.com/openai/deployments/ALI_KIMI_SPECIAL_K2_5"
+api_url = ""
 api_key = "eef3c35188e94e91a8a622180a436d48"
 default_temperature = 1
 provider_timeout_secs = 120
