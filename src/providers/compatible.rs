@@ -48,6 +48,8 @@ pub struct OpenAiCompatibleProvider {
     api_path: Option<String>,
     /// Maximum output tokens to include in API requests.
     max_tokens: Option<u32>,
+    /// Extra fields merged into every API request body (e.g. `{"thinking":{"type":"enabled"}}`).
+    extra_body: Option<serde_json::Value>,
 }
 
 /// How the provider expects the API key to be sent.
@@ -239,6 +241,7 @@ impl OpenAiCompatibleProvider {
             reasoning_effort: None,
             api_path: None,
             max_tokens: None,
+            extra_body: None,
         }
     }
 
@@ -287,6 +290,24 @@ impl OpenAiCompatibleProvider {
     pub fn with_max_tokens(mut self, max_tokens: Option<u32>) -> Self {
         self.max_tokens = max_tokens;
         self
+    }
+
+    /// Set extra fields to merge into every API request body.
+    pub fn with_extra_body(mut self, extra_body: Option<serde_json::Value>) -> Self {
+        self.extra_body = extra_body;
+        self
+    }
+
+    /// Merge `extra_body` fields into a serialized request value.
+    fn apply_extra_body(&self, mut request: serde_json::Value) -> serde_json::Value {
+        if let Some(ref extra) = self.extra_body {
+            if let (Some(req_obj), Some(extra_obj)) = (request.as_object_mut(), extra.as_object()) {
+                for (k, v) in extra_obj {
+                    req_obj.insert(k.clone(), v.clone());
+                }
+            }
+        }
+        request
     }
 
     /// Collect all `system` role messages, concatenate their content,
@@ -1684,17 +1705,20 @@ impl Provider for OpenAiCompatibleProvider {
             });
         }
 
-        let request = ApiChatRequest {
-            model: model.to_string(),
-            messages,
-            temperature,
-            stream: Some(false),
-            reasoning_effort: self.reasoning_effort_for_model(model),
-            tool_stream: None,
-            tools: None,
-            tool_choice: None,
-            max_tokens: self.max_tokens,
-        };
+        let body = self.apply_extra_body(
+            serde_json::to_value(ApiChatRequest {
+                model: model.to_string(),
+                messages,
+                temperature,
+                stream: Some(false),
+                reasoning_effort: self.reasoning_effort_for_model(model),
+                tool_stream: None,
+                tools: None,
+                tool_choice: None,
+                max_tokens: self.max_tokens,
+            })
+            .expect("ApiChatRequest serialization"),
+        );
 
         let url = self.chat_completions_url();
 
@@ -1710,7 +1734,7 @@ impl Provider for OpenAiCompatibleProvider {
         };
 
         let response = match self
-            .apply_auth_header(self.http_client().post(&url).json(&request), credential)
+            .apply_auth_header(self.http_client().post(&url).json(&body), credential)
             .send()
             .await
         {
@@ -1809,21 +1833,24 @@ impl Provider for OpenAiCompatibleProvider {
             })
             .collect();
 
-        let request = ApiChatRequest {
-            model: model.to_string(),
-            messages: api_messages,
-            temperature,
-            stream: Some(false),
-            reasoning_effort: self.reasoning_effort_for_model(model),
-            tool_stream: None,
-            tools: None,
-            tool_choice: None,
-            max_tokens: self.max_tokens,
-        };
+        let body = self.apply_extra_body(
+            serde_json::to_value(ApiChatRequest {
+                model: model.to_string(),
+                messages: api_messages,
+                temperature,
+                stream: Some(false),
+                reasoning_effort: self.reasoning_effort_for_model(model),
+                tool_stream: None,
+                tools: None,
+                tool_choice: None,
+                max_tokens: self.max_tokens,
+            })
+            .expect("ApiChatRequest serialization"),
+        );
 
         let url = self.chat_completions_url();
         let response = match self
-            .apply_auth_header(self.http_client().post(&url).json(&request), credential)
+            .apply_auth_header(self.http_client().post(&url).json(&body), credential)
             .send()
             .await
         {
@@ -1922,29 +1949,32 @@ impl Provider for OpenAiCompatibleProvider {
             })
             .collect();
 
-        let request = ApiChatRequest {
-            model: model.to_string(),
-            messages: api_messages,
-            temperature,
-            stream: Some(false),
-            reasoning_effort: self.reasoning_effort_for_model(model),
-            tool_stream: self.tool_stream_for_tools(!tools.is_empty()),
-            tools: if tools.is_empty() {
-                None
-            } else {
-                Some(tools.to_vec())
-            },
-            tool_choice: if tools.is_empty() {
-                None
-            } else {
-                Some("auto".to_string())
-            },
-            max_tokens: self.max_tokens,
-        };
+        let body = self.apply_extra_body(
+            serde_json::to_value(ApiChatRequest {
+                model: model.to_string(),
+                messages: api_messages,
+                temperature,
+                stream: Some(false),
+                reasoning_effort: self.reasoning_effort_for_model(model),
+                tool_stream: self.tool_stream_for_tools(!tools.is_empty()),
+                tools: if tools.is_empty() {
+                    None
+                } else {
+                    Some(tools.to_vec())
+                },
+                tool_choice: if tools.is_empty() {
+                    None
+                } else {
+                    Some("auto".to_string())
+                },
+                max_tokens: self.max_tokens,
+            })
+            .expect("ApiChatRequest serialization"),
+        );
 
         let url = self.chat_completions_url();
         let response = match self
-            .apply_auth_header(self.http_client().post(&url).json(&request), credential)
+            .apply_auth_header(self.http_client().post(&url).json(&body), credential)
             .send()
             .await
         {
@@ -2027,28 +2057,28 @@ impl Provider for OpenAiCompatibleProvider {
         } else {
             request.messages.to_vec()
         };
-        let native_request = NativeChatRequest {
-            model: model.to_string(),
-            messages: Self::convert_messages_for_native(
-                &effective_messages,
-                !self.merge_system_into_user,
-            ),
-            temperature,
-            stream: Some(false),
-            reasoning_effort: self.reasoning_effort_for_model(model),
-            tool_stream: self
-                .tool_stream_for_tools(tools.as_ref().is_some_and(|tools| !tools.is_empty())),
-            tool_choice: tools.as_ref().map(|_| "auto".to_string()),
-            tools,
-            max_tokens: self.max_tokens,
-        };
+        let body = self.apply_extra_body(
+            serde_json::to_value(NativeChatRequest {
+                model: model.to_string(),
+                messages: Self::convert_messages_for_native(
+                    &effective_messages,
+                    !self.merge_system_into_user,
+                ),
+                temperature,
+                stream: Some(false),
+                reasoning_effort: self.reasoning_effort_for_model(model),
+                tool_stream: self
+                    .tool_stream_for_tools(tools.as_ref().is_some_and(|tools| !tools.is_empty())),
+                tool_choice: tools.as_ref().map(|_| "auto".to_string()),
+                tools,
+                max_tokens: self.max_tokens,
+            })
+            .expect("NativeChatRequest serialization"),
+        );
 
         let url = self.chat_completions_url();
         let response = match self
-            .apply_auth_header(
-                self.http_client().post(&url).json(&native_request),
-                credential,
-            )
+            .apply_auth_header(self.http_client().post(&url).json(&body), credential)
             .send()
             .await
         {
@@ -2222,7 +2252,7 @@ impl Provider for OpenAiCompatibleProvider {
         };
 
         let payload = match payload {
-            Ok(payload) => payload,
+            Ok(payload) => self.apply_extra_body(payload),
             Err(error) => {
                 return stream::once(async move { Err(StreamError::Json(error)) }).boxed();
             }
@@ -2309,17 +2339,20 @@ impl Provider for OpenAiCompatibleProvider {
             content: Self::to_message_content("user", message, !self.merge_system_into_user),
         });
 
-        let request = ApiChatRequest {
-            model: model.to_string(),
-            messages,
-            temperature,
-            stream: Some(options.enabled),
-            reasoning_effort: self.reasoning_effort_for_model(model),
-            tool_stream: None,
-            tools: None,
-            tool_choice: None,
-            max_tokens: self.max_tokens,
-        };
+        let body = self.apply_extra_body(
+            serde_json::to_value(ApiChatRequest {
+                model: model.to_string(),
+                messages,
+                temperature,
+                stream: Some(options.enabled),
+                reasoning_effort: self.reasoning_effort_for_model(model),
+                tool_stream: None,
+                tools: None,
+                tool_choice: None,
+                max_tokens: self.max_tokens,
+            })
+            .expect("ApiChatRequest serialization"),
+        );
 
         let url = self.chat_completions_url();
         let client = self.http_client();
@@ -2330,7 +2363,7 @@ impl Provider for OpenAiCompatibleProvider {
 
         tokio::spawn(async move {
             // Build request with auth
-            let mut req_builder = client.post(&url).json(&request);
+            let mut req_builder = client.post(&url).json(&body);
 
             // Apply auth header
             req_builder = apply_auth_to_request(req_builder, &auth_header, &credential);
@@ -2414,17 +2447,20 @@ impl Provider for OpenAiCompatibleProvider {
             })
             .collect();
 
-        let request = ApiChatRequest {
-            model: model.to_string(),
-            messages: api_messages,
-            temperature,
-            stream: Some(options.enabled),
-            reasoning_effort: self.reasoning_effort_for_model(model),
-            tool_stream: None,
-            tools: None,
-            tool_choice: None,
-            max_tokens: self.max_tokens,
-        };
+        let body = self.apply_extra_body(
+            serde_json::to_value(ApiChatRequest {
+                model: model.to_string(),
+                messages: api_messages,
+                temperature,
+                stream: Some(options.enabled),
+                reasoning_effort: self.reasoning_effort_for_model(model),
+                tool_stream: None,
+                tools: None,
+                tool_choice: None,
+                max_tokens: self.max_tokens,
+            })
+            .expect("ApiChatRequest serialization"),
+        );
 
         let url = self.chat_completions_url();
         let client = self.http_client();
@@ -2433,7 +2469,7 @@ impl Provider for OpenAiCompatibleProvider {
         let (tx, rx) = tokio::sync::mpsc::channel::<StreamResult<StreamChunk>>(100);
 
         tokio::spawn(async move {
-            let mut req_builder = client.post(&url).json(&request);
+            let mut req_builder = client.post(&url).json(&body);
             req_builder = apply_auth_to_request(req_builder, &auth_header, &credential);
             req_builder = req_builder.header("Accept", "text/event-stream");
 

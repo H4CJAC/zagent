@@ -121,6 +121,13 @@ pub struct Config {
     #[serde(default)]
     pub extra_headers: HashMap<String, String>,
 
+    /// Extra fields merged into every LLM provider API request body.
+    ///
+    /// Use this to inject non-standard parameters required by custom proxies
+    /// (e.g. `thinking = { type = "enabled" }` for Kimi reasoning mode).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub extra_body: Option<serde_json::Value>,
+
     /// Observability backend configuration (`[observability]`).
     #[serde(default)]
     pub observability: ObservabilityConfig,
@@ -8412,6 +8419,7 @@ impl Default for Config {
             provider_timeout_secs: default_provider_timeout_secs(),
             provider_max_tokens: None,
             extra_headers: HashMap::new(),
+            extra_body: None,
             observability: ObservabilityConfig::default(),
             autonomy: AutonomyConfig::default(),
             trust: crate::trust::TrustConfig::default(),
@@ -11533,6 +11541,7 @@ auto_save = true
             provider_timeout_secs: 120,
             provider_max_tokens: None,
             extra_headers: HashMap::new(),
+            extra_body: None,
             observability: ObservabilityConfig {
                 backend: "log".into(),
                 ..ObservabilityConfig::default()
@@ -12143,6 +12152,7 @@ default_temperature = 0.7
             provider_timeout_secs: 120,
             provider_max_tokens: None,
             extra_headers: HashMap::new(),
+            extra_body: None,
             observability: ObservabilityConfig::default(),
             autonomy: AutonomyConfig::default(),
             trust: crate::trust::TrustConfig::default(),

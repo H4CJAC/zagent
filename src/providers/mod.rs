@@ -704,6 +704,8 @@ pub struct ProviderRuntimeOptions {
     /// Extra HTTP headers to include in provider API requests.
     /// These are merged from the config file and `ZEROCLAW_EXTRA_HEADERS` env var.
     pub extra_headers: std::collections::HashMap<String, String>,
+    /// Extra fields merged into every LLM API request body (e.g. `thinking`).
+    pub extra_body: Option<serde_json::Value>,
     /// Custom API path suffix for OpenAI-compatible providers
     /// (e.g. "/v2/generate" instead of the default "/chat/completions").
     pub api_path: Option<String>,
@@ -726,6 +728,7 @@ impl Default for ProviderRuntimeOptions {
             reasoning_effort: None,
             provider_timeout_secs: None,
             extra_headers: std::collections::HashMap::new(),
+            extra_body: None,
             api_path: None,
             provider_max_tokens: None,
             merge_system_into_user: false,
@@ -766,6 +769,7 @@ pub fn provider_runtime_options_from_config(
         reasoning_effort: config.runtime.reasoning_effort.clone(),
         provider_timeout_secs: Some(config.provider_timeout_secs),
         extra_headers: config.extra_headers.clone(),
+        extra_body: config.extra_body.clone(),
         api_path: config.api_path.clone(),
         provider_max_tokens: config.provider_max_tokens,
         merge_system_into_user,
@@ -1112,6 +1116,7 @@ fn create_provider_with_url_and_options(
         let timeout = options.provider_timeout_secs;
         let reasoning_effort = options.reasoning_effort.clone();
         let extra_headers = options.extra_headers.clone();
+        let extra_body = options.extra_body.clone();
         let api_path = options.api_path.clone();
         let max_tokens = options.provider_max_tokens;
         move |p: OpenAiCompatibleProvider| -> Box<dyn Provider> {
@@ -1124,6 +1129,9 @@ fn create_provider_with_url_and_options(
             }
             if !extra_headers.is_empty() {
                 p = p.with_extra_headers(extra_headers.clone());
+            }
+            if extra_body.is_some() {
+                p = p.with_extra_body(extra_body.clone());
             }
             if api_path.is_some() {
                 p = p.with_api_path(api_path.clone());

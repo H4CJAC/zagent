@@ -1130,6 +1130,7 @@ data: [DONE]
             reasoning_effort: None,
             provider_timeout_secs: None,
             extra_headers: std::collections::HashMap::new(),
+            extra_body: None,
             api_path: None,
             provider_max_tokens: None,
             merge_system_into_user: false,

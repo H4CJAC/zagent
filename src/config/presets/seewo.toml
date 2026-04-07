@@ -11,6 +11,9 @@ embedding_routes = []
 
 [extra_headers]
 
+[extra_body]
+thinking = { type = "enabled" }
+
 [observability]
 backend = "none"
 runtime_trace_mode = "none"
