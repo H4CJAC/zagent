@@ -1,0 +1,24 @@
+src/providers/openai.rs
+  29dccb33ca9eaaf5 75,77,276,302,313-331,340,378-385,910,923
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "7f5082cd5a10d94c907c3f58e5c8d1e8612828cb",
+  "prompts": {
+    "29dccb33ca9eaaf5": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a2be1d93-ec7c-4269-97e5-e1a05185d2b0",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 40,
+      "total_deletions": 6,
+      "accepted_lines": 40,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/31201900da5b18079938e3ad181ccb82f25741907bee8c0094acd7601734a6d4"
+    }
+  }
+}
