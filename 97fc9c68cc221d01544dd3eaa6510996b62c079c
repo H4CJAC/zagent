@@ -1,0 +1,28 @@
+docs/setup-guides/quick_build/02-build_to_aarch64_kos.md
+  29dccb33ca9eaaf5 2-3,7
+docs/setup-guides/quick_build/01-build_to_x86_kos.md
+  29dccb33ca9eaaf5 2-3,7
+docs/setup-guides/quick_build/00-build_to_windows.md
+  29dccb33ca9eaaf5 1-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "97fc9c68cc221d01544dd3eaa6510996b62c079c",
+  "prompts": {
+    "29dccb33ca9eaaf5": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a2be1d93-ec7c-4269-97e5-e1a05185d2b0",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 12,
+      "total_deletions": 6,
+      "accepted_lines": 12,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/db54ae928a71df4d92fafc75a1511060a4e724a1fc4e64bb8e71bd525dbb48fc"
+    }
+  }
+}
