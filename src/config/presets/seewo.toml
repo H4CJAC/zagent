@@ -429,7 +429,7 @@ allow_private_hosts = false
 [multimodal]
 max_images = 4
 max_image_size_mb = 5
-allow_remote_fetch = false
+allow_remote_fetch = true
 
 [media_pipeline]
 enabled = false
