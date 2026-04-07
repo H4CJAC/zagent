@@ -457,11 +457,11 @@ max_links = 3
 timeout_secs = 10
 
 [text_browser]
-enabled = false
+enabled = true
 timeout_secs = 30
 
 [web_search]
-enabled = true
+enabled = false
 provider = "duckduckgo"
 max_results = 5
 timeout_secs = 15
