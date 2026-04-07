@@ -1557,6 +1557,131 @@ pub async fn handle_claude_code_hook(
     Json(serde_json::json!({ "ok": true }))
 }
 
+// ── Seewo user config endpoints ────────────────────────────────
+
+/// `POST /api/user/sw_token` — inject a Seewo token at runtime.
+pub async fn handle_api_user_sw_token(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(body): Json<serde_json::Value>,
+) -> impl IntoResponse {
+    if let Err(e) = require_auth(&state, &headers) {
+        return e.into_response();
+    }
+    match body["token"].as_str() {
+        Some(token) if !token.is_empty() => {
+            *state.sw_token.write() = Some(token.to_owned());
+            Json(serde_json::json!({})).into_response()
+        }
+        _ => (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({ "error": "missing or empty 'token' field" })),
+        )
+            .into_response(),
+    }
+}
+
+/// `GET /api/user/call_name` — read personalized names from Markdown files.
+pub async fn handle_api_user_call_name_get(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+) -> impl IntoResponse {
+    if let Err(e) = require_auth(&state, &headers) {
+        return e.into_response();
+    }
+    let ws_dir = state.config.lock().workspace_dir.clone();
+    let claw_name = read_claw_name(&ws_dir).unwrap_or_default();
+    let user_name = read_user_name(&ws_dir).unwrap_or_default();
+    Json(serde_json::json!({
+        "claw_name": claw_name,
+        "user_name": user_name,
+    }))
+    .into_response()
+}
+
+/// `POST /api/user/call_name` — update personalized names in Markdown files.
+pub async fn handle_api_user_call_name_post(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Json(body): Json<serde_json::Value>,
+) -> impl IntoResponse {
+    if let Err(e) = require_auth(&state, &headers) {
+        return e.into_response();
+    }
+
+    let ws_dir = state.config.lock().workspace_dir.clone();
+    let new_claw = body["claw_name"].as_str().map(str::to_owned);
+    let new_user = body["user_name"].as_str().map(str::to_owned);
+
+    if new_claw.is_none() && new_user.is_none() {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({ "error": "provide at least one of 'claw_name' or 'user_name'" })),
+        )
+            .into_response();
+    }
+
+    let old_claw = read_claw_name(&ws_dir).unwrap_or_default();
+    let old_user = read_user_name(&ws_dir).unwrap_or_default();
+
+    if let Some(ref name) = new_claw {
+        if !name.is_empty() && !old_claw.is_empty() && name != &old_claw {
+            replace_in_file(&ws_dir.join("IDENTITY.md"), &old_claw, name);
+            replace_in_file(&ws_dir.join("SOUL.md"), &old_claw, name);
+        }
+    }
+    if let Some(ref name) = new_user {
+        if !name.is_empty() && !old_user.is_empty() && name != &old_user {
+            replace_in_file(&ws_dir.join("USER.md"), &old_user, name);
+        }
+    }
+
+    Json(serde_json::json!({})).into_response()
+}
+
+// ── helpers for call_name ──────────────────────────────────────
+
+/// Extract `claw_name` from `IDENTITY.md` by matching `- **名称**：XXX`.
+fn read_claw_name(ws_dir: &std::path::Path) -> Option<String> {
+    let content = std::fs::read_to_string(ws_dir.join("IDENTITY.md")).ok()?;
+    for line in content.lines() {
+        if let Some(rest) = line.strip_prefix("- **名称**：") {
+            let name = rest.trim();
+            if !name.is_empty() {
+                return Some(name.to_owned());
+            }
+        }
+    }
+    None
+}
+
+/// Extract `user_name` from `USER.md` by matching `当前用户是**XXX**`.
+fn read_user_name(ws_dir: &std::path::Path) -> Option<String> {
+    let content = std::fs::read_to_string(ws_dir.join("USER.md")).ok()?;
+    for line in content.lines() {
+        if let Some(start) = line.find("当前用户是**") {
+            let after = &line[start + "当前用户是**".len()..];
+            if let Some(end) = after.find("**") {
+                let name = &after[..end];
+                if !name.is_empty() {
+                    return Some(name.to_owned());
+                }
+            }
+        }
+    }
+    None
+}
+
+/// Replace all occurrences of `old` with `new` in a file (no-op if file is missing).
+fn replace_in_file(path: &std::path::Path, old: &str, new: &str) {
+    if let Ok(content) = std::fs::read_to_string(path) {
+        let updated = content.replace(old, new);
+        if updated != content {
+            let _ = std::fs::write(path, updated);
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1679,6 +1804,7 @@ mod tests {
             canvas_store: crate::tools::canvas::CanvasStore::new(),
             #[cfg(feature = "webauthn")]
             webauthn: None,
+            sw_token: Arc::new(parking_lot::RwLock::new(None)),
         }
     }
 
