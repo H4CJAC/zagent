@@ -1,0 +1,26 @@
+src/gateway/ws_v2.rs
+  29dccb33ca9eaaf5 1-32,34,36-625
+src/gateway/mod.rs
+  29dccb33ca9eaaf5 24,783,1014-1015
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "ca9ac3ed8ffe7baf2be82f44e51eee1c66657b38",
+  "prompts": {
+    "29dccb33ca9eaaf5": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a2be1d93-ec7c-4269-97e5-e1a05185d2b0",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 911,
+      "total_deletions": 275,
+      "accepted_lines": 627,
+      "overriden_lines": 2,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/ebb0a8e2aef771d4ed0f8aa6bae3fa3df2515358de89a1c0cd8ae99b37eb6e21"
+    }
+  }
+}
