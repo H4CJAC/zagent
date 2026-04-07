@@ -341,19 +341,24 @@ async fn handle_socket_v2(
         }
     };
 
-    // Restore persisted history.
+    // Restore persisted history and session name.
+    let mut effective_name = session_name.clone();
     let resumed_count = state
         .session_backend
         .as_ref()
         .map(|b| {
             let msgs = b.load(&session_key);
-            if msgs.is_empty() {
-                0
-            } else {
-                let n = msgs.len();
+            let n = msgs.len();
+            if n > 0 {
                 session.history = msgs;
-                n
             }
+            // Persist provided name, or load existing one.
+            if !session_name.is_empty() {
+                let _ = b.set_session_name(&session_key, &session_name);
+            } else if let Ok(Some(stored)) = b.get_session_name(&session_key) {
+                effective_name = stored;
+            }
+            n
         })
         .unwrap_or(0);
 
@@ -362,7 +367,7 @@ async fn handle_socket_v2(
         serde_json::json!({
             "type": "session_start",
             "session_id": session_id,
-            "name": session_name,
+            "name": effective_name,
             "resumed": resumed_count > 0,
             "message_count": resumed_count,
             "engine": "v2",

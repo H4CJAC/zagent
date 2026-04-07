@@ -1270,6 +1270,31 @@ fn hydrate_config_for_save(
 
 // ── Session API handlers ─────────────────────────────────────────
 
+/// Gateway session key prefixes: v1 uses `gw_`, v2 uses `gw2_`.
+const GW_PREFIXES: &[(&str, &str)] = &[("gw_", "v1"), ("gw2_", "v2")];
+
+/// Strip a gateway prefix from a session key, returning `(bare_id, engine)`.
+fn parse_gw_key(key: &str) -> Option<(&str, &str)> {
+    GW_PREFIXES
+        .iter()
+        .find_map(|&(prefix, engine)| key.strip_prefix(prefix).map(|id| (id, engine)))
+}
+
+/// Resolve a bare session ID to the internal key by trying each known prefix.
+fn resolve_gw_key(
+    backend: &dyn crate::channels::session_backend::SessionBackend,
+    id: &str,
+) -> Option<String> {
+    GW_PREFIXES.iter().find_map(|&(prefix, _)| {
+        let key = format!("{prefix}{id}");
+        if backend.load(&key).is_empty() {
+            None
+        } else {
+            Some(key)
+        }
+    })
+}
+
 /// GET /api/sessions — list gateway sessions
 pub async fn handle_api_sessions_list(
     State(state): State<AppState>,
@@ -1291,9 +1316,10 @@ pub async fn handle_api_sessions_list(
     let gw_sessions: Vec<serde_json::Value> = all_metadata
         .into_iter()
         .filter_map(|meta| {
-            let session_id = meta.key.strip_prefix("gw_")?;
+            let (session_id, engine) = parse_gw_key(&meta.key)?;
             let mut entry = serde_json::json!({
                 "session_id": session_id,
+                "engine": engine,
                 "created_at": meta.created_at.to_rfc3339(),
                 "last_activity": meta.last_activity.to_rfc3339(),
                 "message_count": meta.message_count,
@@ -1327,7 +1353,7 @@ pub async fn handle_api_session_messages(
         .into_response();
     };
 
-    let session_key = format!("gw_{id}");
+    let session_key = resolve_gw_key(backend.as_ref(), &id).unwrap_or_else(|| format!("gw_{id}"));
     let msgs = backend.load(&session_key);
     let messages: Vec<serde_json::Value> = msgs
         .into_iter()
@@ -1360,7 +1386,7 @@ pub async fn handle_api_session_delete(
             .into_response();
     };
 
-    let session_key = format!("gw_{id}");
+    let session_key = resolve_gw_key(backend.as_ref(), &id).unwrap_or_else(|| format!("gw_{id}"));
     match backend.delete_session(&session_key) {
         Ok(true) => Json(serde_json::json!({"deleted": true, "session_id": id})).into_response(),
         Ok(false) => (
@@ -1404,17 +1430,13 @@ pub async fn handle_api_session_rename(
             .into_response();
     }
 
-    let session_key = format!("gw_{id}");
-
-    // Verify the session exists before renaming
-    let sessions = backend.list_sessions();
-    if !sessions.contains(&session_key) {
+    let Some(session_key) = resolve_gw_key(backend.as_ref(), &id) else {
         return (
             StatusCode::NOT_FOUND,
             Json(serde_json::json!({"error": "Session not found"})),
         )
             .into_response();
-    }
+    };
 
     match backend.set_session_name(&session_key, name) {
         Ok(()) => Json(serde_json::json!({"session_id": id, "name": name})).into_response(),
@@ -1447,9 +1469,10 @@ pub async fn handle_api_sessions_running(
     let sessions: Vec<serde_json::Value> = running
         .into_iter()
         .filter_map(|meta| {
-            let session_id = meta.key.strip_prefix("gw_")?;
+            let (session_id, engine) = parse_gw_key(&meta.key)?;
             Some(serde_json::json!({
                 "session_id": session_id,
+                "engine": engine,
                 "created_at": meta.created_at.to_rfc3339(),
                 "last_activity": meta.last_activity.to_rfc3339(),
                 "message_count": meta.message_count,
@@ -1478,7 +1501,7 @@ pub async fn handle_api_session_state(
             .into_response();
     };
 
-    let session_key = format!("gw_{id}");
+    let session_key = resolve_gw_key(backend.as_ref(), &id).unwrap_or_else(|| format!("gw_{id}"));
     match backend.get_session_state(&session_key) {
         Ok(Some(ss)) => {
             let mut resp = serde_json::json!({
