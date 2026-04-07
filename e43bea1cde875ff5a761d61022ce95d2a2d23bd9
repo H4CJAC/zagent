@@ -1,0 +1,24 @@
+.cargo/config.toml
+  29dccb33ca9eaaf5 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "e43bea1cde875ff5a761d61022ce95d2a2d23bd9",
+  "prompts": {
+    "29dccb33ca9eaaf5": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a2be1d93-ec7c-4269-97e5-e1a05185d2b0",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 0,
+      "accepted_lines": 1,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/ad73ea879252a53b1946e8c7edc58b5cd3f3494fc05940b0ee5bbd83487d9425"
+    }
+  }
+}
