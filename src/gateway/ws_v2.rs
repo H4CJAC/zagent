@@ -586,6 +586,7 @@ async fn process_turn(
                         if full_response != text {
                             full_response = text;
                         }
+                        let _ = send_json(sender, serde_json::json!({ "type": "chunk_reset" })).await;
                         let _ = send_json(sender, serde_json::json!({
                             "type": "done", "full_response": full_response,
                         })).await;
@@ -594,8 +595,21 @@ async fn process_turn(
                         if e.downcast_ref::<ToolLoopCancelled>().is_some() || cancelled {
                             let _ = send_json(sender, serde_json::json!({ "type": "cancelled" })).await;
                         } else {
+                            let sanitized = crate::providers::sanitize_api_error(&e.to_string());
+                            let error_code = if sanitized.to_lowercase().contains("api key")
+                                || sanitized.to_lowercase().contains("authentication")
+                                || sanitized.to_lowercase().contains("unauthorized")
+                            {
+                                "AUTH_ERROR"
+                            } else if sanitized.to_lowercase().contains("provider")
+                                || sanitized.to_lowercase().contains("model")
+                            {
+                                "PROVIDER_ERROR"
+                            } else {
+                                "AGENT_ERROR"
+                            };
                             let _ = send_json(sender, serde_json::json!({
-                                "type": "error", "message": format!("{e:#}"), "code": "AGENT_ERROR",
+                                "type": "error", "message": sanitized, "code": error_code,
                             })).await;
                         }
                     }
