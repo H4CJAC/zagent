@@ -21,6 +21,7 @@ pub mod sse;
 pub mod static_files;
 pub mod tls;
 pub mod ws;
+pub mod ws_v2;
 
 use crate::channels::{
     Channel, GmailPushChannel, LinqChannel, NextcloudTalkChannel, SendMessage, WatiChannel,
@@ -779,6 +780,7 @@ pub async fn run_gateway(
     }
     println!("  GET  {pfx}/api/*     — REST API (bearer token required)");
     println!("  GET  {pfx}/ws/chat   — WebSocket agent chat");
+    println!("  GET  {pfx}/ws/chat/v2 — WebSocket agent chat (v2, full engine)");
     if config.nodes.enabled {
         println!("  GET  {pfx}/ws/nodes  — WebSocket node discovery");
     }
@@ -1009,6 +1011,8 @@ pub async fn run_gateway(
         .route("/api/events/history", get(sse::handle_events_history))
         // ── WebSocket agent chat ──
         .route("/ws/chat", get(ws::handle_ws_chat))
+        // ── WebSocket agent chat v2 (full engine) ──
+        .route("/ws/chat/v2", get(ws_v2::handle_ws_chat_v2))
         // ── WebSocket canvas updates ──
         .route("/ws/canvas/{id}", get(canvas::handle_ws_canvas))
         // ── WebSocket node discovery ──
