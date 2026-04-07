@@ -1,6 +1,8 @@
-default_provider = "seewo"
-default_model = "VOLC_DOUBAO_SEED_2_0_PRO_260215"
-default_temperature = 0.7
+default_provider = "openai"
+default_model = "kimi-k2.5"
+api_url = "http://ai-open.seewo.com/openai/deployments/ALI_KIMI_SPECIAL_K2_5"
+api_key = "eef3c35188e94e91a8a622180a436d48"
+default_temperature = 1
 provider_timeout_secs = 120
 model_routes = []
 embedding_routes = []
