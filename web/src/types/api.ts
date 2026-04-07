@@ -142,7 +142,9 @@ export interface WsMessage {
     | 'error'
     | 'session_start'
     | 'connected'
-    | 'cron_result';
+    | 'cron_result'
+    | 'progress'
+    | 'cancelled';
   content?: string;
   full_response?: string;
   name?: string;

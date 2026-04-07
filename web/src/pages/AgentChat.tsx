@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, Bot, User, AlertCircle, Copy, Check } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { Send, Bot, User, AlertCircle, Copy, Check, StopCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { WsMessage } from '@/types/api';
 import { WebSocketClient, getOrCreateSessionId } from '@/lib/ws';
+import type { WsVersion } from '@/lib/ws';
 import { generateUUID } from '@/lib/uuid';
 import { useDraft } from '@/hooks/useDraft';
 import { t } from '@/lib/i18n';
@@ -31,6 +32,12 @@ interface ChatMessage {
 const DRAFT_KEY = 'agent-chat';
 
 export default function AgentChat() {
+  const wsVersion = useMemo<WsVersion>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('wsVersion') === 'v2' ? 'v2' : 'v1';
+  }, []);
+  const isV2 = wsVersion === 'v2';
+
   const sessionIdRef = useRef(getOrCreateSessionId());
   const { draft, saveDraft, clearDraft } = useDraft(DRAFT_KEY);
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
@@ -106,7 +113,7 @@ export default function AgentChat() {
   }, [messages, historyReady]);
 
   useEffect(() => {
-    const ws = new WebSocketClient();
+    const ws = new WebSocketClient({ wsVersion });
 
     ws.onOpen = () => {
       setConnected(true);
@@ -140,6 +147,10 @@ export default function AgentChat() {
           setTyping(true);
           pendingContentRef.current += msg.content ?? '';
           setStreamingContent(pendingContentRef.current);
+          break;
+
+        case 'progress':
+          setTyping(true);
           break;
 
         case 'chunk_reset':
@@ -252,6 +263,24 @@ export default function AgentChat() {
           break;
         }
 
+        case 'cancelled':
+          pendingContentRef.current = '';
+          pendingThinkingRef.current = '';
+          capturedThinkingRef.current = '';
+          setStreamingContent('');
+          setStreamingThinking('');
+          setTyping(false);
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: generateUUID(),
+              role: 'agent',
+              content: '⏹ Turn cancelled.',
+              timestamp: new Date(),
+            },
+          ]);
+          break;
+
         case 'error':
           setMessages((prev) => [
             ...prev,
@@ -282,7 +311,7 @@ export default function AgentChat() {
     return () => {
       ws.disconnect();
     };
-  }, []);
+  }, [wsVersion]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -499,15 +528,27 @@ export default function AgentChat() {
             className="input-electric flex-1 px-4 text-sm resize-none disabled:opacity-40"
             style={{ minHeight: '44px', maxHeight: '200px', paddingTop: '10px', paddingBottom: '10px' }}
           />
-          <button
-            type='button'
-            onClick={handleSend}
-            disabled={!connected || !input.trim()}
-            className="btn-electric flex-shrink-0 rounded-2xl flex items-center justify-center"
-            style={{ color: 'white', width: '40px', height: '40px' }}
-          >
-            <Send className="h-5 w-5" />
-          </button>
+          {isV2 && typing ? (
+            <button
+              type='button'
+              onClick={() => wsRef.current?.sendCancel()}
+              className="btn-electric flex-shrink-0 rounded-2xl flex items-center justify-center"
+              style={{ color: 'white', width: '40px', height: '40px', background: 'var(--color-status-error)' }}
+              title="Cancel"
+            >
+              <StopCircle className="h-5 w-5" />
+            </button>
+          ) : (
+            <button
+              type='button'
+              onClick={handleSend}
+              disabled={!connected || !input.trim()}
+              className="btn-electric flex-shrink-0 rounded-2xl flex items-center justify-center"
+              style={{ color: 'white', width: '40px', height: '40px' }}
+            >
+              <Send className="h-5 w-5" />
+            </button>
+          )}
         </div>
         <div className="flex items-center justify-center mt-2 gap-2">
           <span
@@ -519,6 +560,7 @@ export default function AgentChat() {
           />
           <span className="text-[10px]" style={{ color: 'var(--pc-text-faint)' }}>
             {connected ? t('agent.connected_status') : t('agent.disconnected_status')}
+            {isV2 && ' (v2)'}
           </span>
         </div>
       </div>

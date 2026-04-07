@@ -9,6 +9,8 @@ export type WsOpenHandler = () => void;
 export type WsCloseHandler = (ev: CloseEvent) => void;
 export type WsErrorHandler = (ev: Event) => void;
 
+export type WsVersion = 'v1' | 'v2';
+
 export interface WebSocketClientOptions {
   /** Base URL override. Defaults to current host with ws(s) protocol. */
   baseUrl?: string;
@@ -18,6 +20,8 @@ export interface WebSocketClientOptions {
   maxReconnectDelay?: number;
   /** Set to false to disable auto-reconnect. Default true. */
   autoReconnect?: boolean;
+  /** WS protocol version. 'v1' uses /ws/chat, 'v2' uses /ws/chat/v2 (full engine). Default 'v1'. */
+  wsVersion?: WsVersion;
 }
 
 const DEFAULT_RECONNECT_DELAY = 1000;
@@ -50,6 +54,7 @@ export class WebSocketClient {
   private readonly reconnectDelay: number;
   private readonly maxReconnectDelay: number;
   private readonly autoReconnect: boolean;
+  private readonly wsVersion: WsVersion;
 
   constructor(options: WebSocketClientOptions = {}) {
     let defaultBase: string;
@@ -64,6 +69,7 @@ export class WebSocketClient {
     this.reconnectDelay = options.reconnectDelay ?? DEFAULT_RECONNECT_DELAY;
     this.maxReconnectDelay = options.maxReconnectDelay ?? MAX_RECONNECT_DELAY;
     this.autoReconnect = options.autoReconnect ?? true;
+    this.wsVersion = options.wsVersion ?? 'v1';
     this.currentDelay = this.reconnectDelay;
   }
 
@@ -77,9 +83,12 @@ export class WebSocketClient {
     const params = new URLSearchParams();
     if (token) params.set('token', token);
     params.set('session_id', sessionId);
-    const url = `${this.baseUrl}${basePath}/ws/chat?${params.toString()}`;
 
-    const protocols: string[] = ['zeroclaw.v1'];
+    const wsPath = this.wsVersion === 'v2' ? '/ws/chat/v2' : '/ws/chat';
+    const url = `${this.baseUrl}${basePath}${wsPath}?${params.toString()}`;
+
+    const subProtocol = this.wsVersion === 'v2' ? 'zeroclaw.v2' : 'zeroclaw.v1';
+    const protocols: string[] = [subProtocol];
     if (token) protocols.push(`bearer.${token}`);
     this.ws = new WebSocket(url, protocols);
 
@@ -113,6 +122,17 @@ export class WebSocketClient {
       throw new Error('WebSocket is not connected');
     }
     this.ws.send(JSON.stringify({ type: 'message', content }));
+  }
+
+  /** Cancel the current agent turn (v2 only). */
+  sendCancel(): void {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+    this.ws.send(JSON.stringify({ type: 'cancel' }));
+  }
+
+  /** The WS version this client was configured with. */
+  get version(): WsVersion {
+    return this.wsVersion;
   }
 
   /** Close the connection without auto-reconnecting. */
