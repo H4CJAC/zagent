@@ -273,6 +273,15 @@ pub enum DraftEvent {
     Progress(String),
     /// Actual response content delta to append to the draft message.
     Content(String),
+    /// Reasoning/thinking delta from a thinking-capable model.
+    Thinking(String),
+    /// Structured notification that a tool call is about to execute.
+    ToolCallStart {
+        name: String,
+        args: serde_json::Value,
+    },
+    /// Structured notification that a tool call has completed.
+    ToolCallResult { name: String, output: String },
 }
 
 tokio::task_local! {
@@ -2064,6 +2073,9 @@ async fn consume_provider_streaming_response(
                 if let Some(reasoning) = &chunk.reasoning {
                     if !reasoning.is_empty() {
                         outcome.reasoning_content.push_str(reasoning);
+                        if let Some(tx) = delta_sender {
+                            let _ = tx.send(DraftEvent::Thinking(reasoning.clone())).await;
+                        }
                     }
                 }
 
@@ -3158,6 +3170,12 @@ pub(crate) async fn run_tool_call_loop(
                 };
                 tracing::debug!(tool = %tool_name, "Sending progress start to draft");
                 let _ = tx.send(DraftEvent::Progress(progress)).await;
+                let _ = tx
+                    .send(DraftEvent::ToolCallStart {
+                        name: tool_name.clone(),
+                        args: tool_args.clone(),
+                    })
+                    .await;
             }
 
             executable_indices.push(idx);
@@ -3237,6 +3255,12 @@ pub(crate) async fn run_tool_call_loop(
                 };
                 tracing::debug!(tool = %call.name, secs, "Sending progress complete to draft");
                 let _ = tx.send(DraftEvent::Progress(progress_msg)).await;
+                let _ = tx
+                    .send(DraftEvent::ToolCallResult {
+                        name: call.name.clone(),
+                        output: truncate_with_ellipsis(&outcome.output, max_tool_result_chars),
+                    })
+                    .await;
             }
 
             ordered_results[*idx] = Some((call.name.clone(), call.tool_call_id.clone(), outcome));
@@ -4258,6 +4282,9 @@ pub async fn run(
                             print!("{text}");
                             let _ = std::io::stdout().flush();
                         }
+                        DraftEvent::Thinking(_)
+                        | DraftEvent::ToolCallStart { .. }
+                        | DraftEvent::ToolCallResult { .. } => {}
                     }
                 }
             });
@@ -7020,10 +7047,10 @@ mod tests {
                 DraftEvent::Clear => {
                     visible_deltas.clear();
                 }
-                DraftEvent::Progress(_) => {}
                 DraftEvent::Content(text) => {
                     visible_deltas.push_str(&text);
                 }
+                _ => {}
             }
         }
 
@@ -7091,10 +7118,10 @@ mod tests {
                 DraftEvent::Clear => {
                     visible_deltas.clear();
                 }
-                DraftEvent::Progress(_) => {}
                 DraftEvent::Content(text) => {
                     visible_deltas.push_str(&text);
                 }
+                _ => {}
             }
         }
 
@@ -7166,10 +7193,10 @@ mod tests {
                 DraftEvent::Clear => {
                     visible_deltas.clear();
                 }
-                DraftEvent::Progress(_) => {}
                 DraftEvent::Content(text) => {
                     visible_deltas.push_str(&text);
                 }
+                _ => {}
             }
         }
 
@@ -7250,10 +7277,10 @@ mod tests {
                 DraftEvent::Clear => {
                     visible_deltas.clear();
                 }
-                DraftEvent::Progress(_) => {}
                 DraftEvent::Content(text) => {
                     visible_deltas.push_str(&text);
                 }
+                _ => {}
             }
         }
 
@@ -9267,7 +9294,7 @@ Let me check the result."#;
             .iter()
             .filter_map(|d| match d {
                 DraftEvent::Progress(t) | DraftEvent::Content(t) => Some(t.as_str()),
-                DraftEvent::Clear => None,
+                _ => None,
             })
             .collect();
 

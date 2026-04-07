@@ -539,6 +539,21 @@ async fn process_turn(
                             "type": "chunk", "content": delta,
                         })).await;
                     }
+                    Some(DraftEvent::Thinking(delta)) => {
+                        let _ = send_json(sender, serde_json::json!({
+                            "type": "thinking", "content": delta,
+                        })).await;
+                    }
+                    Some(DraftEvent::ToolCallStart { name, args }) => {
+                        let _ = send_json(sender, serde_json::json!({
+                            "type": "tool_call", "name": name, "args": args,
+                        })).await;
+                    }
+                    Some(DraftEvent::ToolCallResult { name, output }) => {
+                        let _ = send_json(sender, serde_json::json!({
+                            "type": "tool_result", "name": name, "output": output,
+                        })).await;
+                    }
                     Some(DraftEvent::Progress(text)) => {
                         let _ = send_json(sender, serde_json::json!({
                             "type": "progress", "content": text,

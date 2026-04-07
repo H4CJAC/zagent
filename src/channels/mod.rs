@@ -2899,6 +2899,9 @@ async fn process_channel_message(
                                 tracing::debug!("Draft update failed: {e}");
                             }
                         }
+                        DraftEvent::Thinking(_)
+                        | DraftEvent::ToolCallStart { .. }
+                        | DraftEvent::ToolCallResult { .. } => {}
                     }
                 }
             }))
