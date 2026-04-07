@@ -2116,7 +2116,11 @@ async fn consume_provider_streaming_response(
 
                 if let Some(tx) = delta_sender {
                     if !outcome.forwarded_live_deltas {
-                        let _ = tx.send(DraftEvent::Clear).await;
+                        // Only clear if no thinking content was already streamed;
+                        // otherwise the Clear would wipe the displayed reasoning.
+                        if outcome.reasoning_content.is_empty() {
+                            let _ = tx.send(DraftEvent::Clear).await;
+                        }
                         outcome.forwarded_live_deltas = true;
                     }
                     if tx.send(DraftEvent::Content(chunk.delta)).await.is_err() {
