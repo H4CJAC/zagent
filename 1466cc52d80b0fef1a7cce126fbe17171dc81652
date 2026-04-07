@@ -1,0 +1,35 @@
+src/providers/mod.rs
+  29dccb33ca9eaaf5 707-708,731,772,1119,1133-1134
+tests/live/openai_codex_vision_e2e.rs
+  29dccb33ca9eaaf5 158
+src/providers/compatible.rs
+  29dccb33ca9eaaf5 51-52,244,295-312,1708-1709,1719-1721,1737,1836-1837,1847-1849,1853,1952-1953,1971-1973,1977,2060-2061,2075-2077,2255,2342-2343,2353-2355,2366,2450-2451,2461-2463,2472
+src/onboard/wizard.rs
+  29dccb33ca9eaaf5 146,605
+src/config/schema.rs
+  29dccb33ca9eaaf5 124-130,8422,11544,12155
+src/providers/openai_codex.rs
+  29dccb33ca9eaaf5 1133
+src/config/presets/seewo.toml
+  29dccb33ca9eaaf5 14-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "1466cc52d80b0fef1a7cce126fbe17171dc81652",
+  "prompts": {
+    "29dccb33ca9eaaf5": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a2be1d93-ec7c-4269-97e5-e1a05185d2b0",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 154,
+      "total_deletions": 90,
+      "accepted_lines": 82,
+      "overriden_lines": 0
+    }
+  }
+}
