@@ -1,0 +1,28 @@
+web/src/pages/AgentChat.tsx
+  29dccb33ca9eaaf5 1-2,7,35-40,116,152-155,266-283,314,531-551,563
+web/src/lib/ws.ts
+  29dccb33ca9eaaf5 12-13,23-24,57,72,87-91,127-137
+web/src/types/api.ts
+  29dccb33ca9eaaf5 145-147
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "8bc2e5c39a2ce1cd0b7cbc1bb0aff5ae590a4d25",
+  "prompts": {
+    "29dccb33ca9eaaf5": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a2be1d93-ec7c-4269-97e5-e1a05185d2b0",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 80,
+      "total_deletions": 16,
+      "accepted_lines": 80,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/8c53520f732abf37a8c0f5eb712622e4a1cceee945653778a80186a0cef4f615"
+    }
+  }
+}
