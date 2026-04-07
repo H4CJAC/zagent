@@ -625,6 +625,28 @@ async fn process_turn(
             .await;
     }
 
+    // Fire-and-forget memory consolidation (extracts facts → Daily + Core).
+    if state.auto_save && !full_response.is_empty() {
+        let provider = Arc::clone(&state.provider);
+        let model = state.model.clone();
+        let mem = Arc::clone(&state.mem);
+        let user_msg = content.to_string();
+        let assistant_resp = full_response.clone();
+        tokio::spawn(async move {
+            if let Err(e) = crate::memory::consolidation::consolidate_turn(
+                provider.as_ref(),
+                &model,
+                mem.as_ref(),
+                &user_msg,
+                &assistant_resp,
+            )
+            .await
+            {
+                tracing::debug!("WS v2 memory consolidation skipped: {e}");
+            }
+        });
+    }
+
     let _ = state.event_tx.send(serde_json::json!({
         "type": "agent_end", "engine": "v2",
     }));
