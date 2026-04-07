@@ -72,8 +72,9 @@ struct NativeChatRequest {
 #[derive(Debug, Serialize)]
 struct NativeMessage {
     role: String,
+    /// `String` for text-only, `Array` for multimodal content parts.
     #[serde(skip_serializing_if = "Option::is_none")]
-    content: Option<String>,
+    content: Option<serde_json::Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     tool_call_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -272,7 +273,7 @@ impl OpenAiProvider {
                                 let content = value
                                     .get("content")
                                     .and_then(serde_json::Value::as_str)
-                                    .map(ToString::to_string);
+                                    .map(|s| serde_json::Value::String(s.to_string()));
                                 let reasoning_content = value
                                     .get("reasoning_content")
                                     .and_then(serde_json::Value::as_str)
@@ -298,7 +299,7 @@ impl OpenAiProvider {
                         let content = value
                             .get("content")
                             .and_then(serde_json::Value::as_str)
-                            .map(ToString::to_string);
+                            .map(|s| serde_json::Value::String(s.to_string()));
                         return NativeMessage {
                             role: "tool".to_string(),
                             content,
@@ -309,9 +310,34 @@ impl OpenAiProvider {
                     }
                 }
 
+                // User/system messages: check for multimodal [IMAGE:] markers.
+                if m.role == "user" {
+                    let (cleaned, refs) = crate::multimodal::parse_image_markers(&m.content);
+                    if !refs.is_empty() {
+                        let mut parts = Vec::new();
+                        let text = cleaned.trim();
+                        if !text.is_empty() {
+                            parts.push(serde_json::json!({"type": "text", "text": text}));
+                        }
+                        for data_uri in &refs {
+                            parts.push(serde_json::json!({
+                                "type": "image_url",
+                                "image_url": { "url": data_uri }
+                            }));
+                        }
+                        return NativeMessage {
+                            role: "user".to_string(),
+                            content: Some(serde_json::Value::Array(parts)),
+                            tool_call_id: None,
+                            tool_calls: None,
+                            reasoning_content: None,
+                        };
+                    }
+                }
+
                 NativeMessage {
                     role: m.role.clone(),
-                    content: Some(m.content.clone()),
+                    content: Some(serde_json::Value::String(m.content.clone())),
                     tool_call_id: None,
                     tool_calls: None,
                     reasoning_content: None,
@@ -349,6 +375,14 @@ impl OpenAiProvider {
 
 #[async_trait]
 impl Provider for OpenAiProvider {
+    fn capabilities(&self) -> crate::providers::traits::ProviderCapabilities {
+        crate::providers::traits::ProviderCapabilities {
+            native_tool_calling: true,
+            vision: true,
+            prompt_caching: false,
+        }
+    }
+
     async fn chat_with_system(
         &self,
         system_prompt: Option<&str>,
@@ -873,7 +907,7 @@ mod tests {
     fn native_message_omits_reasoning_content_when_none() {
         let msg = NativeMessage {
             role: "assistant".to_string(),
-            content: Some("hi".to_string()),
+            content: Some(serde_json::Value::String("hi".to_string())),
             tool_call_id: None,
             tool_calls: None,
             reasoning_content: None,
@@ -886,7 +920,7 @@ mod tests {
     fn native_message_includes_reasoning_content_when_some() {
         let msg = NativeMessage {
             role: "assistant".to_string(),
-            content: Some("hi".to_string()),
+            content: Some(serde_json::Value::String("hi".to_string())),
             tool_call_id: None,
             tool_calls: None,
             reasoning_content: Some("thinking...".to_string()),
