@@ -813,9 +813,11 @@ mod tests {
 
         assert!(!result.contains_images);
         assert_eq!(result.messages.len(), 1);
-        assert!(result.messages[0]
-            .content
-            .contains("[image unavailable: https://example.com/img.png]"));
+        assert!(
+            result.messages[0]
+                .content
+                .contains("[image unavailable: https://example.com/img.png]")
+        );
         assert!(result.messages[0].content.contains("Look"));
     }
 
@@ -844,9 +846,7 @@ mod tests {
 
         assert!(!result.contains_images);
         assert_eq!(result.messages.len(), 1);
-        assert!(result.messages[0]
-            .content
-            .contains("[image unavailable:"));
+        assert!(result.messages[0].content.contains("[image unavailable:"));
     }
 
     #[test]
