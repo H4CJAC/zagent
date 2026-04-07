@@ -5847,7 +5847,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn run_tool_call_loop_rejects_oversized_image_payload() {
+    async fn run_tool_call_loop_degrades_oversized_image_payload() {
         let calls = Arc::new(AtomicUsize::new(0));
         let provider = VisionProvider {
             calls: Arc::clone(&calls),
@@ -5867,7 +5867,7 @@ mod tests {
             ..Default::default()
         };
 
-        let err = run_tool_call_loop(
+        let result = run_tool_call_loop(
             &provider,
             &mut history,
             &tools_registry,
@@ -5893,14 +5893,21 @@ mod tests {
             0,
             None,
         )
-        .await
-        .expect_err("oversized payload must fail");
+        .await;
 
-        assert!(
-            err.to_string()
-                .contains("multimodal image size limit exceeded")
-        );
-        assert_eq!(calls.load(Ordering::SeqCst), 0);
+        // The multimodal layer should NOT reject; oversized images are degraded
+        // to text placeholders. The provider may still fail for other reasons
+        // (e.g. no image markers left in the degraded message), but never with
+        // the old "image size limit exceeded" error.
+        if let Err(ref e) = result {
+            assert!(
+                !e.to_string()
+                    .contains("multimodal image size limit exceeded"),
+                "oversized image should be degraded, not rejected"
+            );
+        }
+        // Provider must have been called (multimodal didn't block the request)
+        assert!(calls.load(Ordering::SeqCst) > 0);
     }
 
     #[tokio::test]

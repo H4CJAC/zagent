@@ -142,6 +142,7 @@ pub async fn prepare_messages_for_provider(
 
     let remote_client = build_runtime_proxy_client_with_timeouts("provider.ollama", 30, 10);
 
+    let mut any_image_succeeded = false;
     let mut normalized_messages = Vec::with_capacity(trimmed.len());
     for message in &trimmed {
         if message.role != "user" {
@@ -156,22 +157,49 @@ pub async fn prepare_messages_for_provider(
         }
 
         let mut normalized_refs = Vec::with_capacity(refs.len());
-        for reference in refs {
-            let data_uri =
-                normalize_image_reference(&reference, config, max_bytes, &remote_client).await?;
-            normalized_refs.push(data_uri);
+        let mut failed_placeholders: Vec<String> = Vec::new();
+        for reference in &refs {
+            match normalize_image_reference(reference, config, max_bytes, &remote_client).await {
+                Ok(data_uri) => {
+                    any_image_succeeded = true;
+                    normalized_refs.push(data_uri);
+                }
+                Err(e) => {
+                    tracing::warn!(
+                        image = %reference,
+                        error = %e,
+                        "Image processing failed, degrading to text placeholder"
+                    );
+                    failed_placeholders.push(format!("[image unavailable: {reference}]"));
+                }
+            }
         }
 
-        let content = compose_multimodal_message(&cleaned_text, &normalized_refs);
-        normalized_messages.push(ChatMessage {
-            role: message.role.clone(),
-            content,
-        });
+        let mut final_text = cleaned_text;
+        for placeholder in &failed_placeholders {
+            if !final_text.is_empty() {
+                final_text.push('\n');
+            }
+            final_text.push_str(placeholder);
+        }
+
+        if normalized_refs.is_empty() {
+            normalized_messages.push(ChatMessage {
+                role: message.role.clone(),
+                content: final_text,
+            });
+        } else {
+            let content = compose_multimodal_message(&final_text, &normalized_refs);
+            normalized_messages.push(ChatMessage {
+                role: message.role.clone(),
+                content,
+            });
+        }
     }
 
     Ok(PreparedMessages {
         messages: normalized_messages,
-        contains_images: true,
+        contains_images: any_image_succeeded,
     })
 }
 
@@ -774,24 +802,25 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn prepare_messages_rejects_remote_url_when_disabled() {
+    async fn prepare_messages_degrades_remote_url_when_disabled() {
         let messages = vec![ChatMessage::user(
             "Look [IMAGE:https://example.com/img.png]".to_string(),
         )];
 
-        let error = prepare_messages_for_provider(&messages, &MultimodalConfig::default())
+        let result = prepare_messages_for_provider(&messages, &MultimodalConfig::default())
             .await
-            .expect_err("should reject remote image URL when fetch is disabled");
+            .expect("should degrade gracefully instead of failing");
 
-        assert!(
-            error
-                .to_string()
-                .contains("multimodal remote image fetch is disabled")
-        );
+        assert!(!result.contains_images);
+        assert_eq!(result.messages.len(), 1);
+        assert!(result.messages[0]
+            .content
+            .contains("[image unavailable: https://example.com/img.png]"));
+        assert!(result.messages[0].content.contains("Look"));
     }
 
     #[tokio::test]
-    async fn prepare_messages_rejects_oversized_local_image() {
+    async fn prepare_messages_degrades_oversized_local_image() {
         let temp = tempfile::tempdir().unwrap();
         let image_path = temp.path().join("big.png");
 
@@ -809,15 +838,15 @@ mod tests {
             ..Default::default()
         };
 
-        let error = prepare_messages_for_provider(&messages, &config)
+        let result = prepare_messages_for_provider(&messages, &config)
             .await
-            .expect_err("should reject oversized local image");
+            .expect("should degrade gracefully instead of failing");
 
-        assert!(
-            error
-                .to_string()
-                .contains("multimodal image size limit exceeded")
-        );
+        assert!(!result.contains_images);
+        assert_eq!(result.messages.len(), 1);
+        assert!(result.messages[0]
+            .content
+            .contains("[image unavailable:"));
     }
 
     #[test]
