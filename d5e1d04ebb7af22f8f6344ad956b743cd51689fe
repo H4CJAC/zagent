@@ -1,0 +1,23 @@
+src/config/presets/seewo.toml
+  29dccb33ca9eaaf5 29,37-42,46-55,60,63-67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "d5e1d04ebb7af22f8f6344ad956b743cd51689fe",
+  "prompts": {
+    "29dccb33ca9eaaf5": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a2be1d93-ec7c-4269-97e5-e1a05185d2b0",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 25,
+      "total_deletions": 12,
+      "accepted_lines": 23,
+      "overriden_lines": 0
+    }
+  }
+}
