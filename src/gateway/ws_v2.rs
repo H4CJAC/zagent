@@ -375,11 +375,13 @@ async fn handle_socket_v2(
     )
     .await;
 
-    // Cloud report: session created
-    spawn_cloud_report(&config, &state, &session_id, &effective_name, "");
+    // Cloud report: new session created (skip for resumed sessions).
+    if resumed_count == 0 {
+        spawn_cloud_report(&config, &state, &session_id, &effective_name, "");
+    }
 
     let mut broadcast_rx = state.event_tx.subscribe();
-    let mut first_message_reported = false;
+    let mut first_message_reported = resumed_count > 0;
 
     loop {
         tokio::select! {
