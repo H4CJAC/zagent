@@ -101,6 +101,7 @@ pub mod sop_approve;
 pub mod sop_execute;
 pub mod sop_list;
 pub mod sop_status;
+pub mod sw_token_tool;
 pub mod swarm;
 pub mod text_browser;
 pub mod tool_search;
@@ -451,6 +452,7 @@ pub fn all_tools_with_runtime(
         )),
         Arc::new(CalculatorTool::new()),
         Arc::new(WeatherTool::new()),
+        Arc::new(sw_token_tool::SwTokenTool::new()),
         Arc::new(CanvasTool::new(canvas_store.unwrap_or_default())),
     ];
 

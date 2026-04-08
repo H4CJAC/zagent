@@ -377,7 +377,7 @@ async fn handle_socket_v2(
 
     // Cloud report: new session created (skip for resumed sessions).
     if resumed_count == 0 {
-        spawn_cloud_report(&config, &state, &session_id, &effective_name, "");
+        spawn_cloud_report(&config, &session_id, &effective_name, "");
     }
 
     let mut broadcast_rx = state.event_tx.subscribe();
@@ -423,13 +423,7 @@ async fn handle_socket_v2(
                                 let _ = backend.set_session_name(&session_key, &name);
                             }
 
-                            spawn_cloud_report(
-                                &config,
-                                &state,
-                                &session_id,
-                                &name,
-                                &desc,
-                            );
+                            spawn_cloud_report(&config, &session_id, &name, &desc);
                         }
 
                         session.cancel_token = CancellationToken::new();
@@ -702,13 +696,7 @@ async fn send_json(
 }
 
 /// Spawn a fire-and-forget cloud session report if credentials are available.
-fn spawn_cloud_report(
-    config: &Config,
-    state: &AppState,
-    session_id: &str,
-    name: &str,
-    description: &str,
-) {
+fn spawn_cloud_report(config: &Config, session_id: &str, name: &str, description: &str) {
     let url = match config.seewo_cloud.session_record_url {
         Some(ref u) if !u.is_empty() => u.clone(),
         _ => return,
@@ -717,7 +705,7 @@ fn spawn_cloud_report(
         Some(ref c) if !c.is_empty() => c.clone(),
         _ => return,
     };
-    let token = match state.sw_token.read().clone() {
+    let token = match super::sw_state::get_sw_token() {
         Some(t) => t,
         None => return,
     };

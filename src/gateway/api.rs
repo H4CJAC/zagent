@@ -1570,7 +1570,7 @@ pub async fn handle_api_user_sw_token(
     }
     match body["token"].as_str() {
         Some(token) if !token.is_empty() => {
-            *state.sw_token.write() = Some(token.to_owned());
+            super::sw_state::set_sw_token(token.to_owned());
             Json(serde_json::json!({})).into_response()
         }
         _ => (
@@ -1804,7 +1804,6 @@ mod tests {
             canvas_store: crate::tools::canvas::CanvasStore::new(),
             #[cfg(feature = "webauthn")]
             webauthn: None,
-            sw_token: Arc::new(parking_lot::RwLock::new(None)),
         }
     }
 

@@ -20,6 +20,7 @@ pub mod nodes;
 pub mod session_queue;
 pub mod sse;
 pub mod static_files;
+pub mod sw_state;
 pub mod tls;
 pub mod ws;
 pub mod ws_v2;
@@ -377,8 +378,6 @@ pub struct AppState {
     /// WebAuthn state for hardware key authentication (optional, requires `webauthn` feature)
     #[cfg(feature = "webauthn")]
     pub webauthn: Option<Arc<api_webauthn::WebAuthnState>>,
-    /// Seewo token injected at runtime via `POST /api/user/sw_token`.
-    pub sw_token: Arc<parking_lot::RwLock<Option<String>>>,
 }
 
 /// Run the HTTP gateway using axum with proper HTTP/1.1 compliance.
@@ -885,7 +884,6 @@ pub async fn run_gateway(
         } else {
             None
         },
-        sw_token: Arc::new(parking_lot::RwLock::new(None)),
     };
 
     // Config PUT needs larger body limit (1MB)
@@ -2362,7 +2360,6 @@ mod tests {
             canvas_store: CanvasStore::new(),
             #[cfg(feature = "webauthn")]
             webauthn: None,
-            sw_token: Arc::new(parking_lot::RwLock::new(None)),
         };
 
         let response = handle_metrics(State(state)).await.into_response();
@@ -2434,7 +2431,6 @@ mod tests {
             canvas_store: CanvasStore::new(),
             #[cfg(feature = "webauthn")]
             webauthn: None,
-            sw_token: Arc::new(parking_lot::RwLock::new(None)),
         };
 
         let response = handle_metrics(State(state)).await.into_response();
@@ -2830,7 +2826,6 @@ mod tests {
             canvas_store: CanvasStore::new(),
             #[cfg(feature = "webauthn")]
             webauthn: None,
-            sw_token: Arc::new(parking_lot::RwLock::new(None)),
         };
 
         let mut headers = HeaderMap::new();
@@ -2910,7 +2905,6 @@ mod tests {
             canvas_store: CanvasStore::new(),
             #[cfg(feature = "webauthn")]
             webauthn: None,
-            sw_token: Arc::new(parking_lot::RwLock::new(None)),
         };
 
         let headers = HeaderMap::new();
@@ -3002,7 +2996,6 @@ mod tests {
             canvas_store: CanvasStore::new(),
             #[cfg(feature = "webauthn")]
             webauthn: None,
-            sw_token: Arc::new(parking_lot::RwLock::new(None)),
         };
 
         let response = handle_webhook(
@@ -3066,7 +3059,6 @@ mod tests {
             canvas_store: CanvasStore::new(),
             #[cfg(feature = "webauthn")]
             webauthn: None,
-            sw_token: Arc::new(parking_lot::RwLock::new(None)),
         };
 
         let mut headers = HeaderMap::new();
@@ -3135,7 +3127,6 @@ mod tests {
             canvas_store: CanvasStore::new(),
             #[cfg(feature = "webauthn")]
             webauthn: None,
-            sw_token: Arc::new(parking_lot::RwLock::new(None)),
         };
 
         let mut headers = HeaderMap::new();
@@ -3209,7 +3200,6 @@ mod tests {
             canvas_store: CanvasStore::new(),
             #[cfg(feature = "webauthn")]
             webauthn: None,
-            sw_token: Arc::new(parking_lot::RwLock::new(None)),
         };
 
         let response = Box::pin(handle_nextcloud_talk_webhook(
@@ -3280,7 +3270,6 @@ mod tests {
             canvas_store: CanvasStore::new(),
             #[cfg(feature = "webauthn")]
             webauthn: None,
-            sw_token: Arc::new(parking_lot::RwLock::new(None)),
         };
 
         let mut headers = HeaderMap::new();
