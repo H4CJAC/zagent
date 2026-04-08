@@ -1,4 +1,5 @@
 use super::traits::{Tool, ToolResult};
+use crate::agent::loop_::{DraftEvent, TOOL_LIVE_TX};
 use crate::runtime::RuntimeAdapter;
 use crate::security::SecurityPolicy;
 use crate::security::traits::Sandbox;
@@ -7,6 +8,7 @@ use serde_json::json;
 use std::collections::HashSet;
 use std::sync::Arc;
 use std::time::Duration;
+use tokio::io::{AsyncBufReadExt, BufReader};
 
 /// Default maximum shell command execution time before kill.
 const DEFAULT_SHELL_TIMEOUT_SECS: u64 = 60;
@@ -189,33 +191,45 @@ impl Tool for ShellTool {
         }
 
         let timeout_secs = self.timeout_secs;
-        let result = tokio::time::timeout(Duration::from_secs(timeout_secs), cmd.output()).await;
+
+        cmd.stdout(std::process::Stdio::piped());
+        cmd.stderr(std::process::Stdio::piped());
+
+        let mut child = match cmd.spawn() {
+            Ok(c) => c,
+            Err(e) => {
+                return Ok(ToolResult {
+                    success: false,
+                    output: String::new(),
+                    error: Some(format!("Failed to execute command: {e}")),
+                });
+            }
+        };
+
+        let child_stdout = child.stdout.take();
+        let child_stderr = child.stderr.take();
+
+        let live_tx: Option<tokio::sync::mpsc::Sender<DraftEvent>> =
+            TOOL_LIVE_TX.try_with(|tx| tx.clone()).ok();
+
+        let stdout_handle = tokio::spawn(read_stream(child_stdout, live_tx.clone()));
+        let stderr_handle = tokio::spawn(read_stream(child_stderr, live_tx));
+
+        let result = tokio::time::timeout(Duration::from_secs(timeout_secs), async {
+            let status = child.wait().await?;
+            let stdout_buf = stdout_handle.await.unwrap_or_default();
+            let stderr_buf = stderr_handle.await.unwrap_or_default();
+            Ok::<_, std::io::Error>((status, stdout_buf, stderr_buf))
+        })
+        .await;
 
         match result {
-            Ok(Ok(output)) => {
-                let mut stdout = String::from_utf8_lossy(&output.stdout).to_string();
-                let mut stderr = String::from_utf8_lossy(&output.stderr).to_string();
-
-                // Truncate output to prevent OOM
-                if stdout.len() > MAX_OUTPUT_BYTES {
-                    let mut b = MAX_OUTPUT_BYTES.min(stdout.len());
-                    while b > 0 && !stdout.is_char_boundary(b) {
-                        b -= 1;
-                    }
-                    stdout.truncate(b);
-                    stdout.push_str("\n... [output truncated at 1MB]");
-                }
-                if stderr.len() > MAX_OUTPUT_BYTES {
-                    let mut b = MAX_OUTPUT_BYTES.min(stderr.len());
-                    while b > 0 && !stderr.is_char_boundary(b) {
-                        b -= 1;
-                    }
-                    stderr.truncate(b);
-                    stderr.push_str("\n... [stderr truncated at 1MB]");
-                }
+            Ok(Ok((status, mut stdout, mut stderr))) => {
+                truncate_output(&mut stdout);
+                truncate_output(&mut stderr);
 
                 Ok(ToolResult {
-                    success: output.status.success(),
+                    success: status.success(),
                     output: stdout,
                     error: if stderr.is_empty() {
                         None
@@ -229,14 +243,55 @@ impl Tool for ShellTool {
                 output: String::new(),
                 error: Some(format!("Failed to execute command: {e}")),
             }),
-            Err(_) => Ok(ToolResult {
-                success: false,
-                output: String::new(),
-                error: Some(format!(
-                    "Command timed out after {timeout_secs}s and was killed"
-                )),
-            }),
+            Err(_) => {
+                let _ = child.kill().await;
+                Ok(ToolResult {
+                    success: false,
+                    output: String::new(),
+                    error: Some(format!(
+                        "Command timed out after {timeout_secs}s and was killed"
+                    )),
+                })
+            }
         }
+    }
+}
+
+async fn read_stream(
+    stream: Option<impl tokio::io::AsyncRead + Unpin>,
+    live_tx: Option<tokio::sync::mpsc::Sender<DraftEvent>>,
+) -> String {
+    let Some(stream) = stream else {
+        return String::new();
+    };
+    let mut reader = BufReader::new(stream);
+    let mut buf = String::new();
+    let mut line = String::new();
+    loop {
+        line.clear();
+        match reader.read_line(&mut line).await {
+            Ok(0) | Err(_) => break,
+            Ok(_) => {
+                if let Some(ref tx) = live_tx {
+                    let _ = tx.send(DraftEvent::Thinking(line.clone())).await;
+                }
+                if buf.len() + line.len() <= MAX_OUTPUT_BYTES {
+                    buf.push_str(&line);
+                }
+            }
+        }
+    }
+    buf
+}
+
+fn truncate_output(s: &mut String) {
+    if s.len() > MAX_OUTPUT_BYTES {
+        let mut b = MAX_OUTPUT_BYTES.min(s.len());
+        while b > 0 && !s.is_char_boundary(b) {
+            b -= 1;
+        }
+        s.truncate(b);
+        s.push_str("\n... [output truncated at 1MB]");
     }
 }
 

@@ -233,7 +233,7 @@ loop_detection_window_size = 20
 loop_detection_max_repeats = 3
 
 [skills]
-open_skills_enabled = true
+open_skills_enabled = false
 allow_scripts = true
 prompt_injection_mode = "compact"
 

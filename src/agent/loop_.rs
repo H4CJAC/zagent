@@ -288,6 +288,11 @@ tokio::task_local! {
     pub(crate) static TOOL_CHOICE_OVERRIDE: Option<String>;
 }
 
+tokio::task_local! {
+    /// Channel for tools (e.g. shell) to push live output as `Thinking` events.
+    pub static TOOL_LIVE_TX: tokio::sync::mpsc::Sender<DraftEvent>;
+}
+
 /// Convert a tool registry to OpenAI function-calling format for native tool support.
 fn tools_to_openai_format(tools_registry: &[Box<dyn Tool>]) -> Vec<serde_json::Value> {
     tools_registry
@@ -3190,24 +3195,31 @@ pub(crate) async fn run_tool_call_loop(
             });
         }
 
-        let executed_outcomes = if allow_parallel_execution && executable_calls.len() > 1 {
-            execute_tools_parallel(
-                &executable_calls,
-                tools_registry,
-                activated_tools,
-                observer,
-                cancellation_token.as_ref(),
-            )
-            .await?
-        } else {
-            execute_tools_sequential(
-                &executable_calls,
-                tools_registry,
-                activated_tools,
-                observer,
-                cancellation_token.as_ref(),
-            )
-            .await?
+        let exec_fut = async {
+            if allow_parallel_execution && executable_calls.len() > 1 {
+                execute_tools_parallel(
+                    &executable_calls,
+                    tools_registry,
+                    activated_tools,
+                    observer,
+                    cancellation_token.as_ref(),
+                )
+                .await
+            } else {
+                execute_tools_sequential(
+                    &executable_calls,
+                    tools_registry,
+                    activated_tools,
+                    observer,
+                    cancellation_token.as_ref(),
+                )
+                .await
+            }
+        };
+
+        let executed_outcomes = match on_delta {
+            Some(ref tx) => TOOL_LIVE_TX.scope(tx.clone(), exec_fut).await?,
+            None => exec_fut.await?,
         };
 
         for ((idx, call), outcome) in executable_indices
