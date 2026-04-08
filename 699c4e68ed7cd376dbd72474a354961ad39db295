@@ -1,0 +1,36 @@
+src/gateway/cloud_report.rs
+  29dccb33ca9eaaf5 1-63
+src/config/schema.rs
+  29dccb33ca9eaaf5 442-456,8508,11711,12243
+src/gateway/ws_v2.rs
+  29dccb33ca9eaaf5 378-380,382,414-432,701-733
+src/config/presets/seewo.toml
+  29dccb33ca9eaaf5 718-721
+src/gateway/mod.rs
+  29dccb33ca9eaaf5 18
+src/onboard/wizard.rs
+  29dccb33ca9eaaf5 217,677
+src/config/mod.rs
+  29dccb33ca9eaaf5 28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "699c4e68ed7cd376dbd72474a354961ad39db295",
+  "prompts": {
+    "29dccb33ca9eaaf5": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a2be1d93-ec7c-4269-97e5-e1a05185d2b0",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 157,
+      "total_deletions": 16,
+      "accepted_lines": 145,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/423d9e3c2fb4ccaf01015b7e7286e5d9e95408dcaf80eac055cc940f93f8c250"
+    }
+  }
+}
