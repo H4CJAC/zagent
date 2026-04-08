@@ -347,12 +347,14 @@ async fn handle_socket_v2(
         .session_backend
         .as_ref()
         .map(|b| {
+            // Ensure metadata row exists so set_session_state / set_session_name work on first turn.
+            let _ = b.ensure_session(&session_key);
+
             let msgs = b.load(&session_key);
             let n = msgs.len();
             if n > 0 {
                 session.history = msgs;
             }
-            // Persist provided name, or load existing one.
             if !session_name.is_empty() {
                 let _ = b.set_session_name(&session_key, &session_name);
             } else if let Ok(Some(stored)) = b.get_session_name(&session_key) {

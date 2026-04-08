@@ -358,6 +358,19 @@ impl SessionBackend for SqliteSessionBackend {
         Ok(true)
     }
 
+    fn ensure_session(&self, session_key: &str) -> std::io::Result<()> {
+        let conn = self.conn.lock();
+        let now = Utc::now().to_rfc3339();
+        conn.execute(
+            "INSERT INTO session_metadata (session_key, created_at, last_activity, message_count)
+             VALUES (?1, ?2, ?3, 0)
+             ON CONFLICT(session_key) DO NOTHING",
+            params![session_key, now, now],
+        )
+        .map_err(std::io::Error::other)?;
+        Ok(())
+    }
+
     fn set_session_name(&self, session_key: &str, name: &str) -> std::io::Result<()> {
         let conn = self.conn.lock();
         let name_val = if name.is_empty() { None } else { Some(name) };

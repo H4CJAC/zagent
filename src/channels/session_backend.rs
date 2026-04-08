@@ -85,6 +85,11 @@ pub trait SessionBackend: Send + Sync {
         Ok(false)
     }
 
+    /// Ensure a session metadata row exists (creates one with `message_count: 0` if absent).
+    fn ensure_session(&self, _session_key: &str) -> std::io::Result<()> {
+        Ok(())
+    }
+
     /// Set or update the human-readable name for a session.
     fn set_session_name(&self, _session_key: &str, _name: &str) -> std::io::Result<()> {
         Ok(())
