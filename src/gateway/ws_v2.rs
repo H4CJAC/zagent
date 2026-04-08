@@ -375,7 +375,11 @@ async fn handle_socket_v2(
     )
     .await;
 
+    // Cloud report: session created
+    spawn_cloud_report(&config, &state, &session_id, &effective_name, "");
+
     let mut broadcast_rx = state.event_tx.subscribe();
+    let mut first_message_reported = false;
 
     loop {
         tokio::select! {
@@ -407,10 +411,25 @@ async fn handle_socket_v2(
                             })).await;
                             continue;
                         }
-                        // process_turn exclusively borrows receiver, so the
-                        // outer loop is suspended while a turn is running.
-                        // Cancel frames are handled inside process_turn's own
-                        // select! loop.
+
+                        if !first_message_reported {
+                            first_message_reported = true;
+                            let name = truncate_chars(content, 32);
+                            let desc = truncate_chars(content, 128);
+
+                            if let Some(ref backend) = state.session_backend {
+                                let _ = backend.set_session_name(&session_key, &name);
+                            }
+
+                            spawn_cloud_report(
+                                &config,
+                                &state,
+                                &session_id,
+                                &name,
+                                &desc,
+                            );
+                        }
+
                         session.cancel_token = CancellationToken::new();
                         process_turn(
                             &state, &mut session, &mut sender, &mut receiver,
@@ -678,4 +697,37 @@ async fn send_json(
     value: serde_json::Value,
 ) -> Result<(), axum::Error> {
     sender.send(Message::Text(value.to_string().into())).await
+}
+
+/// Spawn a fire-and-forget cloud session report if credentials are available.
+fn spawn_cloud_report(
+    config: &Config,
+    state: &AppState,
+    session_id: &str,
+    name: &str,
+    description: &str,
+) {
+    let url = match config.seewo_cloud.session_record_url {
+        Some(ref u) if !u.is_empty() => u.clone(),
+        _ => return,
+    };
+    let app_code = match config.seewo_cloud.app_code {
+        Some(ref c) if !c.is_empty() => c.clone(),
+        _ => return,
+    };
+    let token = match state.sw_token.read().clone() {
+        Some(t) => t,
+        None => return,
+    };
+    let uid = session_id.to_owned();
+    let name = name.to_owned();
+    let desc = description.to_owned();
+    tokio::spawn(super::cloud_report::report_session(
+        url, token, app_code, uid, name, desc,
+    ));
+}
+
+/// Truncate a string to at most `max` characters (Unicode-aware).
+fn truncate_chars(s: &str, max: usize) -> String {
+    s.chars().take(max).collect()
 }

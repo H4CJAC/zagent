@@ -439,6 +439,21 @@ pub struct Config {
     /// Shell tool configuration (`[shell_tool]`).
     #[serde(default)]
     pub shell_tool: ShellToolConfig,
+
+    /// Seewo cloud integration (`[seewo_cloud]`).
+    #[serde(default)]
+    pub seewo_cloud: SeewoCloudConfig,
+}
+
+/// Seewo cloud integration configuration.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
+pub struct SeewoCloudConfig {
+    /// URL for session record reporting (e.g. `POST /claw/session/record`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub session_record_url: Option<String>,
+    /// Application code sent as `x-auth-app` cookie.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub app_code: Option<String>,
 }
 
 /// Multi-client workspace isolation configuration.
@@ -8490,6 +8505,7 @@ impl Default for Config {
             opencode_cli: OpenCodeCliConfig::default(),
             sop: SopConfig::default(),
             shell_tool: ShellToolConfig::default(),
+            seewo_cloud: SeewoCloudConfig::default(),
         }
     }
 }
@@ -11692,6 +11708,7 @@ auto_save = true
             opencode_cli: OpenCodeCliConfig::default(),
             sop: SopConfig::default(),
             shell_tool: ShellToolConfig::default(),
+            seewo_cloud: SeewoCloudConfig::default(),
         };
 
         let toml_str = toml::to_string_pretty(&config).unwrap();
@@ -12223,6 +12240,7 @@ default_temperature = 0.7
             opencode_cli: OpenCodeCliConfig::default(),
             sop: SopConfig::default(),
             shell_tool: ShellToolConfig::default(),
+            seewo_cloud: SeewoCloudConfig::default(),
         };
 
         config.save().await.unwrap();
