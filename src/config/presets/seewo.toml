@@ -26,6 +26,7 @@ workspace_only = false
 allowed_commands = [
     "git",
     "npm",
+    "npx",
     "cargo",
     "ls",
     "cat",
@@ -33,38 +34,50 @@ allowed_commands = [
     "find",
     "echo",
     "pwd",
+    "cd",
+    "mkdir",
+    "cp",
+    "mv",
+    "touch",
+    "chmod",
     "wc",
     "head",
     "tail",
+    "sort",
+    "uniq",
+    "sed",
+    "awk",
+    "tr",
+    "tee",
+    "xargs",
+    "which",
+    "env",
+    "export",
     "date",
     "python",
     "python3",
     "pip",
+    "pip3",
     "node",
     "shell",
+    "curl",
+    "wget",
+    "tar",
+    "unzip",
+    "zip",
 ]
 forbidden_paths = [
     "/etc",
     "/root",
-    "/home",
-    "/usr",
-    "/bin",
-    "/sbin",
-    "/lib",
-    "/opt",
     "/boot",
-    "/dev",
     "/proc",
     "/sys",
-    "/var",
-    "/tmp",
     "~/.ssh",
     "~/.gnupg",
     "~/.aws",
-    "~/.config",
 ]
-max_actions_per_hour = 20
-max_cost_per_day_cents = 500
+max_actions_per_hour = 2000
+max_cost_per_day_cents = 5000
 require_approval_for_medium_risk = false
 block_high_risk_commands = false
 shell_env_passthrough = []
@@ -84,7 +97,7 @@ auto_approve = [
 always_ask = []
 allowed_roots = []
 non_cli_excluded_tools = []
-shell_timeout_secs = 60
+shell_timeout_secs = 600
 
 [trust]
 initial_score = 0.8
@@ -743,4 +756,4 @@ approval_timeout_secs = 300
 max_finished_runs = 100
 
 [shell_tool]
-timeout_secs = 60
+timeout_secs = 600
