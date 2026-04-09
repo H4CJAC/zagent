@@ -1,0 +1,26 @@
+src/config/traits.rs
+  ec9b779df4259c56 53-56
+src/config/schema.rs
+  ec9b779df4259c56 513,518-519,6467,8260-8261,8267,8270
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.19",
+  "base_commit_sha": "d5437a7c430155fc758af85d9e6cb13c7376f853",
+  "prompts": {
+    "ec9b779df4259c56": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "68b221da-0c41-4962-817c-b010c31b6366",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hacyou <huangweichao@cvte.com>",
+      "messages": [],
+      "total_additions": 13,
+      "total_deletions": 3,
+      "accepted_lines": 12,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/26748bb7729f3e9acf2244f13a10f741a59652edbbd39d086cb436d45aebb1ac"
+    }
+  }
+}
