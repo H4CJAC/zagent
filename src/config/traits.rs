@@ -50,6 +50,10 @@ impl_prop_kind!(
     isize
 );
 
+impl HasPropKind for serde_json::Value {
+    const PROP_KIND: PropKind = PropKind::String;
+}
+
 /// Describes a single property field discovered via `#[derive(Configurable)]`.
 #[derive(Clone)]
 pub struct PropFieldInfo {

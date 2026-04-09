@@ -510,11 +510,13 @@ pub struct Config {
 
     /// Seewo cloud integration (`[seewo_cloud]`).
     #[serde(default)]
+    #[nested]
     pub seewo_cloud: SeewoCloudConfig,
 }
 
 /// Seewo cloud integration configuration.
-#[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema, Configurable)]
+#[prefix = "seewo-cloud"]
 pub struct SeewoCloudConfig {
     /// URL for session record reporting (e.g. `POST /claw/session/record`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -6462,6 +6464,7 @@ pub struct ChannelsConfig {
     #[nested]
     pub qq: Option<QQConfig>,
     /// Seewo Enterprise IM channel configuration.
+    #[nested]
     pub seewo: Option<SeewoConfig>,
     /// X/Twitter channel configuration.
     #[nested]
@@ -8254,14 +8257,17 @@ impl ChannelConfig for WeComConfig {
 }
 
 /// Seewo Enterprise IM channel configuration.
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema, Configurable)]
+#[prefix = "channels.seewo"]
 pub struct SeewoConfig {
     /// Base URL for the Seewo IM API.
     #[serde(default = "SeewoConfig::default_api_base")]
     pub api_base: String,
     /// Application key from Seewo developer console.
+    #[secret]
     pub app_key: String,
     /// Application secret from Seewo developer console.
+    #[secret]
     pub app_secret: String,
     /// Allowed user IDs. Empty = deny all, `"*"` = allow all.
     #[serde(default)]
