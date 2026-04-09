@@ -1,0 +1,24 @@
+src/providers/compatible.rs
+  ec9b779df4259c56 103-105,109,111-114,497-512,1401,1403,1408,1694,1696,1699,1706,1743,1825,1827-1828,1837,1933,1935-1936,1945,2044,2046,2048,2056,2181,2183,2185,2195,2209,2243,2288,2290,2292-2307,2309-2310,2341,2391,2393-2394,2403,2430,2468-2475,2513-2515,2517,2519-2520,2692,2694-2701,2706-2707,2709-2710,2808-2812,3227-3228,3230-3235,3572-3573,3589,3591-3592
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.1.19",
+  "base_commit_sha": "86d8b21f3f3ae31c0f4bc405a70ff3c27adb8a57",
+  "prompts": {
+    "ec9b779df4259c56": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "68b221da-0c41-4962-817c-b010c31b6366",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hacyou <huangweichao@cvte.com>",
+      "messages": [],
+      "total_additions": 127,
+      "total_deletions": 166,
+      "accepted_lines": 123,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/e58dbac3409174920dd4c55a76fc96ac4caefe9dabd1637160de8ff210c8a812"
+    }
+  }
+}
