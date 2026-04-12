@@ -207,17 +207,24 @@ impl Tool for SwLessonGenPlanTool {
         let plan_path = out_dir.join("plan.md");
         std::fs::write(&plan_path, &plan_text)?;
 
+        let task_id = format!("task-plan-{session_id}");
+        let title = truncate_str(topic, 60);
+        let now = chrono::Utc::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
+        let plan_path_str = plan_path.display().to_string();
+
+        let xml = format!(
+            "<task>\n  <taskType>card</taskType>\n  <taskId>{task_id}</taskId>\n  <payload>\n    \
+             <cardType>teaching-plan</cardType>\n    <title>{title}</title>\n    \
+             <createdAt>{now}</createdAt>\n  </payload>\n</task>\n\
+             <notice>\n  <noticeType>task-complete</noticeType>\n  <taskId>{task_id}</taskId>\n  \
+             <payload>\n    <filePath>{plan_path_str}</filePath>\n  </payload>\n</notice>"
+        );
+
         Ok(ToolResult {
             success: true,
             output: format!(
-                "教案生成完成。session_id={session_id}\n文件: {}\n\n{}",
-                plan_path.display(),
-                if plan_text.len() > 500 {
-                    let trunc = truncate_str(&plan_text, 500);
-                    format!("{trunc}...(共 {} 字)", plan_text.chars().count())
-                } else {
-                    plan_text
-                }
+                "教案生成完成。session_id={session_id}\n文件: {plan_path_str}\n\n\
+                 请将以下标签组原样输出给用户：\n{xml}"
             ),
             error: None,
         })

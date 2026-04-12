@@ -161,19 +161,21 @@ impl Tool for SwLessonGenCwTool {
         let notice_xml = extract_xml_block(&stdout2, "notice");
 
         use std::fmt::Write;
-        let mut output = String::new();
-        let _ = write!(output, "课件生成完成。session_id={session_id}\n\n");
-        if !notice_xml.is_empty() {
-            output.push_str(&notice_xml);
-            output.push('\n');
-        }
+        let mut xml_block = String::new();
         if !task_xml.is_empty() {
-            output.push_str(&task_xml);
-            output.push('\n');
+            xml_block.push_str(&task_xml);
+            xml_block.push('\n');
         }
+        if !notice_xml.is_empty() {
+            xml_block.push_str(&notice_xml);
+        }
+
+        let mut output = String::new();
         let _ = write!(
             output,
-            "\ntask_id={task_id}\npiece_id={piece_id}\n文件: {}",
+            "课件生成完成。session_id={session_id}\n\
+             task_id={task_id}\npiece_id={piece_id}\n文件: {}\n\n\
+             请将以下标签组原样输出给用户：\n{xml_block}",
             cw_output.display()
         );
 
