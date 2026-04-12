@@ -224,7 +224,7 @@ impl Tool for SwLessonGenPlanTool {
             success: true,
             output: format!(
                 "教案生成完成。session_id={session_id}\n文件: {plan_path_str}\n\n\
-                 请将以下标签组原样输出给用户：\n{xml}"
+                 请将以下task和notice标签组原样输出给用户：\n{xml}"
             ),
             error: None,
         })

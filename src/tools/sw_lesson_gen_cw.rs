@@ -175,7 +175,7 @@ impl Tool for SwLessonGenCwTool {
             output,
             "课件生成完成。session_id={session_id}\n\
              task_id={task_id}\npiece_id={piece_id}\n文件: {}\n\n\
-             请将以下标签组原样输出给用户：\n{xml_block}",
+             请将以下task和notice标签组原样输出给用户：\n{xml_block}",
             cw_output.display()
         );
 
