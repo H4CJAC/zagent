@@ -101,6 +101,10 @@ pub mod sop_approve;
 pub mod sop_execute;
 pub mod sop_list;
 pub mod sop_status;
+pub mod sw_lesson_common;
+pub mod sw_lesson_data_collect;
+pub mod sw_lesson_gen_cw;
+pub mod sw_lesson_gen_plan;
 pub mod sw_token_tool;
 pub mod swarm;
 pub mod text_browser;
@@ -460,6 +464,12 @@ pub fn all_tools_with_runtime(
         Arc::new(CalculatorTool::new()),
         Arc::new(WeatherTool::new()),
         Arc::new(sw_token_tool::SwTokenTool::new()),
+        Arc::new(sw_lesson_data_collect::SwLessonDataCollectTool::new(
+            workspace_dir.to_path_buf(),
+        )),
+        Arc::new(sw_lesson_gen_cw::SwLessonGenCwTool::new(
+            workspace_dir.to_path_buf(),
+        )),
         Arc::new(CanvasTool::new(canvas_store.unwrap_or_default())),
     ];
 
@@ -489,6 +499,16 @@ pub fn all_tools_with_runtime(
             crate::providers::provider_runtime_options_from_config(root_config);
         tool_arcs.push(Arc::new(LlmTaskTool::new(
             security.clone(),
+            llm_task_provider.clone(),
+            llm_task_model.clone(),
+            root_config.default_temperature,
+            root_config.api_key.clone(),
+            llm_task_runtime_options.clone(),
+        )));
+
+        // Lesson plan generator reuses the same provider config
+        tool_arcs.push(Arc::new(sw_lesson_gen_plan::SwLessonGenPlanTool::new(
+            workspace_dir.to_path_buf(),
             llm_task_provider,
             llm_task_model,
             root_config.default_temperature,
