@@ -311,16 +311,20 @@ pub fn default_tools_with_runtime(
 /// Converts each skill's `[[tools]]` entries into callable `Tool` implementations
 /// and appends them to the registry. Skill tools that would shadow a built-in tool
 /// name are skipped with a warning.
+///
+/// Returns `Arc` clones of the registered tools so callers can inject them into
+/// the delegate `parent_tools` handle (enabling sub-agents to use skills).
 pub fn register_skill_tools(
     tools_registry: &mut Vec<Box<dyn Tool>>,
     skills: &[crate::skills::Skill],
     security: Arc<SecurityPolicy>,
-) {
+) -> Vec<Arc<dyn Tool>> {
     let skill_tools = crate::skills::skills_to_tools(skills, security);
     let existing_names: std::collections::HashSet<String> = tools_registry
         .iter()
         .map(|t| t.name().to_string())
         .collect();
+    let mut registered_arcs = Vec::new();
     for tool in skill_tools {
         if existing_names.contains(tool.name()) {
             tracing::warn!(
@@ -328,9 +332,12 @@ pub fn register_skill_tools(
                 tool.name()
             );
         } else {
-            tools_registry.push(tool);
+            let arc: Arc<dyn Tool> = Arc::from(tool);
+            tools_registry.push(Box::new(ArcToolRef(Arc::clone(&arc))));
+            registered_arcs.push(arc);
         }
     }
+    registered_arcs
 }
 
 /// Create full tool registry including memory tools and optional Composio

@@ -1,5 +1,5 @@
 use super::traits::{Tool, ToolResult};
-use crate::agent::loop_::run_tool_call_loop;
+use crate::agent::loop_::{DraftEvent, TOOL_LIVE_TX, run_tool_call_loop};
 use crate::agent::prompt::{PromptContext, SystemPromptBuilder};
 use crate::config::{DelegateAgentConfig, DelegateToolConfig};
 use crate::memory::{Memory, NamespacedMemory};
@@ -1144,6 +1144,46 @@ impl DelegateTool {
 
         let noop_observer = NoopObserver;
 
+        let parent_live_tx: Option<tokio::sync::mpsc::Sender<DraftEvent>> =
+            TOOL_LIVE_TX.try_with(|tx| tx.clone()).ok();
+
+        let (child_tx, mut child_rx) = tokio::sync::mpsc::channel::<DraftEvent>(100);
+        let delegate_label = format!("delegate:{agent_name}");
+
+        let forward_handle = parent_live_tx.map(|ptx| {
+            let label = delegate_label;
+            tokio::spawn(async move {
+                while let Some(event) = child_rx.recv().await {
+                    let content = match &event {
+                        DraftEvent::Thinking(t) => format!("[thinking] {t}"),
+                        DraftEvent::ToolCallStart { name, .. } => format!("[call] {name}"),
+                        DraftEvent::ToolCallResult { name, output } => {
+                            let preview = if output.len() > 200 {
+                                &output[..200]
+                            } else {
+                                output
+                            };
+                            format!("[done] {name}: {preview}")
+                        }
+                        DraftEvent::Content(text) => text.clone(),
+                        DraftEvent::ToolChunk { content, .. } => content.clone(),
+                        DraftEvent::Progress(p) => format!("[progress] {p}"),
+                        DraftEvent::Clear => continue,
+                    };
+                    if ptx
+                        .send(DraftEvent::ToolChunk {
+                            name: label.clone(),
+                            content,
+                        })
+                        .await
+                        .is_err()
+                    {
+                        break;
+                    }
+                }
+            })
+        });
+
         let agentic_timeout_secs = agent_config
             .agentic_timeout_secs
             .unwrap_or(self.delegate_config.agentic_timeout_secs);
@@ -1164,7 +1204,7 @@ impl DelegateTool {
                 &self.multimodal_config,
                 agent_config.max_iterations,
                 None,
-                None,
+                Some(child_tx),
                 None,
                 &[],
                 &[],
@@ -1177,6 +1217,10 @@ impl DelegateTool {
             ),
         )
         .await;
+
+        if let Some(h) = forward_handle {
+            let _ = h.await;
+        }
 
         match result {
             Ok(Ok(response)) => {

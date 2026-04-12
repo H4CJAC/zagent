@@ -3748,7 +3748,13 @@ pub async fn run(
 
     // Register skill-defined tools as callable tool specs in the tool registry
     // so the LLM can invoke them via native function calling, not just XML prompts.
-    tools::register_skill_tools(&mut tools_registry, &skills, security.clone());
+    let skill_arcs = tools::register_skill_tools(&mut tools_registry, &skills, security.clone());
+    if let Some(ref handle) = delegate_handle {
+        let mut parent = handle.write();
+        for arc in skill_arcs {
+            parent.push(arc);
+        }
+    }
 
     let mut tool_descs: Vec<(&str, &str)> = vec![
         (
@@ -4691,7 +4697,13 @@ pub async fn process_message(
     let skills = crate::skills::load_skills_with_config(&config.workspace_dir, &config);
 
     // Register skill-defined tools as callable tool specs (process_message path).
-    tools::register_skill_tools(&mut tools_registry, &skills, security.clone());
+    let skill_arcs = tools::register_skill_tools(&mut tools_registry, &skills, security.clone());
+    if let Some(ref handle) = delegate_handle_pm {
+        let mut parent = handle.write();
+        for arc in skill_arcs {
+            parent.push(arc);
+        }
+    }
 
     let mut tool_descs: Vec<(&str, &str)> = vec![
         ("shell", "Execute terminal commands."),
