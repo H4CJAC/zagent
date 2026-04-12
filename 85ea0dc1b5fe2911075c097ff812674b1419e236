@@ -1,0 +1,28 @@
+src/tools/delegate.rs
+  ec9b779df4259c56 2,1147-1186,1207,1221-1223
+src/agent/loop_.rs
+  ec9b779df4259c56 3751-3757,4700-4706
+src/tools/mod.rs
+  ec9b779df4259c56 314-316,321,327,335-337,340
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.12",
+  "base_commit_sha": "85ea0dc1b5fe2911075c097ff812674b1419e236",
+  "prompts": {
+    "ec9b779df4259c56": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "68b221da-0c41-4962-817c-b010c31b6366",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hacyou",
+      "messages": [],
+      "total_additions": 69,
+      "total_deletions": 6,
+      "accepted_lines": 69,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/0f3c762f887d3b55b486ef8689b0fd3901be992a06850b40ac61ac492ec9031a"
+    }
+  }
+}
