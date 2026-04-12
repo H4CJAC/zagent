@@ -1,0 +1,24 @@
+src/tools/delegate.rs
+  29dccb33ca9eaaf5 1112-1113,1118
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.12",
+  "base_commit_sha": "f8d36c747be7a776318ac98b924713d4e9dbadb6",
+  "prompts": {
+    "29dccb33ca9eaaf5": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a2be1d93-ec7c-4269-97e5-e1a05185d2b0",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 1,
+      "accepted_lines": 3,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/5a40f8a0aca8e3ac5626dab2726fe4590e5e8e94547c75baeb38c589613a0045"
+    }
+  }
+}
