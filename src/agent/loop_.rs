@@ -282,6 +282,8 @@ pub enum DraftEvent {
     },
     /// Structured notification that a tool call has completed.
     ToolCallResult { name: String, output: String },
+    /// Live output line from a running tool (e.g. shell stdout/stderr).
+    ToolChunk { name: String, content: String },
 }
 
 tokio::task_local! {
@@ -289,7 +291,7 @@ tokio::task_local! {
 }
 
 tokio::task_local! {
-    /// Channel for tools (e.g. shell) to push live output as `Thinking` events.
+    /// Channel for tools (e.g. shell) to push live output as `ToolChunk` events.
     pub static TOOL_LIVE_TX: tokio::sync::mpsc::Sender<DraftEvent>;
 }
 
@@ -4311,7 +4313,8 @@ pub async fn run(
                         }
                         DraftEvent::Thinking(_)
                         | DraftEvent::ToolCallStart { .. }
-                        | DraftEvent::ToolCallResult { .. } => {}
+                        | DraftEvent::ToolCallResult { .. }
+                        | DraftEvent::ToolChunk { .. } => {}
                     }
                 }
             });

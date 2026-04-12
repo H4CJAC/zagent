@@ -576,6 +576,11 @@ async fn process_turn(
                             "type": "tool_result", "name": name, "output": output,
                         })).await;
                     }
+                    Some(DraftEvent::ToolChunk { name, content }) => {
+                        let _ = send_json(sender, serde_json::json!({
+                            "type": "tool_chunk", "name": name, "content": content,
+                        })).await;
+                    }
                     Some(DraftEvent::Progress(text)) => {
                         let _ = send_json(sender, serde_json::json!({
                             "type": "progress", "content": text,

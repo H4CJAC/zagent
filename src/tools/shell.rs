@@ -212,8 +212,8 @@ impl Tool for ShellTool {
         let live_tx: Option<tokio::sync::mpsc::Sender<DraftEvent>> =
             TOOL_LIVE_TX.try_with(|tx| tx.clone()).ok();
 
-        let stdout_handle = tokio::spawn(read_stream(child_stdout, live_tx.clone()));
-        let stderr_handle = tokio::spawn(read_stream(child_stderr, live_tx));
+        let stdout_handle = tokio::spawn(read_stream(child_stdout, live_tx.clone(), "shell"));
+        let stderr_handle = tokio::spawn(read_stream(child_stderr, live_tx, "shell"));
 
         let result = tokio::time::timeout(Duration::from_secs(timeout_secs), async {
             let status = child.wait().await?;
@@ -260,6 +260,7 @@ impl Tool for ShellTool {
 async fn read_stream(
     stream: Option<impl tokio::io::AsyncRead + Unpin>,
     live_tx: Option<tokio::sync::mpsc::Sender<DraftEvent>>,
+    tool_name: &str,
 ) -> String {
     let Some(stream) = stream else {
         return String::new();
@@ -267,13 +268,19 @@ async fn read_stream(
     let mut reader = BufReader::new(stream);
     let mut buf = String::new();
     let mut line = String::new();
+    let name = tool_name.to_owned();
     loop {
         line.clear();
         match reader.read_line(&mut line).await {
             Ok(0) | Err(_) => break,
             Ok(_) => {
                 if let Some(ref tx) = live_tx {
-                    let _ = tx.send(DraftEvent::Thinking(line.clone())).await;
+                    let _ = tx
+                        .send(DraftEvent::ToolChunk {
+                            name: name.clone(),
+                            content: line.clone(),
+                        })
+                        .await;
                 }
                 if buf.len() + line.len() <= MAX_OUTPUT_BYTES {
                     buf.push_str(&line);

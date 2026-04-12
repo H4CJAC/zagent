@@ -2933,7 +2933,8 @@ async fn process_channel_message(
                         }
                         DraftEvent::Thinking(_)
                         | DraftEvent::ToolCallStart { .. }
-                        | DraftEvent::ToolCallResult { .. } => {}
+                        | DraftEvent::ToolCallResult { .. }
+                        | DraftEvent::ToolChunk { .. } => {}
                     }
                 }
             }))
