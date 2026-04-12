@@ -520,7 +520,13 @@ boards = []
 timeout_secs = 120
 agentic_timeout_secs = 300
 
-[agents]
+[agents.skill_worker]
+provider = "custom:http://ai-open.seewo.com/openai/deployments/ALI_KIMI_SPECIAL_K2_5"
+model = "kimi-k2.5"
+agentic = true
+timeout_secs = 1200
+allowed_tools = ["*"]
+max_iterations = 1000
 
 [swarms]
 
