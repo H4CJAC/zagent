@@ -1,0 +1,26 @@
+src/tools/sw_lesson_gen_plan.rs
+  29dccb33ca9eaaf5 210-222,226-227
+src/tools/sw_lesson_gen_cw.rs
+  29dccb33ca9eaaf5 164,166-167,169-173,176-178
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.12",
+  "base_commit_sha": "0b3cdb8292ab127dca0fc287e62c56c5f5320fb6",
+  "prompts": {
+    "29dccb33ca9eaaf5": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a2be1d93-ec7c-4269-97e5-e1a05185d2b0",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 26,
+      "total_deletions": 17,
+      "accepted_lines": 26,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/cd60f897e3d68c025b14e0085650ef6bc515b063c54dbc2dece28f5182beec2f"
+    }
+  }
+}
