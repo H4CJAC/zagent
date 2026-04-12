@@ -213,11 +213,8 @@ impl Tool for SwLessonGenPlanTool {
                 "教案生成完成。session_id={session_id}\n文件: {}\n\n{}",
                 plan_path.display(),
                 if plan_text.len() > 500 {
-                    format!(
-                        "{}...(共 {} 字)",
-                        &plan_text[..500],
-                        plan_text.chars().count()
-                    )
+                    let trunc = truncate_str(&plan_text, 500);
+                    format!("{trunc}...(共 {} 字)", plan_text.chars().count())
                 } else {
                     plan_text
                 }
@@ -251,11 +248,7 @@ fn summarize_research(research: &Value) -> String {
                     .and_then(|v| v.as_str())
                     .unwrap_or("");
                 let content = result.get("content").and_then(|v| v.as_str()).unwrap_or("");
-                let preview = if content.len() > 1000 {
-                    &content[..1000]
-                } else {
-                    content
-                };
+                let preview = truncate_str(content, 1000);
                 let _ = write!(summary, "### 知识库 — {chapter}\n{preview}\n\n");
             }
         }
@@ -265,6 +258,18 @@ fn summarize_research(research: &Value) -> String {
         summary.push_str("（无搜索结果）");
     }
     summary
+}
+
+/// Truncate a string to at most `max_bytes` while respecting UTF-8 char boundaries.
+fn truncate_str(s: &str, max_bytes: usize) -> &str {
+    if s.len() <= max_bytes {
+        return s;
+    }
+    let mut end = max_bytes;
+    while end > 0 && !s.is_char_boundary(end) {
+        end -= 1;
+    }
+    &s[..end]
 }
 
 fn err_result(msg: String) -> ToolResult {
