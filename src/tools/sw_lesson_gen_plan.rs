@@ -58,7 +58,9 @@ impl Tool for SwLessonGenPlanTool {
                 "extra_requirements": {
                     "type": "string",
                     "description": "额外教学要求（可选）"
-                }
+                },
+                "sp_s_name": { "type": "string", "description": "前端显示的步骤名称，建议值：\"生成教案-{生成的教案名}\"" },
+                "sp_s_icon": { "type": "string", "description": "前端显示的步骤图标，固定值：\"icon-gen-plan\"" }
             },
             "required": ["session_id"]
         })

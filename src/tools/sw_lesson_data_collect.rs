@@ -36,7 +36,9 @@ impl Tool for SwLessonDataCollectTool {
                 "grade":   { "type": "string", "description": "学段/年级" },
                 "region":  { "type": "string", "description": "地区（可选）" },
                 "progress": { "type": "string", "description": "已教进度描述（可选）" },
-                "session_id": { "type": "string", "description": "自定义会话 ID（可选，不填则自动生成 8 位 hex）" }
+                "session_id": { "type": "string", "description": "自定义会话 ID（可选，不填则自动生成 8 位 hex）" },
+                "sp_s_name": { "type": "string", "description": "前端显示的步骤名称，建议值：\"准备备课数据\"" },
+                "sp_s_icon": { "type": "string", "description": "前端显示的步骤图标，固定值：\"icon-data-collect\"" }
             },
             "required": ["topic", "subject", "grade"]
         })
