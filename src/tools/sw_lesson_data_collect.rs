@@ -4,8 +4,8 @@
 //! `sw_classroom_observation` or `sw_student_analysis`.
 
 use super::sw_lesson_common::{
-    artifacts_dir, ensure_skill_scripts, err_result, gen_session_id, opt_str, require_str,
-    require_sw_token, run_claw_query,
+    artifacts_dir, ensure_skill_scripts, err_result, fetch_teacher_identity, gen_session_id,
+    opt_str, require_str, require_sw_token, run_claw_query,
 };
 use super::traits::{Tool, ToolResult};
 use async_trait::async_trait;
@@ -79,14 +79,16 @@ impl Tool for SwLessonDataCollectTool {
         let out_dir = artifacts_dir(&self.workspace_dir, &session_id);
         std::fs::create_dir_all(&out_dir)?;
 
+        let teacher = fetch_teacher_identity(&token).await;
+
         let queries = [
             (
                 "curriculum",
-                format!("查询{subject}{grade}{topic}的课程大纲和课时安排"),
+                format!("查询{teacher}所教{subject}{grade}{topic}的课程大纲和课时安排"),
             ),
             (
                 "homework_errors",
-                format!("查询最近批改作业中{subject}的错题情况"),
+                format!("查询{teacher}最近批改作业中{subject}的错题情况"),
             ),
         ];
 
