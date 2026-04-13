@@ -62,7 +62,7 @@ impl Tool for SwLessonGenPlanTool {
                     "description": "额外教学要求（可选）"
                 },
                 "sp_s_name": { "type": "string", "description": "前端显示的步骤名称，建议值：\"生成教案-{生成的教案名}\"" },
-                "sp_s_icon": { "type": "string", "description": "前端显示的步骤图标，固定值：\"icon-gen-plan\"" }
+                "sp_s_icon": { "type": "string", "description": "前端显示的步骤图标，固定值：\"icon-gen-markdown\"" }
             },
             "required": ["session_id"]
         })
@@ -218,7 +218,7 @@ impl Tool for SwLessonGenPlanTool {
 
         let xml = format!(
             "<task>\n  <taskType>card</taskType>\n  <taskId>{task_id}</taskId>\n  <payload>\n    \
-             <cardType>teaching-plan</cardType>\n    <title>{title}</title>\n    \
+             <cardType>markdown</cardType>\n    <title>{title}</title>\n    \
              <createdAt>{now}</createdAt>\n  </payload>\n</task>\n\
              <notice>\n  <noticeType>task-complete</noticeType>\n  <taskId>{task_id}</taskId>\n  \
              <payload>\n    <filePath>{plan_path_str}</filePath>\n  </payload>\n</notice>"
