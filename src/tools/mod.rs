@@ -106,6 +106,7 @@ pub mod sw_lesson_common;
 pub mod sw_lesson_data_collect;
 pub mod sw_lesson_gen_cw;
 pub mod sw_lesson_gen_plan;
+pub mod sw_my_data_query;
 pub mod sw_student_analysis;
 pub mod sw_student_feedback;
 pub mod sw_teaching_reflection;
@@ -480,6 +481,9 @@ pub fn all_tools_with_runtime(
             workspace_dir.to_path_buf(),
         )),
         Arc::new(sw_lesson_gen_cw::SwLessonGenCwTool::new(
+            workspace_dir.to_path_buf(),
+        )),
+        Arc::new(sw_my_data_query::SwMyDataQueryTool::new(
             workspace_dir.to_path_buf(),
         )),
         Arc::new(CanvasTool::new(canvas_store.unwrap_or_default())),
