@@ -1,0 +1,26 @@
+src/tools/mod.rs
+  29dccb33ca9eaaf5 110,523-524,527,529-539
+src/tools/sw_teaching_reflection.rs
+  29dccb33ca9eaaf5 1-76,78-190,192-206
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.12",
+  "base_commit_sha": "3f23efcb3ec59dce510f8161b6339724b440a939",
+  "prompts": {
+    "29dccb33ca9eaaf5": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a2be1d93-ec7c-4269-97e5-e1a05185d2b0",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 234,
+      "total_deletions": 12,
+      "accepted_lines": 219,
+      "overriden_lines": 2,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/6e83fca082c2e9cf3286d656cd8a603bc927fec58b41b27390e1c87e5fd977b2"
+    }
+  }
+}
