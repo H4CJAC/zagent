@@ -1,6 +1,8 @@
 //! Built-in tool: generate a lesson plan from collected data via search + LLM.
 
-use super::sw_lesson_common::{artifacts_dir, ensure_skill_scripts, run_script};
+use super::sw_lesson_common::{
+    artifacts_dir, ensure_skill_scripts, err_result, run_script, truncate_str,
+};
 use super::traits::{Tool, ToolResult};
 use crate::providers::{self, Provider, ProviderRuntimeOptions};
 use async_trait::async_trait;
@@ -267,24 +269,4 @@ fn summarize_research(research: &Value) -> String {
         summary.push_str("（无搜索结果）");
     }
     summary
-}
-
-/// Truncate a string to at most `max_bytes` while respecting UTF-8 char boundaries.
-fn truncate_str(s: &str, max_bytes: usize) -> &str {
-    if s.len() <= max_bytes {
-        return s;
-    }
-    let mut end = max_bytes;
-    while end > 0 && !s.is_char_boundary(end) {
-        end -= 1;
-    }
-    &s[..end]
-}
-
-fn err_result(msg: String) -> ToolResult {
-    ToolResult {
-        success: false,
-        output: String::new(),
-        error: Some(msg),
-    }
 }

@@ -1,6 +1,6 @@
 //! Built-in tool: generate courseware using the embedded create-courseware scripts.
 
-use super::sw_lesson_common::{artifacts_dir, ensure_skill_scripts, run_script};
+use super::sw_lesson_common::{artifacts_dir, ensure_skill_scripts, err_result, run_script};
 use super::traits::{Tool, ToolResult};
 use async_trait::async_trait;
 use serde_json::{Value, json};
@@ -225,12 +225,4 @@ fn extract_xml_field(text: &str, field: &str) -> String {
         }
     }
     String::new()
-}
-
-fn err_result(msg: String) -> ToolResult {
-    ToolResult {
-        success: false,
-        output: String::new(),
-        error: Some(msg),
-    }
 }

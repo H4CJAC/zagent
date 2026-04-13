@@ -101,10 +101,12 @@ pub mod sop_approve;
 pub mod sop_execute;
 pub mod sop_list;
 pub mod sop_status;
+pub mod sw_classroom_observation;
 pub mod sw_lesson_common;
 pub mod sw_lesson_data_collect;
 pub mod sw_lesson_gen_cw;
 pub mod sw_lesson_gen_plan;
+pub mod sw_student_analysis;
 pub mod sw_token_tool;
 pub mod swarm;
 pub mod text_browser;
@@ -464,6 +466,12 @@ pub fn all_tools_with_runtime(
         Arc::new(CalculatorTool::new()),
         Arc::new(WeatherTool::new()),
         Arc::new(sw_token_tool::SwTokenTool::new()),
+        Arc::new(sw_classroom_observation::SwClassroomObservationTool::new(
+            workspace_dir.to_path_buf(),
+        )),
+        Arc::new(sw_student_analysis::SwStudentAnalysisTool::new(
+            workspace_dir.to_path_buf(),
+        )),
         Arc::new(sw_lesson_data_collect::SwLessonDataCollectTool::new(
             workspace_dir.to_path_buf(),
         )),
