@@ -3,13 +3,10 @@
 //! Calls the Seewo user-info API using the injected `sw_token` and returns
 //! structured profile data (name, school, subject, grade, uid, etc.).
 
-use super::sw_lesson_common::{err_result, require_sw_token};
+use super::sw_lesson_common::{err_result, fetch_sw_user_data, require_sw_token};
 use super::traits::{Tool, ToolResult};
 use async_trait::async_trait;
 use serde_json::{Value, json};
-
-const USER_INFO_URL: &str = "https://edu.seewo.com/api/v2/user/both/info";
-const AUTH_APP: &str = "EasiNote5";
 
 pub struct SwUserInfoTool;
 
@@ -45,44 +42,11 @@ impl Tool for SwUserInfoTool {
             Err(e) => return Ok(e),
         };
 
-        let client = reqwest::Client::new();
-        let resp = client
-            .get(USER_INFO_URL)
-            .header("accept", "*/*")
-            .header(
-                "Cookie",
-                format!("x-auth-token={token}; x-auth-app={AUTH_APP};"),
-            )
-            .send()
-            .await;
-
-        let resp = match resp {
-            Ok(r) => r,
-            Err(e) => return Ok(err_result(format!("请求用户信息失败: {e}"))),
+        let data = match fetch_sw_user_data(&token).await {
+            Ok(d) => d,
+            Err(msg) => return Ok(err_result(msg)),
         };
 
-        if !resp.status().is_success() {
-            return Ok(err_result(format!("用户信息接口返回 {}", resp.status())));
-        }
-
-        let body: Value = match resp.json().await {
-            Ok(v) => v,
-            Err(e) => return Ok(err_result(format!("解析响应 JSON 失败: {e}"))),
-        };
-
-        let error_code = body
-            .get("error_code")
-            .and_then(|v| v.as_i64())
-            .unwrap_or(-1);
-        if error_code != 0 {
-            let msg = body
-                .get("message")
-                .and_then(|v| v.as_str())
-                .unwrap_or("unknown error");
-            return Ok(err_result(format!("用户信息接口错误: {msg}")));
-        }
-
-        let data = body.get("data").cloned().unwrap_or(json!({}));
         let pretty = serde_json::to_string_pretty(&data).unwrap_or_default();
 
         Ok(ToolResult {

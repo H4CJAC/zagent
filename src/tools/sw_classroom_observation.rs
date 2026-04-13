@@ -5,8 +5,8 @@
 //! instructional research workflows.
 
 use super::sw_lesson_common::{
-    analysis_artifacts_dir, ensure_skill_scripts, err_result, gen_session_id, opt_str, require_str,
-    require_sw_token, run_claw_query,
+    analysis_artifacts_dir, ensure_skill_scripts, err_result, fetch_teacher_identity,
+    gen_session_id, opt_str, require_str, require_sw_token, run_claw_query,
 };
 use super::traits::{Tool, ToolResult};
 use async_trait::async_trait;
@@ -75,6 +75,8 @@ impl Tool for SwClassroomObservationTool {
         let out_dir = analysis_artifacts_dir(&self.workspace_dir, &session_id);
         std::fs::create_dir_all(&out_dir)?;
 
+        let teacher = fetch_teacher_identity(&token).await;
+
         let topic_clause = if topic.is_empty() {
             String::new()
         } else {
@@ -84,15 +86,17 @@ impl Tool for SwClassroomObservationTool {
         let queries = [
             (
                 "teaching_report",
-                format!("查询最近{subject}{grade}{topic_clause}课堂教学报告中教师授课情况"),
+                format!(
+                    "查询{teacher}最近{subject}{grade}{topic_clause}课堂教学报告中教师授课情况"
+                ),
             ),
             (
                 "interaction_data",
-                format!("查询最近{subject}{grade}课堂反馈报告中师生互动数据"),
+                format!("查询{teacher}最近{subject}{grade}课堂反馈报告中师生互动数据"),
             ),
             (
                 "observation_assessment",
-                format!("查询最近{subject}{grade}课堂观察评估数据"),
+                format!("查询{teacher}最近{subject}{grade}课堂观察评估数据"),
             ),
         ];
 

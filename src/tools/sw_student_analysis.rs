@@ -5,8 +5,8 @@
 //! learning diagnostics workflows.
 
 use super::sw_lesson_common::{
-    analysis_artifacts_dir, ensure_skill_scripts, err_result, gen_session_id, opt_str, require_str,
-    require_sw_token, run_claw_query,
+    analysis_artifacts_dir, ensure_skill_scripts, err_result, fetch_teacher_identity,
+    gen_session_id, opt_str, require_str, require_sw_token, run_claw_query,
 };
 use super::traits::{Tool, ToolResult};
 use async_trait::async_trait;
@@ -75,6 +75,8 @@ impl Tool for SwStudentAnalysisTool {
         let out_dir = analysis_artifacts_dir(&self.workspace_dir, &session_id);
         std::fs::create_dir_all(&out_dir)?;
 
+        let teacher = fetch_teacher_identity(&token).await;
+
         let topic_clause = if topic.is_empty() {
             String::new()
         } else {
@@ -84,15 +86,21 @@ impl Tool for SwStudentAnalysisTool {
         let queries = [
             (
                 "participation",
-                format!("查询最近{subject}{grade}课堂中学生参与度和表现数据{topic_clause}"),
+                format!(
+                    "查询{teacher}最近{subject}{grade}课堂中学生参与度和表现数据{topic_clause}"
+                ),
             ),
             (
                 "homework_analysis",
-                format!("查询{grade}学生{subject}作业完成情况和错题分析{topic_clause}"),
+                format!(
+                    "查询{teacher}所教{grade}学生{subject}作业完成情况和错题分析{topic_clause}"
+                ),
             ),
             (
                 "learning_weaknesses",
-                format!("查询{grade}学生在{subject}的学习弱项和常见错误{topic_clause}"),
+                format!(
+                    "查询{teacher}所教{grade}学生在{subject}的学习弱项和常见错误{topic_clause}"
+                ),
             ),
         ];
 

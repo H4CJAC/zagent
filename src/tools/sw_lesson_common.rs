@@ -66,6 +66,80 @@ pub fn analysis_artifacts_dir(workspace_dir: &Path, session_id: &str) -> PathBuf
     workspace_dir.join("artifacts/analysis").join(session_id)
 }
 
+// ── Seewo user-info API ─────────────────────────────────────────────
+
+const USER_INFO_URL: &str = "https://edu.seewo.com/api/v2/user/both/info";
+const AUTH_APP: &str = "EasiNote5";
+
+/// Fetch the `data` object from the Seewo user-info API.
+///
+/// Returns `Ok(Value)` with the `data` field on success, or an error message.
+pub async fn fetch_sw_user_data(token: &str) -> Result<Value, String> {
+    let resp = reqwest::Client::new()
+        .get(USER_INFO_URL)
+        .header("accept", "*/*")
+        .header(
+            "Cookie",
+            format!("x-auth-token={token}; x-auth-app={AUTH_APP};"),
+        )
+        .send()
+        .await
+        .map_err(|e| format!("请求用户信息失败: {e}"))?;
+
+    if !resp.status().is_success() {
+        return Err(format!("用户信息接口返回 {}", resp.status()));
+    }
+
+    let body: Value = resp
+        .json()
+        .await
+        .map_err(|e| format!("解析响应 JSON 失败: {e}"))?;
+
+    let error_code = body
+        .get("error_code")
+        .and_then(|v| v.as_i64())
+        .unwrap_or(-1);
+    if error_code != 0 {
+        let msg = body
+            .get("message")
+            .and_then(|v| v.as_str())
+            .unwrap_or("unknown error");
+        return Err(format!("用户信息接口错误: {msg}"));
+    }
+
+    Ok(body.get("data").cloned().unwrap_or(serde_json::json!({})))
+}
+
+/// Fetch current teacher's display identity from the Seewo user-info API.
+///
+/// Returns a short string like `"教师张三(uid:abc123)"` suitable for embedding
+/// in natural-language queries. Falls back to `"当前教师"` on any failure.
+pub async fn fetch_teacher_identity(token: &str) -> String {
+    let data = match fetch_sw_user_data(token).await {
+        Ok(d) => d,
+        Err(_) => return "当前教师".into(),
+    };
+
+    let name = data
+        .get("realName")
+        .or_else(|| data.get("nickName"))
+        .or_else(|| data.get("name"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+    let uid = data
+        .get("thirdUid")
+        .or_else(|| data.get("uid"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+
+    match (name.is_empty(), uid.is_empty()) {
+        (false, false) => format!("教师{name}(uid:{uid})"),
+        (false, true) => format!("教师{name}"),
+        (true, false) => format!("当前教师(uid:{uid})"),
+        (true, true) => "当前教师".into(),
+    }
+}
+
 // ── claw_query integration ──────────────────────────────────────────
 
 /// Call `claw_query.py --no-stream` and return the `answer` text.
