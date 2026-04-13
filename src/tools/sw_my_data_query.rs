@@ -50,7 +50,7 @@ impl Tool for SwMyDataQueryTool {
                 "sp_s_name": { "type": "string", "description": "前端显示的步骤名称，建议值：\"查询我的数据\"" },
                 "sp_s_icon": { "type": "string", "description": "前端显示的步骤图标，固定值：\"icon-data-collect\"" }
             },
-            "required": ["question"]
+            "required": ["question", "sp_s_name", "sp_s_icon"]
         })
     }
 

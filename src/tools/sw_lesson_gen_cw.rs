@@ -48,7 +48,7 @@ impl Tool for SwLessonGenCwTool {
                 "phase1_timeout_secs": { "type": "integer", "description": "课件生成 Phase 1 超时秒数（默认 300）", "default": 300 },
                 "phase2_timeout_secs": { "type": "integer", "description": "课件生成 Phase 2 超时秒数（默认 960）", "default": 960 }
             },
-            "required": ["session_id", "topic"]
+            "required": ["session_id", "topic", "sp_s_name", "sp_s_icon"]
         })
     }
 

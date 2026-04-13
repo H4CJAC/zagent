@@ -65,7 +65,7 @@ impl Tool for SwLessonGenPlanTool {
                 "sp_s_icon": { "type": "string", "description": "前端显示的步骤图标，固定值：\"icon-gen-markdown\"" },
                 "script_timeout_secs": { "type": "integer", "description": "外部脚本（web_search / kb_search）单次超时秒数（默认 180）", "default": 180 }
             },
-            "required": ["session_id"]
+            "required": ["session_id", "sp_s_name", "sp_s_icon"]
         })
     }
 

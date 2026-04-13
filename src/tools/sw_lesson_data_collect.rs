@@ -48,7 +48,7 @@ impl Tool for SwLessonDataCollectTool {
                 "sp_s_icon": { "type": "string", "description": "前端显示的步骤图标，固定值：\"icon-data-collect\"" },
                 "timeout_secs": { "type": "integer", "description": "每次查询的超时秒数（默认 360", "default": 360 }
             },
-            "required": ["topic", "subject", "grade"]
+            "required": ["topic", "subject", "grade", "sp_s_name", "sp_s_icon"]
         })
     }
 

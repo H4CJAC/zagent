@@ -76,7 +76,7 @@ impl Tool for SwTeachingReflectionTool {
                 "sp_s_name": { "type": "string", "description": "前端显示的步骤名称，建议值：\"生成教学反思\"" },
                 "sp_s_icon": { "type": "string", "description": "前端显示的步骤图标，固定值：\"icon-gen-markdown\"" }
             },
-            "required": ["session_id", "subject"]
+            "required": ["session_id", "subject", "sp_s_name", "sp_s_icon"]
         })
     }
 
