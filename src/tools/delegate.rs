@@ -1,5 +1,5 @@
 use super::traits::{Tool, ToolResult};
-use crate::agent::loop_::{DraftEvent, TOOL_LIVE_TX, run_tool_call_loop};
+use crate::agent::loop_::{DraftEvent, TOOL_CALL_ID, TOOL_LIVE_TX, run_tool_call_loop};
 use crate::agent::prompt::{PromptContext, SystemPromptBuilder};
 use crate::config::{DelegateAgentConfig, DelegateToolConfig};
 use crate::memory::{Memory, NamespacedMemory};
@@ -1150,14 +1150,16 @@ impl DelegateTool {
         let (child_tx, mut child_rx) = tokio::sync::mpsc::channel::<DraftEvent>(100);
         let delegate_label = format!("delegate:{agent_name}");
 
+        let parent_call_id = TOOL_CALL_ID.try_with(|id| id.clone()).unwrap_or_default();
         let forward_handle = parent_live_tx.map(|ptx| {
             let label = delegate_label;
+            let cid = parent_call_id;
             tokio::spawn(async move {
                 while let Some(event) = child_rx.recv().await {
                     let content = match &event {
                         DraftEvent::Thinking(t) => format!("[thinking] {t}"),
                         DraftEvent::ToolCallStart { name, .. } => format!("[call] {name}"),
-                        DraftEvent::ToolCallResult { name, output } => {
+                        DraftEvent::ToolCallResult { name, output, .. } => {
                             let preview = if output.len() > 200 {
                                 &output[..200]
                             } else {
@@ -1172,6 +1174,7 @@ impl DelegateTool {
                     };
                     if ptx
                         .send(DraftEvent::ToolChunk {
+                            call_id: cid.clone(),
                             name: label.clone(),
                             content,
                         })

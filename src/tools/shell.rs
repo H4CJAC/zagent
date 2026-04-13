@@ -1,5 +1,5 @@
 use super::traits::{Tool, ToolResult};
-use crate::agent::loop_::{DraftEvent, TOOL_LIVE_TX};
+use crate::agent::loop_::{DraftEvent, TOOL_CALL_ID, TOOL_LIVE_TX};
 use crate::runtime::RuntimeAdapter;
 use crate::security::SecurityPolicy;
 use crate::security::traits::Sandbox;
@@ -211,9 +211,15 @@ impl Tool for ShellTool {
 
         let live_tx: Option<tokio::sync::mpsc::Sender<DraftEvent>> =
             TOOL_LIVE_TX.try_with(|tx| tx.clone()).ok();
+        let call_id = TOOL_CALL_ID.try_with(|id| id.clone()).unwrap_or_default();
 
-        let stdout_handle = tokio::spawn(read_stream(child_stdout, live_tx.clone(), "shell"));
-        let stderr_handle = tokio::spawn(read_stream(child_stderr, live_tx, "shell"));
+        let stdout_handle = tokio::spawn(read_stream(
+            child_stdout,
+            live_tx.clone(),
+            "shell",
+            call_id.clone(),
+        ));
+        let stderr_handle = tokio::spawn(read_stream(child_stderr, live_tx, "shell", call_id));
 
         let result = tokio::time::timeout(Duration::from_secs(timeout_secs), async {
             let status = child.wait().await?;
@@ -261,6 +267,7 @@ async fn read_stream(
     stream: Option<impl tokio::io::AsyncRead + Unpin>,
     live_tx: Option<tokio::sync::mpsc::Sender<DraftEvent>>,
     tool_name: &str,
+    call_id: String,
 ) -> String {
     let Some(stream) = stream else {
         return String::new();
@@ -277,6 +284,7 @@ async fn read_stream(
                 if let Some(ref tx) = live_tx {
                     let _ = tx
                         .send(DraftEvent::ToolChunk {
+                            call_id: call_id.clone(),
                             name: name.clone(),
                             content: line.clone(),
                         })

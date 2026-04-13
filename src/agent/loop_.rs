@@ -277,13 +277,22 @@ pub enum DraftEvent {
     Thinking(String),
     /// Structured notification that a tool call is about to execute.
     ToolCallStart {
+        call_id: String,
         name: String,
         args: serde_json::Value,
     },
     /// Structured notification that a tool call has completed.
-    ToolCallResult { name: String, output: String },
+    ToolCallResult {
+        call_id: String,
+        name: String,
+        output: String,
+    },
     /// Live output line from a running tool (e.g. shell stdout/stderr).
-    ToolChunk { name: String, content: String },
+    ToolChunk {
+        call_id: String,
+        name: String,
+        content: String,
+    },
 }
 
 tokio::task_local! {
@@ -293,6 +302,12 @@ tokio::task_local! {
 tokio::task_local! {
     /// Channel for tools (e.g. shell) to push live output as `ToolChunk` events.
     pub static TOOL_LIVE_TX: tokio::sync::mpsc::Sender<DraftEvent>;
+}
+
+tokio::task_local! {
+    /// Current tool call ID — injected before tool execution so that `ToolChunk`
+    /// events emitted by tools can be correlated with their parent call.
+    pub static TOOL_CALL_ID: String;
 }
 
 /// Convert a tool registry to OpenAI function-calling format for native tool support.
@@ -3179,10 +3194,15 @@ pub(crate) async fn run_tool_call_loop(
                 } else {
                     format!("\u{23f3} {}: {hint}\n", tool_name)
                 };
-                tracing::debug!(tool = %tool_name, "Sending progress start to draft");
+                let call_id = call
+                    .tool_call_id
+                    .clone()
+                    .unwrap_or_else(|| format!("tc-{idx}"));
+                tracing::debug!(tool = %tool_name, %call_id, "Sending progress start to draft");
                 let _ = tx.send(DraftEvent::Progress(progress)).await;
                 let _ = tx
                     .send(DraftEvent::ToolCallStart {
+                        call_id,
                         name: tool_name.clone(),
                         args: tool_args.clone(),
                     })
@@ -3271,10 +3291,15 @@ pub(crate) async fn run_tool_call_loop(
                 } else {
                     format!("\u{274c} {} ({secs}s)\n", call.name)
                 };
-                tracing::debug!(tool = %call.name, secs, "Sending progress complete to draft");
+                let call_id = call
+                    .tool_call_id
+                    .clone()
+                    .unwrap_or_else(|| format!("tc-{idx}"));
+                tracing::debug!(tool = %call.name, %call_id, secs, "Sending progress complete to draft");
                 let _ = tx.send(DraftEvent::Progress(progress_msg)).await;
                 let _ = tx
                     .send(DraftEvent::ToolCallResult {
+                        call_id,
                         name: call.name.clone(),
                         output: truncate_with_ellipsis(&outcome.output, max_tool_result_chars),
                     })

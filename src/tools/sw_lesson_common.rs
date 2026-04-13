@@ -4,7 +4,7 @@
 //! session ID generation, shared path helpers, claw_query integration,
 //! and common parameter/result helpers reused across multiple sw_ tools.
 
-use crate::agent::loop_::{DraftEvent, TOOL_LIVE_TX};
+use crate::agent::loop_::{DraftEvent, TOOL_CALL_ID, TOOL_LIVE_TX};
 use anyhow::{Context, Result};
 use rust_embed::Embed;
 use serde_json::Value;
@@ -264,14 +264,16 @@ pub async fn run_script(
     let child_stderr = child.stderr.take();
     let live_tx: Option<tokio::sync::mpsc::Sender<DraftEvent>> =
         TOOL_LIVE_TX.try_with(|tx| tx.clone()).ok();
+    let call_id = TOOL_CALL_ID.try_with(|id| id.clone()).unwrap_or_default();
 
     let tool_name = cmd.to_string();
     let stdout_handle = tokio::spawn(read_stream(
         child_stdout,
         live_tx.clone(),
         tool_name.clone(),
+        call_id.clone(),
     ));
-    let stderr_handle = tokio::spawn(read_stream(child_stderr, live_tx, tool_name));
+    let stderr_handle = tokio::spawn(read_stream(child_stderr, live_tx, tool_name, call_id));
 
     let status = tokio::time::timeout(std::time::Duration::from_secs(timeout_secs), child.wait())
         .await
@@ -288,6 +290,7 @@ async fn read_stream(
     stream: Option<impl tokio::io::AsyncRead + Unpin + Send + 'static>,
     live_tx: Option<tokio::sync::mpsc::Sender<DraftEvent>>,
     name: String,
+    call_id: String,
 ) -> String {
     let Some(stream) = stream else {
         return String::new();
@@ -304,6 +307,7 @@ async fn read_stream(
                 if let Some(ref tx) = live_tx {
                     let _ = tx
                         .send(DraftEvent::ToolChunk {
+                            call_id: call_id.clone(),
                             name: name.clone(),
                             content: line.clone(),
                         })

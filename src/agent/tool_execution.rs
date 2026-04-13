@@ -14,7 +14,7 @@ use crate::tools::Tool;
 use crate::util::truncate_with_ellipsis;
 
 // Items that still live in `loop_` — import via the parent module.
-use super::loop_::{ParsedToolCall, ToolLoopCancelled, scrub_credentials};
+use super::loop_::{ParsedToolCall, TOOL_CALL_ID, ToolLoopCancelled, scrub_credentials};
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -164,14 +164,22 @@ pub(crate) async fn execute_tools_parallel(
 ) -> Result<Vec<ToolExecutionOutcome>> {
     let futures: Vec<_> = tool_calls
         .iter()
-        .map(|call| {
-            execute_one_tool(
-                &call.name,
-                call.arguments.clone(),
-                tools_registry,
-                activated_tools,
-                observer,
-                cancellation_token,
+        .enumerate()
+        .map(|(i, call)| {
+            let cid = call
+                .tool_call_id
+                .clone()
+                .unwrap_or_else(|| format!("tc-{i}"));
+            TOOL_CALL_ID.scope(
+                cid,
+                execute_one_tool(
+                    &call.name,
+                    call.arguments.clone(),
+                    tools_registry,
+                    activated_tools,
+                    observer,
+                    cancellation_token,
+                ),
             )
         })
         .collect();
@@ -191,17 +199,25 @@ pub(crate) async fn execute_tools_sequential(
 ) -> Result<Vec<ToolExecutionOutcome>> {
     let mut outcomes = Vec::with_capacity(tool_calls.len());
 
-    for call in tool_calls {
+    for (i, call) in tool_calls.iter().enumerate() {
+        let cid = call
+            .tool_call_id
+            .clone()
+            .unwrap_or_else(|| format!("tc-{i}"));
         outcomes.push(
-            execute_one_tool(
-                &call.name,
-                call.arguments.clone(),
-                tools_registry,
-                activated_tools,
-                observer,
-                cancellation_token,
-            )
-            .await?,
+            TOOL_CALL_ID
+                .scope(
+                    cid,
+                    execute_one_tool(
+                        &call.name,
+                        call.arguments.clone(),
+                        tools_registry,
+                        activated_tools,
+                        observer,
+                        cancellation_token,
+                    ),
+                )
+                .await?,
         );
     }
 
