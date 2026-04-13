@@ -45,7 +45,8 @@ impl Tool for SwLessonDataCollectTool {
                 "progress": { "type": "string", "description": "已教进度描述（可选）" },
                 "session_id": { "type": "string", "description": "自定义会话 ID（可选，不填则自动生成 8 位 hex）" },
                 "sp_s_name": { "type": "string", "description": "前端显示的步骤名称，建议值：\"准备备课数据\"" },
-                "sp_s_icon": { "type": "string", "description": "前端显示的步骤图标，固定值：\"icon-data-collect\"" }
+                "sp_s_icon": { "type": "string", "description": "前端显示的步骤图标，固定值：\"icon-data-collect\"" },
+                "timeout_secs": { "type": "integer", "description": "每次查询的超时秒数（默认 360", "default": 360 }
             },
             "required": ["topic", "subject", "grade"]
         })
@@ -97,8 +98,13 @@ impl Tool for SwLessonDataCollectTool {
         results.insert("region".into(), json!(region));
         results.insert("progress".into(), json!(progress));
 
+        let timeout = args
+            .get("timeout_secs")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(360);
+
         for (label, question) in &queries {
-            let answer = run_claw_query(&scripts_dir, &token, question, &out_dir, 180).await?;
+            let answer = run_claw_query(&scripts_dir, &token, question, &out_dir, timeout).await?;
             results.insert((*label).to_string(), json!(answer));
         }
 

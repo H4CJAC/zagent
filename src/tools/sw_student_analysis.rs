@@ -43,7 +43,8 @@ impl Tool for SwStudentAnalysisTool {
                 "topic":   { "type": "string", "description": "具体课程主题（可选，用于更精准查询）" },
                 "session_id": { "type": "string", "description": "自定义会话 ID（可选，不填则自动生成 8 位 hex）" },
                 "sp_s_name": { "type": "string", "description": "前端显示的步骤名称，建议值：\"学生表现观察分析\"" },
-                "sp_s_icon": { "type": "string", "description": "前端显示的步骤图标，固定值：\"icon-course-stud-perf-analysis\"" }
+                "sp_s_icon": { "type": "string", "description": "前端显示的步骤图标，固定值：\"icon-course-stud-perf-analysis\"" },
+                "timeout_secs": { "type": "integer", "description": "每次查询的超时秒数（默认 360）", "default": 360 }
             },
             "required": ["subject", "grade"]
         })
@@ -103,8 +104,13 @@ impl Tool for SwStudentAnalysisTool {
             results.insert("topic".into(), json!(topic));
         }
 
+        let timeout = args
+            .get("timeout_secs")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(360);
+
         for (label, question) in &queries {
-            let answer = run_claw_query(&scripts_dir, &token, question, &out_dir, 180).await?;
+            let answer = run_claw_query(&scripts_dir, &token, question, &out_dir, timeout).await?;
             results.insert((*label).to_string(), json!(answer));
         }
 

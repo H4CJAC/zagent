@@ -62,7 +62,8 @@ impl Tool for SwLessonGenPlanTool {
                     "description": "额外教学要求（可选）"
                 },
                 "sp_s_name": { "type": "string", "description": "前端显示的步骤名称，建议值：\"生成教案-{生成的教案名}\"" },
-                "sp_s_icon": { "type": "string", "description": "前端显示的步骤图标，固定值：\"icon-gen-markdown\"" }
+                "sp_s_icon": { "type": "string", "description": "前端显示的步骤图标，固定值：\"icon-gen-markdown\"" },
+                "script_timeout_secs": { "type": "integer", "description": "外部脚本（web_search / kb_search）单次超时秒数（默认 180）", "default": 180 }
             },
             "required": ["session_id"]
         })
@@ -77,6 +78,10 @@ impl Tool for SwLessonGenPlanTool {
             .get("extra_requirements")
             .and_then(|v| v.as_str())
             .unwrap_or("");
+        let script_timeout = args
+            .get("script_timeout_secs")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(180);
 
         let out_dir = artifacts_dir(&self.workspace_dir, session_id);
         let data_path = out_dir.join("data.json");
@@ -123,7 +128,7 @@ impl Tool for SwLessonGenPlanTool {
                 &[&web_script, "--query", theme, "--theme", topic],
                 &[],
                 &out_dir,
-                60,
+                script_timeout,
             )
             .await?;
             if success {
@@ -138,7 +143,7 @@ impl Tool for SwLessonGenPlanTool {
             &[&kb_script, "--keyword", topic],
             &[],
             &out_dir,
-            60,
+            script_timeout,
         )
         .await?;
         if kb_ok {

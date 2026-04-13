@@ -44,7 +44,9 @@ impl Tool for SwLessonGenCwTool {
                     "description": "额外上下文文件路径（可选）"
                 },
                 "sp_s_name": { "type": "string", "description": "前端显示的步骤名称，建议值：\"生成课件-{生成的课件名}\"" },
-                "sp_s_icon": { "type": "string", "description": "前端显示的步骤图标，固定值：\"icon-gen-cw\"" }
+                "sp_s_icon": { "type": "string", "description": "前端显示的步骤图标，固定值：\"icon-gen-cw\"" },
+                "phase1_timeout_secs": { "type": "integer", "description": "课件生成 Phase 1 超时秒数（默认 300）", "default": 300 },
+                "phase2_timeout_secs": { "type": "integer", "description": "课件生成 Phase 2 超时秒数（默认 960）", "default": 960 }
             },
             "required": ["session_id", "topic"]
         })
@@ -63,6 +65,14 @@ impl Tool for SwLessonGenCwTool {
             .get("context_file")
             .and_then(|v| v.as_str())
             .unwrap_or("");
+        let phase1_timeout = args
+            .get("phase1_timeout_secs")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(300);
+        let phase2_timeout = args
+            .get("phase2_timeout_secs")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(960);
 
         let out_dir = artifacts_dir(&self.workspace_dir, session_id);
         std::fs::create_dir_all(&out_dir)?;
@@ -108,8 +118,14 @@ impl Tool for SwLessonGenCwTool {
         let env_refs: Vec<(&str, &str)> = envs.iter().map(|(k, v)| (*k, v.as_str())).collect();
         let script1_str = script1.to_string_lossy().to_string();
 
-        let (stdout1, stderr1, ok1) =
-            run_script("node", &[&script1_str], &env_refs, &cw_scripts, 300).await?;
+        let (stdout1, stderr1, ok1) = run_script(
+            "node",
+            &[&script1_str],
+            &env_refs,
+            &cw_scripts,
+            phase1_timeout,
+        )
+        .await?;
 
         if !ok1 {
             let detail = if stderr1.is_empty() {
@@ -141,8 +157,14 @@ impl Tool for SwLessonGenCwTool {
         let phase2_refs: Vec<(&str, &str)> =
             phase2_envs.iter().map(|(k, v)| (*k, v.as_str())).collect();
 
-        let (stdout2, stderr2, ok2) =
-            run_script("node", &[&script2_str], &phase2_refs, &cw_scripts, 960).await?;
+        let (stdout2, stderr2, ok2) = run_script(
+            "node",
+            &[&script2_str],
+            &phase2_refs,
+            &cw_scripts,
+            phase2_timeout,
+        )
+        .await?;
 
         if !ok2 {
             let detail = if stderr2.is_empty() {
