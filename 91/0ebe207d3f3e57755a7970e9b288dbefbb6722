@@ -1,0 +1,24 @@
+src/tools/sw_lesson_data_collect.rs
+  29dccb33ca9eaaf5 7-8,82-83,87,91
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.12",
+  "base_commit_sha": "910ebe207d3f3e57755a7970e9b288dbefbb6722",
+  "prompts": {
+    "29dccb33ca9eaaf5": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a2be1d93-ec7c-4269-97e5-e1a05185d2b0",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 6,
+      "total_deletions": 4,
+      "accepted_lines": 6,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/2e7b3d29a5a265ac0da5d1f4f428bc6676a935b0380238d1cdbe887394a40d2c"
+    }
+  }
+}
