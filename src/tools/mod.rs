@@ -108,6 +108,7 @@ pub mod sw_lesson_gen_cw;
 pub mod sw_lesson_gen_plan;
 pub mod sw_student_analysis;
 pub mod sw_token_tool;
+pub mod sw_user_info;
 pub mod swarm;
 pub mod text_browser;
 pub mod tool_search;
@@ -466,6 +467,7 @@ pub fn all_tools_with_runtime(
         Arc::new(CalculatorTool::new()),
         Arc::new(WeatherTool::new()),
         Arc::new(sw_token_tool::SwTokenTool::new()),
+        Arc::new(sw_user_info::SwUserInfoTool::new()),
         Arc::new(sw_classroom_observation::SwClassroomObservationTool::new(
             workspace_dir.to_path_buf(),
         )),
