@@ -107,6 +107,7 @@ pub mod sw_lesson_data_collect;
 pub mod sw_lesson_gen_cw;
 pub mod sw_lesson_gen_plan;
 pub mod sw_student_analysis;
+pub mod sw_student_feedback;
 pub mod sw_teaching_reflection;
 pub mod sw_token_tool;
 pub mod sw_user_info;
@@ -530,13 +531,22 @@ pub fn all_tools_with_runtime(
         tool_arcs.push(Arc::new(
             sw_teaching_reflection::SwTeachingReflectionTool::new(
                 workspace_dir.to_path_buf(),
-                llm_task_provider,
-                llm_task_model,
+                llm_task_provider.clone(),
+                llm_task_model.clone(),
                 root_config.default_temperature,
                 root_config.api_key.clone(),
-                llm_task_runtime_options,
+                llm_task_runtime_options.clone(),
             ),
         ));
+
+        tool_arcs.push(Arc::new(sw_student_feedback::SwStudentFeedbackTool::new(
+            workspace_dir.to_path_buf(),
+            llm_task_provider,
+            llm_task_model,
+            root_config.default_temperature,
+            root_config.api_key.clone(),
+            llm_task_runtime_options,
+        )));
     }
 
     if matches!(
