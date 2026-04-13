@@ -1,0 +1,34 @@
+src/tools/delegate.rs
+  29dccb33ca9eaaf5 2,1153,1156,1162,1177
+src/tools/shell.rs
+  29dccb33ca9eaaf5 2,214,216-219,221-222,270,287
+src/gateway/ws_v2.rs
+  29dccb33ca9eaaf5 569,571,574,576,579,581
+src/agent/tool_execution.rs
+  29dccb33ca9eaaf5 167-182,202-206,208-220
+src/agent/loop_.rs
+  29dccb33ca9eaaf5 280,285-289,291-295,307-310,3197-3201,3205,3294-3298,3302
+src/tools/sw_lesson_common.rs
+  29dccb33ca9eaaf5 7,267,274,276,293,310
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.12",
+  "base_commit_sha": "490e3b767febfc47551de63551ea0b00c629a2f2",
+  "prompts": {
+    "29dccb33ca9eaaf5": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a2be1d93-ec7c-4269-97e5-e1a05185d2b0",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 94,
+      "total_deletions": 36,
+      "accepted_lines": 90,
+      "overriden_lines": 2,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/7312666bcfae241d7a6fb01b0bcffa6e46ba9023d99a5277c5602cb79882b531"
+    }
+  }
+}
