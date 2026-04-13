@@ -1,0 +1,36 @@
+src/tools/mod.rs
+  29dccb33ca9eaaf5 104,109,469-474
+src/tools/sw_lesson_gen_cw.rs
+  29dccb33ca9eaaf5 3
+src/tools/sw_lesson_data_collect.rs
+  29dccb33ca9eaaf5 2-9,68-71,82-83,85-87,89,100-102
+src/tools/sw_lesson_gen_plan.rs
+  29dccb33ca9eaaf5 3-5
+src/tools/sw_classroom_observation.rs
+  29dccb33ca9eaaf5 1-45,47-124
+src/tools/sw_student_analysis.rs
+  29dccb33ca9eaaf5 1-45,47-124
+src/tools/sw_lesson_common.rs
+  29dccb33ca9eaaf5 1,4-5,10,15,64-93,95-167
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.12",
+  "base_commit_sha": "a3b69928771fff3fa1f256b681a54d274ebe5490",
+  "prompts": {
+    "29dccb33ca9eaaf5": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a2be1d93-ec7c-4269-97e5-e1a05185d2b0",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 529,
+      "total_deletions": 116,
+      "accepted_lines": 389,
+      "overriden_lines": 6,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/d9788ecafad8637d35beb7363590f1998130b78381d6954c8bd4618e3d23ff75"
+    }
+  }
+}
