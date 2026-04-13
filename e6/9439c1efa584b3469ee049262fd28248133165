@@ -1,0 +1,26 @@
+src/tools/mod.rs
+  29dccb33ca9eaaf5 110,534-535,538,541-543
+src/tools/sw_student_feedback.rs
+  29dccb33ca9eaaf5 1-7,9-12,14-199,201-239
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.12",
+  "base_commit_sha": "e69439c1efa584b3469ee049262fd28248133165",
+  "prompts": {
+    "29dccb33ca9eaaf5": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a2be1d93-ec7c-4269-97e5-e1a05185d2b0",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 244,
+      "total_deletions": 0,
+      "accepted_lines": 247,
+      "overriden_lines": 3,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/b0eec0968b5c457e30159e579551af2a09edfbcee8b5cbfea94f3f2e9bd4c3ed"
+    }
+  }
+}
