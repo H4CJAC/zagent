@@ -29,7 +29,7 @@ except ImportError:
     sys.exit(1)
 
 
-WS_URL = os.getenv("CLAW_WS_URL", "ws://chatdata-agent.test.seewo.com/api/ws")
+WS_URL = os.getenv("CLAW_WS_URL", "ws://chatdata-agent.seewo.com/api/ws")
 TENANT_ID = os.getenv("CLAW_TENANT_ID", "chatdata-mofang-school")
 APP_KEY = os.getenv("CLAW_APP_KEY", "EasiNote5")  # UC 模式固定使用 EasiNote5
 
