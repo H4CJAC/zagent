@@ -315,6 +315,10 @@ Examples:
         #[arg(long, default_value = "auto", value_parser = ["auto", "systemd", "openrc"])]
         service_init: String,
 
+        /// Install with the built-in Seewo preset (passed through to daemon)
+        #[arg(long)]
+        sw: bool,
+
         #[command(subcommand)]
         service_command: ServiceCommands,
     },
@@ -1473,9 +1477,17 @@ async fn main() -> Result<()> {
         Commands::Service {
             service_command,
             service_init,
+            sw,
         } => {
             let init_system = service_init.parse()?;
-            service::handle_command(&service_command, &config, init_system)
+            let config_dir = config.config_path.parent().map(|p| p.to_path_buf());
+            service::handle_command(
+                &service_command,
+                &config,
+                init_system,
+                config_dir.as_deref(),
+                sw,
+            )
         }
 
         Commands::Doctor { doctor_command } => match doctor_command {

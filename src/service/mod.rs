@@ -125,13 +125,53 @@ fn is_running_linux() -> bool {
         .unwrap_or(false)
 }
 
+/// Extra CLI arguments that should be forwarded to the daemon process
+/// when generating service configuration files.
+struct DaemonArgs<'a> {
+    config_dir: Option<&'a Path>,
+    sw: bool,
+}
+
+impl DaemonArgs<'_> {
+    /// Build the argument fragments that go *before* the `daemon` subcommand
+    /// (global args like `--config-dir`).
+    fn global_args(&self) -> Vec<String> {
+        let mut args = Vec::new();
+        if let Some(dir) = self.config_dir {
+            args.push("--config-dir".into());
+            args.push(dir.display().to_string());
+        }
+        args
+    }
+
+    /// Build the argument fragments that go *after* the `daemon` subcommand.
+    fn daemon_args(&self) -> Vec<String> {
+        let mut args = Vec::new();
+        if self.sw {
+            args.push("--sw".into());
+        }
+        args
+    }
+
+    /// Full ordered argument list: `[global..] daemon [daemon..]`
+    fn full_args(&self) -> Vec<String> {
+        let mut v = self.global_args();
+        v.push("daemon".into());
+        v.extend(self.daemon_args());
+        v
+    }
+}
+
 pub fn handle_command(
     command: &crate::ServiceCommands,
     config: &Config,
     init_system: InitSystem,
+    config_dir: Option<&Path>,
+    sw: bool,
 ) -> Result<()> {
+    let daemon_args = DaemonArgs { config_dir, sw };
     match command {
-        crate::ServiceCommands::Install => install(config, init_system),
+        crate::ServiceCommands::Install => install(config, init_system, &daemon_args),
         crate::ServiceCommands::Start => start(config, init_system),
         crate::ServiceCommands::Stop => stop(config, init_system),
         crate::ServiceCommands::Restart => restart(config, init_system),
@@ -143,14 +183,14 @@ pub fn handle_command(
     }
 }
 
-fn install(config: &Config, init_system: InitSystem) -> Result<()> {
+fn install(config: &Config, init_system: InitSystem, daemon_args: &DaemonArgs<'_>) -> Result<()> {
     if cfg!(target_os = "macos") {
-        install_macos(config)
+        install_macos(config, daemon_args)
     } else if cfg!(target_os = "linux") {
         let resolved = init_system.resolve()?;
-        install_linux(config, resolved)
+        install_linux(config, resolved, daemon_args)
     } else if cfg!(target_os = "windows") {
-        install_windows(config)
+        install_windows(config, daemon_args)
     } else {
         anyhow::bail!("Service management is supported on macOS and Linux only");
     }
@@ -637,7 +677,7 @@ fn detect_homebrew_var_dir(exe: &Path) -> Option<PathBuf> {
     prefix.map(|p| p.join("var").join("zeroclaw"))
 }
 
-fn install_macos(config: &Config) -> Result<()> {
+fn install_macos(config: &Config, daemon_args: &DaemonArgs<'_>) -> Result<()> {
     let file = macos_service_file()?;
     if let Some(parent) = file.parent() {
         fs::create_dir_all(parent)?;
@@ -671,24 +711,46 @@ fn install_macos(config: &Config) -> Result<()> {
     let stdout = logs_dir.join("daemon.stdout.log");
     let stderr = logs_dir.join("daemon.stderr.log");
 
-    // When running under Homebrew, inject ZEROCLAW_CONFIG_DIR and
-    // WorkingDirectory so the daemon finds its data in the Homebrew prefix.
-    let env_section = if let Some(ref var_dir) = homebrew_var_dir {
+    // When running under Homebrew, inject WorkingDirectory so the daemon
+    // finds its data in the Homebrew prefix.
+    let working_dir_section = if let Some(ref var_dir) = homebrew_var_dir {
         format!(
-            r#"  <key>EnvironmentVariables</key>
-  <dict>
-    <key>ZEROCLAW_CONFIG_DIR</key>
-    <string>{config_dir}</string>
-  </dict>
-  <key>WorkingDirectory</key>
-  <string>{working_dir}</string>
-"#,
-            config_dir = xml_escape(&var_dir.display().to_string()),
-            working_dir = xml_escape(&var_dir.display().to_string()),
+            "  <key>WorkingDirectory</key>\n  <string>{}</string>\n",
+            xml_escape(&var_dir.display().to_string()),
         )
     } else {
         String::new()
     };
+
+    // Build <string> entries for ProgramArguments from DaemonArgs.
+    // For Homebrew installs, if no explicit --config-dir was given by the user,
+    // inject the Homebrew var dir as config-dir so the daemon resolves correctly.
+    let effective_args = if daemon_args.config_dir.is_some() {
+        daemon_args.full_args()
+    } else if let Some(ref var_dir) = homebrew_var_dir {
+        let mut a = DaemonArgs {
+            config_dir: Some(var_dir),
+            sw: daemon_args.sw,
+        }
+        .full_args();
+        // full_args already builds [global..] daemon [daemon..], just return
+        let _ = &mut a;
+        a
+    } else {
+        daemon_args.full_args()
+    };
+
+    let program_args: String = std::iter::once(format!(
+        "    <string>{}</string>",
+        xml_escape(&exe.display().to_string())
+    ))
+    .chain(
+        effective_args
+            .iter()
+            .map(|a| format!("    <string>{}</string>", xml_escape(a))),
+    )
+    .collect::<Vec<_>>()
+    .join("\n");
 
     let plist = format!(
         r#"<?xml version=\"1.0\" encoding=\"UTF-8\"?>
@@ -699,14 +761,13 @@ fn install_macos(config: &Config) -> Result<()> {
   <string>{label}</string>
   <key>ProgramArguments</key>
   <array>
-    <string>{exe}</string>
-    <string>daemon</string>
+{program_args}
   </array>
   <key>RunAtLoad</key>
   <true/>
   <key>KeepAlive</key>
   <true/>
-{env_section}  <key>StandardOutPath</key>
+{working_dir_section}  <key>StandardOutPath</key>
   <string>{stdout}</string>
   <key>StandardErrorPath</key>
   <string>{stderr}</string>
@@ -714,8 +775,8 @@ fn install_macos(config: &Config) -> Result<()> {
 </plist>
 "#,
         label = SERVICE_LABEL,
-        exe = xml_escape(&exe.display().to_string()),
-        env_section = env_section,
+        program_args = program_args,
+        working_dir_section = working_dir_section,
         stdout = xml_escape(&stdout.display().to_string()),
         stderr = xml_escape(&stderr.display().to_string())
     );
@@ -729,21 +790,30 @@ fn install_macos(config: &Config) -> Result<()> {
     Ok(())
 }
 
-fn install_linux(config: &Config, init_system: InitSystem) -> Result<()> {
+fn install_linux(
+    config: &Config,
+    init_system: InitSystem,
+    daemon_args: &DaemonArgs<'_>,
+) -> Result<()> {
     match init_system {
-        InitSystem::Systemd => install_linux_systemd(config),
-        InitSystem::Openrc => install_linux_openrc(config),
+        InitSystem::Systemd => install_linux_systemd(config, daemon_args),
+        InitSystem::Openrc => install_linux_openrc(config, daemon_args),
         InitSystem::Auto => unreachable!("Auto should be resolved before this point"),
     }
 }
 
-fn install_linux_systemd(config: &Config) -> Result<()> {
+fn install_linux_systemd(config: &Config, daemon_args: &DaemonArgs<'_>) -> Result<()> {
     let file = linux_service_file(config)?;
     if let Some(parent) = file.parent() {
         fs::create_dir_all(parent)?;
     }
 
     let exe = std::env::current_exe().context("Failed to resolve current executable")?;
+    let exec_start = format!(
+        "{exe} {args}",
+        exe = exe.display(),
+        args = daemon_args.full_args().join(" ")
+    );
     let unit = format!(
         "[Unit]\n\
          Description=ZeroClaw daemon\n\
@@ -751,7 +821,7 @@ fn install_linux_systemd(config: &Config) -> Result<()> {
          \n\
          [Service]\n\
          Type=simple\n\
-         ExecStart={exe} daemon\n\
+         ExecStart={exec_start}\n\
          Restart=always\n\
          RestartSec=3\n\
          # Ensure HOME is set so headless browsers can create profile/cache dirs.\n\
@@ -762,7 +832,7 @@ fn install_linux_systemd(config: &Config) -> Result<()> {
          \n\
          [Install]\n\
          WantedBy=default.target\n",
-        exe = exe.display()
+        exec_start = exec_start
     );
 
     fs::write(&file, unit)?;
@@ -1143,7 +1213,17 @@ fn warn_if_binary_in_home(exe_path: &Path) {
 }
 
 /// Generate OpenRC init script content (pure function for testability)
-fn generate_openrc_script(exe_path: &Path, config_dir: &Path) -> String {
+fn generate_openrc_script(
+    exe_path: &Path,
+    config_dir: &Path,
+    daemon_args: &DaemonArgs<'_>,
+) -> String {
+    let extra_daemon = daemon_args.daemon_args().join(" ");
+    let daemon_suffix = if extra_daemon.is_empty() {
+        String::new()
+    } else {
+        format!(" {extra_daemon}")
+    };
     format!(
         r#"#!/sbin/openrc-run
 
@@ -1151,7 +1231,7 @@ name="zeroclaw"
 description="ZeroClaw daemon"
 
 command="{exe}"
-command_args="--config-dir {config_dir} daemon"
+command_args="--config-dir {config_dir} daemon{daemon_suffix}"
 command_background="yes"
 command_user="zeroclaw:zeroclaw"
 pidfile="/run/${{RC_SVCNAME}}.pid"
@@ -1174,6 +1254,7 @@ start_pre() {{
 "#,
         exe = exe_path.display(),
         config_dir = config_dir.display(),
+        daemon_suffix = daemon_suffix,
     )
 }
 
@@ -1187,7 +1268,7 @@ fn resolve_openrc_executable() -> Result<PathBuf> {
     Ok(exe)
 }
 
-fn install_linux_openrc(config: &Config) -> Result<()> {
+fn install_linux_openrc(config: &Config, daemon_args: &DaemonArgs<'_>) -> Result<()> {
     if !is_root() {
         bail!(
             "OpenRC service installation requires root privileges.\n\
@@ -1287,7 +1368,7 @@ fn install_linux_openrc(config: &Config) -> Result<()> {
         );
     }
 
-    let init_script = generate_openrc_script(&exe, config_dir);
+    let init_script = generate_openrc_script(&exe, config_dir, daemon_args);
     let init_path = Path::new("/etc/init.d/zeroclaw");
     fs::write(init_path, init_script)
         .with_context(|| format!("Failed to write {}", init_path.display()))?;
@@ -1307,7 +1388,7 @@ fn install_linux_openrc(config: &Config) -> Result<()> {
     Ok(())
 }
 
-fn install_windows(config: &Config) -> Result<()> {
+fn install_windows(config: &Config, daemon_args: &DaemonArgs<'_>) -> Result<()> {
     let exe = std::env::current_exe().context("Failed to resolve current executable")?;
     let logs_dir = config
         .config_path
@@ -1316,14 +1397,15 @@ fn install_windows(config: &Config) -> Result<()> {
         .join("logs");
     fs::create_dir_all(&logs_dir)?;
 
-    // Create a wrapper script that redirects output to log files
     let wrapper = logs_dir.join("zeroclaw-daemon.cmd");
     let stdout_log = logs_dir.join("daemon.stdout.log");
     let stderr_log = logs_dir.join("daemon.stderr.log");
 
+    let args_str = daemon_args.full_args().join(" ");
     let wrapper_content = format!(
-        "@echo off\r\n\"{}\" daemon >>\"{}\" 2>>\"{}\"",
+        "@echo off\r\n\"{}\" {} >>\"{}\" 2>>\"{}\"",
         exe.display(),
+        args_str,
         stdout_log.display(),
         stderr_log.display()
     );
@@ -1511,7 +1593,11 @@ mod tests {
         use std::path::PathBuf;
 
         let exe_path = PathBuf::from("/usr/local/bin/zeroclaw");
-        let script = generate_openrc_script(&exe_path, Path::new("/etc/zeroclaw"));
+        let no_extra = DaemonArgs {
+            config_dir: None,
+            sw: false,
+        };
+        let script = generate_openrc_script(&exe_path, Path::new("/etc/zeroclaw"), &no_extra);
 
         assert!(script.starts_with("#!/sbin/openrc-run"));
         assert!(script.contains("name=\"zeroclaw\""));
@@ -1532,11 +1618,29 @@ mod tests {
     }
 
     #[test]
+    fn generate_openrc_script_with_sw_flag() {
+        use std::path::PathBuf;
+
+        let exe_path = PathBuf::from("/usr/local/bin/zeroclaw");
+        let with_sw = DaemonArgs {
+            config_dir: None,
+            sw: true,
+        };
+        let script = generate_openrc_script(&exe_path, Path::new("/etc/zeroclaw"), &with_sw);
+
+        assert!(script.contains("command_args=\"--config-dir /etc/zeroclaw daemon --sw\""));
+    }
+
+    #[test]
     fn generate_openrc_script_sets_home_for_browser() {
         use std::path::PathBuf;
 
         let exe_path = PathBuf::from("/usr/local/bin/zeroclaw");
-        let script = generate_openrc_script(&exe_path, Path::new("/etc/zeroclaw"));
+        let no_extra = DaemonArgs {
+            config_dir: None,
+            sw: false,
+        };
+        let script = generate_openrc_script(&exe_path, Path::new("/etc/zeroclaw"), &no_extra);
 
         assert!(
             script.contains("export HOME=\"/var/lib/zeroclaw\""),
@@ -1549,7 +1653,11 @@ mod tests {
         use std::path::PathBuf;
 
         let exe_path = PathBuf::from("/usr/local/bin/zeroclaw");
-        let script = generate_openrc_script(&exe_path, Path::new("/etc/zeroclaw"));
+        let no_extra = DaemonArgs {
+            config_dir: None,
+            sw: false,
+        };
+        let script = generate_openrc_script(&exe_path, Path::new("/etc/zeroclaw"), &no_extra);
 
         assert!(
             script.contains("start_pre()"),
@@ -1696,7 +1804,6 @@ mod tests {
 
     #[test]
     fn logs_variant_is_recognized() {
-        // Ensure the Logs variant can be constructed and matched
         let cmd = crate::ServiceCommands::Logs {
             lines: 25,
             follow: true,
@@ -1708,5 +1815,54 @@ mod tests {
             }
             _ => panic!("Expected Logs variant"),
         }
+    }
+
+    #[test]
+    fn daemon_args_full_args_no_extras() {
+        let args = DaemonArgs {
+            config_dir: None,
+            sw: false,
+        };
+        assert_eq!(args.full_args(), vec!["daemon"]);
+    }
+
+    #[test]
+    fn daemon_args_full_args_with_config_dir_and_sw() {
+        let dir = PathBuf::from("/home/user/.config/zeroclaw");
+        let args = DaemonArgs {
+            config_dir: Some(dir.as_path()),
+            sw: true,
+        };
+        assert_eq!(
+            args.full_args(),
+            vec![
+                "--config-dir",
+                "/home/user/.config/zeroclaw",
+                "daemon",
+                "--sw",
+            ]
+        );
+    }
+
+    #[test]
+    fn daemon_args_full_args_config_dir_only() {
+        let dir = PathBuf::from("/etc/zeroclaw");
+        let args = DaemonArgs {
+            config_dir: Some(dir.as_path()),
+            sw: false,
+        };
+        assert_eq!(
+            args.full_args(),
+            vec!["--config-dir", "/etc/zeroclaw", "daemon"]
+        );
+    }
+
+    #[test]
+    fn daemon_args_full_args_sw_only() {
+        let args = DaemonArgs {
+            config_dir: None,
+            sw: true,
+        };
+        assert_eq!(args.full_args(), vec!["daemon", "--sw"]);
     }
 }
