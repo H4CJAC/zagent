@@ -1,11 +1,10 @@
-//! Built-in tool: query the current teacher's own data via claw_query.
+//! Built-in tool: query teacher + school data via claw_query.
 //!
-//! Accepts an arbitrary natural-language question, but enforces that the query
-//! is scoped to the authenticated teacher's identity (name + uid) to prevent
-//! cross-user data access.
+//! Accepts an arbitrary natural-language question, scoped to the authenticated
+//! teacher's identity **and** their school to prevent cross-org data access.
 
 use super::sw_lesson_common::{
-    ensure_skill_scripts, err_result, fetch_teacher_identity, require_str, require_sw_token,
+    ensure_skill_scripts, err_result, fetch_sw_user_data, require_str, require_sw_token,
     run_claw_query,
 };
 use super::traits::{Tool, ToolResult};
@@ -30,8 +29,8 @@ impl Tool for SwMyDataQueryTool {
     }
 
     fn description(&self) -> &str {
-        "查询当前教师自身的教学相关数据（课堂报告、学生表现、作业批改、课程安排等）。\
-         只能查到与当前教师关联的数据，不允许越权查询其他教师或无关数据。"
+        "查询当前教师及所在学校的教学相关数据（课堂报告、学生表现、作业批改、课程安排、学校教研等）。\
+         只能查到与当前教师或其所在学校关联的数据，不允许越权查询无关数据。"
     }
 
     fn parameters_schema(&self) -> Value {
@@ -71,8 +70,46 @@ impl Tool for SwMyDataQueryTool {
             Err(e) => return Ok(err_result(format!("释放脚本失败: {e}"))),
         };
 
-        let teacher = fetch_teacher_identity(&token).await;
-        let scoped_question = format!("以下查询仅限{teacher}本人的数据：{raw_question}");
+        let (teacher, school) = match fetch_sw_user_data(&token).await {
+            Ok(data) => {
+                let name = data
+                    .get("realName")
+                    .or_else(|| data.get("nickName"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("");
+                let uid = data
+                    .get("thirdUid")
+                    .or_else(|| data.get("uid"))
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("");
+                let unit = data.get("unitName").and_then(|v| v.as_str()).unwrap_or("");
+                let unit_id = data.get("unitId").and_then(|v| v.as_str()).unwrap_or("");
+
+                let t = if !name.is_empty() && !uid.is_empty() {
+                    format!("教师{name}(uid:{uid})")
+                } else if !name.is_empty() {
+                    format!("教师{name}")
+                } else {
+                    "当前教师".into()
+                };
+                let s = if !unit.is_empty() && !unit_id.is_empty() {
+                    format!("{unit}(uid:{unit_id})")
+                } else if !unit.is_empty() {
+                    unit.to_string()
+                } else {
+                    String::new()
+                };
+                (t, s)
+            }
+            Err(_) => ("当前教师".into(), String::new()),
+        };
+
+        let scope = if school.is_empty() {
+            format!("{teacher}本人")
+        } else {
+            format!("{teacher}本人及其所在学校{school}")
+        };
+        let scoped_question = format!("以下查询仅限{scope}的数据：{raw_question}");
 
         let work_dir = self.workspace_dir.join(".local/sw-query-tmp");
         std::fs::create_dir_all(&work_dir)?;
