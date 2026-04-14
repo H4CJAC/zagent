@@ -171,7 +171,9 @@ allowed_workspace_roots = []
 [reliability]
 provider_retries = 2
 provider_backoff_ms = 500
-fallback_providers = []
+fallback_providers = [
+    "custom:http://ai-open.seewo.com/openai/deployments/ALI_KIMI_K2_5"
+]
 api_keys = []
 channel_initial_backoff_secs = 2
 channel_max_backoff_secs = 60
@@ -179,6 +181,7 @@ scheduler_poll_secs = 15
 scheduler_retries = 2
 
 [reliability.model_fallbacks]
+"kimi-k2.5" = ["kimi/kimi-k2.5"]
 
 [scheduler]
 enabled = true
