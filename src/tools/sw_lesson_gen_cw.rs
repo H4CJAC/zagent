@@ -37,11 +37,11 @@ impl Tool for SwLessonGenCwTool {
                 },
                 "topic": {
                     "type": "string",
-                    "description": "课件主题"
+                    "description": "课件主题，可以用收集到的备课数据中的课程主题"
                 },
                 "context_file": {
                     "type": "string",
-                    "description": "额外上下文文件路径（可选）"
+                    "description": "额外上下文文件路径（可选），可以用生成的教案作为上下文"
                 },
                 "sp_s_name": { "type": "string", "description": "前端显示的步骤名称，建议值：\"生成课件-{生成的课件名}\"" },
                 "sp_s_icon": { "type": "string", "description": "前端显示的步骤图标，固定值：\"icon-gen-cw\"" },
