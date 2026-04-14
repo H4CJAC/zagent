@@ -5,7 +5,7 @@
 //! learning diagnostics workflows.
 
 use super::sw_lesson_common::{
-    AgentSheConfig, analysis_artifacts_dir, err_result, fetch_user_meta, gen_session_id, opt_str,
+    AgentSheConfig, analysis_artifacts_dir, err_result, fetch_user_meta, gen_session_id,
     require_str, require_sw_token, run_agent_she_query,
 };
 use super::traits::{Tool, ToolResult};
@@ -34,7 +34,7 @@ impl Tool for SwStudentAnalysisTool {
     }
 
     fn description(&self) -> &str {
-        "学生表现观察分析：查询最近的学生课堂参与度、作业完成情况和学习弱项等数据。\
+        "学生表现观察分析：根据描述查询学生课堂参与度、作业完成情况和学习弱项等数据。\
          输出结构化 JSON，可用于备课参考、学生反馈、学情诊断等场景。"
     }
 
@@ -42,22 +42,21 @@ impl Tool for SwStudentAnalysisTool {
         json!({
             "type": "object",
             "properties": {
-                "subject": { "type": "string", "description": "学科" },
-                "grade":   { "type": "string", "description": "学段/年级" },
-                "topic":   { "type": "string", "description": "具体课程主题（可选，用于更精准查询）" },
+                "query": {
+                    "type": "string",
+                    "description": "要查询的内容描述（自然语言），例如：\"五年级数学最近学生参与度和作业错题分析\""
+                },
                 "session_id": { "type": "string", "description": "自定义会话 ID（可选，不填则自动生成 8 位 hex）" },
                 "sp_s_name": { "type": "string", "description": "前端显示的步骤名称，建议值：\"学生表现观察分析\"" },
                 "sp_s_icon": { "type": "string", "description": "前端显示的步骤图标，固定值：\"icon-course-stud-perf-analysis\"" },
                 "timeout_secs": { "type": "integer", "description": "查询的超时秒数（默认 360）", "default": 360 }
             },
-            "required": ["subject", "grade", "sp_s_name", "sp_s_icon"]
+            "required": ["query", "sp_s_name", "sp_s_icon"]
         })
     }
 
     async fn execute(&self, args: Value) -> anyhow::Result<ToolResult> {
-        let subject = require_str(&args, "subject")?;
-        let grade = require_str(&args, "grade")?;
-        let topic = opt_str(&args, "topic");
+        let query = require_str(&args, "query")?;
 
         let session_id = args
             .get("session_id")
@@ -74,20 +73,10 @@ impl Tool for SwStudentAnalysisTool {
         let out_dir = analysis_artifacts_dir(&self.workspace_dir, &session_id);
         std::fs::create_dir_all(&out_dir)?;
 
-        let mut meta = match fetch_user_meta(&token).await {
+        let meta = match fetch_user_meta(&token).await {
             Ok(m) => m,
             Err(e) => return Ok(err_result(format!("获取用户信息失败: {e}"))),
         };
-        meta.subject_name = subject.clone();
-
-        let topic_clause = if topic.is_empty() {
-            String::new()
-        } else {
-            format!("（{topic}相关）")
-        };
-        let question = format!(
-            "查询最近{subject}{grade}课堂中学生参与度、作业完成和学习弱项数据{topic_clause}"
-        );
 
         let timeout = args
             .get("timeout_secs")
@@ -97,7 +86,7 @@ impl Tool for SwStudentAnalysisTool {
         let answer = match run_agent_she_query(
             &self.agent_she,
             &token,
-            &question,
+            &query,
             &meta,
             "ktgc_question_answer_recommend",
             timeout,
@@ -110,11 +99,7 @@ impl Tool for SwStudentAnalysisTool {
 
         let mut results = serde_json::Map::new();
         results.insert("session_id".into(), json!(session_id));
-        results.insert("subject".into(), json!(subject));
-        results.insert("grade".into(), json!(grade));
-        if !topic.is_empty() {
-            results.insert("topic".into(), json!(topic));
-        }
+        results.insert("query".into(), json!(query));
         results.insert("analysis_data".into(), json!(answer));
 
         let data = Value::Object(results);
@@ -124,7 +109,7 @@ impl Tool for SwStudentAnalysisTool {
         Ok(ToolResult {
             success: true,
             output: format!(
-                "学生表现观察分析完成。session_id={session_id}\n文件: {}\n学科={subject}, 年级={grade}",
+                "学生表现观察分析完成。session_id={session_id}\n文件: {}",
                 output_path.display()
             ),
             error: None,
