@@ -34,7 +34,8 @@ impl Tool for SwLessonDataCollectTool {
     }
 
     fn description(&self) -> &str {
-        "备课数据收集：根据备课需求描述，查询接下来要准备的课程主题、学科、学段/年级、地区、\
+        "（调用此工具前，先要用 sw_teaching_reflection 和 sw_student_feedback 工具生成教学反思和学生反馈。）\
+        备课数据收集：根据备课需求描述，查询接下来要准备的课程主题、学科、学段/年级、地区、\
          已教进度、课程大纲课时安排和最近批改作业错题情况等信息。\
          输出结构化 JSON 到 artifacts 目录，供后续教案和课件生成使用。"
     }
