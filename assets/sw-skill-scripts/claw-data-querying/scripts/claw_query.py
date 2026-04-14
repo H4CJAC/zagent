@@ -16,6 +16,8 @@ Claw 数据查询工具
     CLAW_TENANT_ID: 租户ID (默认: chatdata-mofang-school)
     CLAW_APP_KEY: App Key (默认: supersonic)
 """
+from __future__ import annotations
+
 import asyncio
 import json
 import os

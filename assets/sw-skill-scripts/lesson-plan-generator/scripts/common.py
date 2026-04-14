@@ -42,7 +42,8 @@ def infer_mime_type(file_path: str | Path) -> str:
 
 
 def to_file_url(file_path: str | Path) -> str:
-    return Path(file_path).resolve().as_uri()
+    resolved = Path(file_path).resolve()
+    return "file://" + str(resolved).replace("\\", "/")
 
 
 def print_json(payload: dict[str, Any]) -> None:
