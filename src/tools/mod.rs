@@ -473,12 +473,15 @@ pub fn all_tools_with_runtime(
         Arc::new(sw_user_info::SwUserInfoTool::new()),
         Arc::new(sw_classroom_observation::SwClassroomObservationTool::new(
             workspace_dir.to_path_buf(),
+            sw_lesson_common::AgentSheConfig::from_seewo_cloud(&root_config.seewo_cloud),
         )),
         Arc::new(sw_student_analysis::SwStudentAnalysisTool::new(
             workspace_dir.to_path_buf(),
+            sw_lesson_common::AgentSheConfig::from_seewo_cloud(&root_config.seewo_cloud),
         )),
         Arc::new(sw_lesson_data_collect::SwLessonDataCollectTool::new(
             workspace_dir.to_path_buf(),
+            sw_lesson_common::AgentSheConfig::from_seewo_cloud(&root_config.seewo_cloud),
         )),
         Arc::new(sw_lesson_gen_cw::SwLessonGenCwTool::new(
             workspace_dir.to_path_buf(),

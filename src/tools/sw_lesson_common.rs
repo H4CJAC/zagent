@@ -187,6 +187,266 @@ pub async fn run_claw_query(
     Ok(answer.to_string())
 }
 
+// ── agent-she SSE data query ────────────────────────────────────────
+
+const DEFAULT_AGENT_SHE_BASE_URL: &str = "https://agent-she.seewo.com";
+const DEFAULT_CREATE_WORKFLOW_ID: u64 = 997;
+const DEFAULT_RUN_WORKFLOW_ID: u64 = 998;
+
+/// Configuration for the agent-she data query API.
+#[derive(Debug, Clone)]
+pub struct AgentSheConfig {
+    pub base_url: String,
+    pub create_workflow_id: u64,
+    pub run_workflow_id: u64,
+}
+
+impl Default for AgentSheConfig {
+    fn default() -> Self {
+        Self {
+            base_url: DEFAULT_AGENT_SHE_BASE_URL.into(),
+            create_workflow_id: DEFAULT_CREATE_WORKFLOW_ID,
+            run_workflow_id: DEFAULT_RUN_WORKFLOW_ID,
+        }
+    }
+}
+
+impl AgentSheConfig {
+    pub fn from_seewo_cloud(cfg: &crate::config::schema::SeewoCloudConfig) -> Self {
+        Self {
+            base_url: cfg
+                .data_query_base_url
+                .clone()
+                .unwrap_or_else(|| DEFAULT_AGENT_SHE_BASE_URL.into()),
+            create_workflow_id: cfg
+                .data_query_create_workflow_id
+                .unwrap_or(DEFAULT_CREATE_WORKFLOW_ID),
+            run_workflow_id: cfg
+                .data_query_run_workflow_id
+                .unwrap_or(DEFAULT_RUN_WORKFLOW_ID),
+        }
+    }
+}
+
+/// User metadata extracted from the Seewo user-info API, used to populate
+/// the `meta` payload for agent-she queries.
+#[derive(Debug, Clone)]
+pub struct AgentSheMeta {
+    pub school_uid: String,
+    pub teacher_uid: String,
+    pub teacher_name: String,
+    pub stage_name: String,
+    pub subject_name: String,
+}
+
+/// Build `AgentSheMeta` from a previously fetched user-data `Value`.
+pub fn extract_user_meta(data: &Value) -> AgentSheMeta {
+    let field = |keys: &[&str]| -> String {
+        for k in keys {
+            if let Some(v) = data
+                .get(*k)
+                .and_then(|v| v.as_str())
+                .filter(|s| !s.is_empty())
+            {
+                return v.to_string();
+            }
+        }
+        String::new()
+    };
+    AgentSheMeta {
+        school_uid: field(&["unitId"]),
+        teacher_uid: field(&["uid"]),
+        teacher_name: field(&["realName", "nickName", "name"]),
+        stage_name: field(&["stageName"]),
+        subject_name: field(&["subjectName"]),
+    }
+}
+
+/// Fetch `AgentSheMeta` from the user-info API in one call.
+pub async fn fetch_user_meta(token: &str) -> Result<AgentSheMeta, String> {
+    let data = fetch_sw_user_data(token).await?;
+    Ok(extract_user_meta(&data))
+}
+
+/// Run a single data query against the agent-she SSE API.
+///
+/// 1. Creates a session via `POST /api/sessions`.
+/// 2. Sends the question via `POST /api/sessions/{id}/workflow/{wf}/run/sse`.
+/// 3. Consumes the SSE stream, forwarding progress via `ToolChunk`.
+/// 4. Returns the final answer content from the `agent_response` event.
+pub async fn run_agent_she_query(
+    config: &AgentSheConfig,
+    token: &str,
+    question: &str,
+    meta: &AgentSheMeta,
+    request_type: &str,
+    timeout_secs: u64,
+) -> Result<String> {
+    let client = reqwest::Client::new();
+    let token_header_key = "x-kish-token-key";
+    let token_header_val = "x-user-token";
+
+    // Step 1: create session
+    let create_url = format!("{}/api/sessions", config.base_url);
+    let create_body = serde_json::json!({
+        "name": "新对话",
+        "workflow_id": config.create_workflow_id,
+        "workflow_session_type": "general",
+    });
+
+    let create_resp = tokio::time::timeout(
+        std::time::Duration::from_secs(30),
+        client
+            .post(&create_url)
+            .header("content-type", "application/json")
+            .header(token_header_key, token_header_val)
+            .header("x-user-token", token)
+            .json(&create_body)
+            .send(),
+    )
+    .await
+    .context("创建会话超时")?
+    .context("创建会话请求失败")?;
+
+    if !create_resp.status().is_success() {
+        anyhow::bail!("创建会话失败: HTTP {}", create_resp.status());
+    }
+
+    let create_json: Value = create_resp.json().await.context("解析创建会话响应失败")?;
+    let session_id = create_json["data"]["id"]
+        .as_u64()
+        .ok_or_else(|| anyhow::anyhow!("创建会话响应缺少 data.id"))?;
+
+    // Step 2: run SSE query
+    let run_url = format!(
+        "{}/api/sessions/{}/workflow/{}/run/sse",
+        config.base_url, session_id, config.run_workflow_id
+    );
+
+    let run_body = serde_json::json!({
+        "content": [{ "type": "text", "text": question }],
+        "meta": {
+            "source": "",
+            "course_id": "",
+            "school_uid": meta.school_uid,
+            "teacher_uid": meta.teacher_uid,
+            "teacher_name": meta.teacher_name,
+            "stage_name": meta.stage_name,
+            "subject_name": meta.subject_name,
+            "selected_data": [],
+            "course_name": "",
+            "course_time": "",
+            "request_type": request_type,
+        },
+        "role": "user",
+    });
+
+    let sse_resp = tokio::time::timeout(
+        std::time::Duration::from_secs(timeout_secs),
+        client
+            .post(&run_url)
+            .header("Content-Type", "application/json")
+            .header(token_header_key, token_header_val)
+            .header("x-user-token", token)
+            .json(&run_body)
+            .send(),
+    )
+    .await
+    .context("SSE 查询连接超时")?
+    .context("SSE 查询请求失败")?;
+
+    if !sse_resp.status().is_success() {
+        anyhow::bail!("SSE 查询失败: HTTP {}", sse_resp.status());
+    }
+
+    // Step 3: consume SSE stream
+    let live_tx: Option<tokio::sync::mpsc::Sender<DraftEvent>> =
+        TOOL_LIVE_TX.try_with(|tx| tx.clone()).ok();
+    let call_id = TOOL_CALL_ID.try_with(|id| id.clone()).unwrap_or_default();
+
+    let mut final_content = String::new();
+    use futures_util::StreamExt;
+
+    let mut stream = sse_resp.bytes_stream();
+    let mut leftover = String::new();
+
+    let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(timeout_secs);
+    loop {
+        let chunk = tokio::time::timeout_at(deadline, stream.next()).await;
+        match chunk {
+            Ok(Some(Ok(bytes))) => {
+                leftover.push_str(&String::from_utf8_lossy(&bytes));
+            }
+            Ok(Some(Err(e))) => {
+                tracing::warn!("SSE stream read error: {e}");
+                break;
+            }
+            Ok(None) => break,
+            Err(_) => {
+                tracing::warn!("SSE stream read timed out");
+                break;
+            }
+        }
+
+        while let Some(newline_pos) = leftover.find('\n') {
+            let line = leftover[..newline_pos].trim().to_string();
+            leftover = leftover[newline_pos + 1..].to_string();
+
+            if line.is_empty() || !line.starts_with("data: ") {
+                continue;
+            }
+            let json_str = &line["data: ".len()..];
+            let Ok(event) = serde_json::from_str::<Value>(json_str) else {
+                continue;
+            };
+
+            let event_type = event["type"].as_str().unwrap_or("");
+            match event_type {
+                "agent_progress_message" => {
+                    if let Some(display) = event["data"]["message"]["content"]["display"].as_str() {
+                        if let Some(ref tx) = live_tx {
+                            let _ = tx
+                                .send(DraftEvent::ToolChunk {
+                                    call_id: call_id.clone(),
+                                    name: "agent_she_query".into(),
+                                    content: format!("[进度] {display}\n"),
+                                })
+                                .await;
+                        }
+                    }
+                }
+                "agent_stream_message" => {
+                    let busi = event["data"]["message"]["busi_type"].as_str().unwrap_or("");
+                    if busi == "agent_answering" {
+                        if let Some(chunk_text) = event["data"]["message"]["content"].as_str() {
+                            if let Some(ref tx) = live_tx {
+                                let _ = tx
+                                    .send(DraftEvent::ToolChunk {
+                                        call_id: call_id.clone(),
+                                        name: "agent_she_query".into(),
+                                        content: chunk_text.to_string(),
+                                    })
+                                    .await;
+                            }
+                        }
+                    }
+                }
+                "agent_response" => {
+                    if let Some(content) = event["data"]["data"]["content"].as_str() {
+                        final_content = content.to_string();
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    if final_content.is_empty() {
+        anyhow::bail!("SSE 查询未返回有效结果");
+    }
+    Ok(final_content)
+}
+
 // ── Parameter / result helpers ──────────────────────────────────────
 
 /// Extract a required string parameter.

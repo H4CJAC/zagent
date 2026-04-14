@@ -524,6 +524,15 @@ pub struct SeewoCloudConfig {
     /// Application code sent as `x-auth-app` cookie.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub app_code: Option<String>,
+    /// Base URL for the agent-she data query API (e.g. `https://agent-she.seewo.com`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub data_query_base_url: Option<String>,
+    /// Workflow ID used when creating a data-query session (default: 997).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub data_query_create_workflow_id: Option<u64>,
+    /// Workflow ID used when running an SSE query (default: 998).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub data_query_run_workflow_id: Option<u64>,
 }
 
 /// Multi-client workspace isolation configuration.

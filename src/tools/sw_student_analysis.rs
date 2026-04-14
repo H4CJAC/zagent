@@ -1,12 +1,12 @@
 //! Built-in tool: student performance observation analysis.
 //!
-//! A general-purpose tool that queries student learning data via claw_query.
+//! Queries student learning data via the agent-she SSE API.
 //! Output can be consumed by lesson preparation, student feedback, or
 //! learning diagnostics workflows.
 
 use super::sw_lesson_common::{
-    analysis_artifacts_dir, ensure_skill_scripts, err_result, fetch_teacher_identity,
-    gen_session_id, opt_str, require_str, require_sw_token, run_claw_query,
+    AgentSheConfig, analysis_artifacts_dir, err_result, fetch_user_meta, gen_session_id, opt_str,
+    require_str, require_sw_token, run_agent_she_query,
 };
 use super::traits::{Tool, ToolResult};
 use async_trait::async_trait;
@@ -15,11 +15,15 @@ use std::path::PathBuf;
 
 pub struct SwStudentAnalysisTool {
     workspace_dir: PathBuf,
+    agent_she: AgentSheConfig,
 }
 
 impl SwStudentAnalysisTool {
-    pub fn new(workspace_dir: PathBuf) -> Self {
-        Self { workspace_dir }
+    pub fn new(workspace_dir: PathBuf, agent_she: AgentSheConfig) -> Self {
+        Self {
+            workspace_dir,
+            agent_she,
+        }
     }
 }
 
@@ -44,7 +48,7 @@ impl Tool for SwStudentAnalysisTool {
                 "session_id": { "type": "string", "description": "自定义会话 ID（可选，不填则自动生成 8 位 hex）" },
                 "sp_s_name": { "type": "string", "description": "前端显示的步骤名称，建议值：\"学生表现观察分析\"" },
                 "sp_s_icon": { "type": "string", "description": "前端显示的步骤图标，固定值：\"icon-course-stud-perf-analysis\"" },
-                "timeout_secs": { "type": "integer", "description": "每次查询的超时秒数（默认 360）", "default": 360 }
+                "timeout_secs": { "type": "integer", "description": "查询的超时秒数（默认 360）", "default": 360 }
             },
             "required": ["subject", "grade", "sp_s_name", "sp_s_icon"]
         })
@@ -67,60 +71,51 @@ impl Tool for SwStudentAnalysisTool {
             Err(e) => return Ok(e),
         };
 
-        let scripts_dir = match ensure_skill_scripts(&self.workspace_dir) {
-            Ok(d) => d,
-            Err(e) => return Ok(err_result(format!("释放脚本失败: {e}"))),
-        };
-
         let out_dir = analysis_artifacts_dir(&self.workspace_dir, &session_id);
         std::fs::create_dir_all(&out_dir)?;
 
-        let teacher = fetch_teacher_identity(&token).await;
+        let mut meta = match fetch_user_meta(&token).await {
+            Ok(m) => m,
+            Err(e) => return Ok(err_result(format!("获取用户信息失败: {e}"))),
+        };
+        meta.subject_name = subject.clone();
 
         let topic_clause = if topic.is_empty() {
             String::new()
         } else {
             format!("（{topic}相关）")
         };
-
-        let queries = [
-            (
-                "participation",
-                format!(
-                    "查询{teacher}最近{subject}{grade}课堂中学生参与度和表现数据{topic_clause}"
-                ),
-            ),
-            (
-                "homework_analysis",
-                format!(
-                    "查询{teacher}所教{grade}学生{subject}作业完成情况和错题分析{topic_clause}"
-                ),
-            ),
-            (
-                "learning_weaknesses",
-                format!(
-                    "查询{teacher}所教{grade}学生在{subject}的学习弱项和常见错误{topic_clause}"
-                ),
-            ),
-        ];
-
-        let mut results: serde_json::Map<String, Value> = serde_json::Map::new();
-        results.insert("session_id".into(), json!(session_id));
-        results.insert("subject".into(), json!(subject));
-        results.insert("grade".into(), json!(grade));
-        if !topic.is_empty() {
-            results.insert("topic".into(), json!(topic));
-        }
+        let question = format!(
+            "查询最近{subject}{grade}课堂中学生参与度、作业完成和学习弱项数据{topic_clause}"
+        );
 
         let timeout = args
             .get("timeout_secs")
             .and_then(|v| v.as_u64())
             .unwrap_or(360);
 
-        for (label, question) in &queries {
-            let answer = run_claw_query(&scripts_dir, &token, question, &out_dir, timeout).await?;
-            results.insert((*label).to_string(), json!(answer));
+        let answer = match run_agent_she_query(
+            &self.agent_she,
+            &token,
+            &question,
+            &meta,
+            "ktgc_question_answer_recommend",
+            timeout,
+        )
+        .await
+        {
+            Ok(a) => a,
+            Err(e) => return Ok(err_result(format!("数据查询失败: {e}"))),
+        };
+
+        let mut results = serde_json::Map::new();
+        results.insert("session_id".into(), json!(session_id));
+        results.insert("subject".into(), json!(subject));
+        results.insert("grade".into(), json!(grade));
+        if !topic.is_empty() {
+            results.insert("topic".into(), json!(topic));
         }
+        results.insert("analysis_data".into(), json!(answer));
 
         let data = Value::Object(results);
         let output_path = out_dir.join("student_analysis.json");

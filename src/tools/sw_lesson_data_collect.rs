@@ -4,8 +4,8 @@
 //! `sw_classroom_observation` or `sw_student_analysis`.
 
 use super::sw_lesson_common::{
-    artifacts_dir, ensure_skill_scripts, err_result, fetch_teacher_identity, gen_session_id,
-    opt_str, require_str, require_sw_token, run_claw_query,
+    AgentSheConfig, artifacts_dir, err_result, fetch_user_meta, gen_session_id, opt_str,
+    require_str, require_sw_token, run_agent_she_query,
 };
 use super::traits::{Tool, ToolResult};
 use async_trait::async_trait;
@@ -14,11 +14,15 @@ use std::path::PathBuf;
 
 pub struct SwLessonDataCollectTool {
     workspace_dir: PathBuf,
+    agent_she: AgentSheConfig,
 }
 
 impl SwLessonDataCollectTool {
-    pub fn new(workspace_dir: PathBuf) -> Self {
-        Self { workspace_dir }
+    pub fn new(workspace_dir: PathBuf, agent_she: AgentSheConfig) -> Self {
+        Self {
+            workspace_dir,
+            agent_she,
+        }
     }
 }
 
@@ -46,7 +50,7 @@ impl Tool for SwLessonDataCollectTool {
                 "session_id": { "type": "string", "description": "自定义会话 ID（可选，不填则自动生成 8 位 hex）" },
                 "sp_s_name": { "type": "string", "description": "前端显示的步骤名称，建议值：\"准备备课数据\"" },
                 "sp_s_icon": { "type": "string", "description": "前端显示的步骤图标，固定值：\"icon-data-collect\"" },
-                "timeout_secs": { "type": "integer", "description": "每次查询的超时秒数（默认 360", "default": 360 }
+                "timeout_secs": { "type": "integer", "description": "查询的超时秒数（默认 360）", "default": 360 }
             },
             "required": ["topic", "subject", "grade", "sp_s_name", "sp_s_icon"]
         })
@@ -71,44 +75,45 @@ impl Tool for SwLessonDataCollectTool {
             Err(e) => return Ok(e),
         };
 
-        let scripts_dir = match ensure_skill_scripts(&self.workspace_dir) {
-            Ok(d) => d,
-            Err(e) => return Ok(err_result(format!("释放脚本失败: {e}"))),
-        };
-
         let out_dir = artifacts_dir(&self.workspace_dir, &session_id);
         std::fs::create_dir_all(&out_dir)?;
 
-        let teacher = fetch_teacher_identity(&token).await;
+        let mut meta = match fetch_user_meta(&token).await {
+            Ok(m) => m,
+            Err(e) => return Ok(err_result(format!("获取用户信息失败: {e}"))),
+        };
+        meta.subject_name = subject.clone();
 
-        let queries = [
-            (
-                "curriculum",
-                format!("查询{teacher}所教{subject}{grade}{topic}的课程大纲和课时安排"),
-            ),
-            (
-                "homework_errors",
-                format!("查询{teacher}最近批改作业中{subject}的错题情况"),
-            ),
-        ];
-
-        let mut results: serde_json::Map<String, Value> = serde_json::Map::new();
-        results.insert("session_id".into(), json!(session_id));
-        results.insert("topic".into(), json!(topic));
-        results.insert("subject".into(), json!(subject));
-        results.insert("grade".into(), json!(grade));
-        results.insert("region".into(), json!(region));
-        results.insert("progress".into(), json!(progress));
+        let question =
+            format!("查询{subject}{grade}{topic}的课程大纲课时安排和最近批改作业错题情况");
 
         let timeout = args
             .get("timeout_secs")
             .and_then(|v| v.as_u64())
             .unwrap_or(360);
 
-        for (label, question) in &queries {
-            let answer = run_claw_query(&scripts_dir, &token, question, &out_dir, timeout).await?;
-            results.insert((*label).to_string(), json!(answer));
-        }
+        let answer = match run_agent_she_query(
+            &self.agent_she,
+            &token,
+            &question,
+            &meta,
+            "ktgc_question_answer_recommend",
+            timeout,
+        )
+        .await
+        {
+            Ok(a) => a,
+            Err(e) => return Ok(err_result(format!("数据查询失败: {e}"))),
+        };
+
+        let mut results = serde_json::Map::new();
+        results.insert("session_id".into(), json!(session_id));
+        results.insert("topic".into(), json!(topic));
+        results.insert("subject".into(), json!(subject));
+        results.insert("grade".into(), json!(grade));
+        results.insert("region".into(), json!(region));
+        results.insert("progress".into(), json!(progress));
+        results.insert("collected_data".into(), json!(answer));
 
         let data = Value::Object(results);
         let data_path = out_dir.join("data.json");
