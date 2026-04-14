@@ -130,7 +130,7 @@ impl Tool for SwStudentFeedbackTool {
                 },
                 "subject": {
                     "type": "string",
-                    "description": "学科"
+                    "description": "学科，可以先从 sw_get_user_info 工具获取"
                 },
                 "topic": {
                     "type": "string",

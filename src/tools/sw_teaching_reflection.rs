@@ -63,7 +63,7 @@ impl Tool for SwTeachingReflectionTool {
                 },
                 "subject": {
                     "type": "string",
-                    "description": "学科（用于对齐学科核心素养维度）"
+                    "description": "学科（用于对齐学科核心素养维度），可以先从 sw_get_user_info 工具获取"
                 },
                 "topic": {
                     "type": "string",
