@@ -548,6 +548,7 @@ async fn process_turn(
 
     let mut full_response = String::new();
     let mut cancelled = false;
+    let mut client_gone = false;
 
     loop {
         tokio::select! {
@@ -596,14 +597,21 @@ async fn process_turn(
                 }
             }
 
-            frame = receiver.next() => {
-                if let Some(Ok(Message::Text(text))) = frame {
-                    if let Ok(v) = serde_json::from_str::<serde_json::Value>(&text) {
-                        if v["type"].as_str() == Some("cancel") {
-                            cancel.cancel();
-                            cancelled = true;
+            frame = receiver.next(), if !client_gone => {
+                match frame {
+                    Some(Ok(Message::Text(text))) => {
+                        if let Ok(v) = serde_json::from_str::<serde_json::Value>(&text) {
+                            if v["type"].as_str() == Some("cancel") {
+                                cancel.cancel();
+                                cancelled = true;
+                            }
                         }
                     }
+                    Some(Ok(Message::Close(_)) | Err(_)) | None => {
+                        client_gone = true;
+                        tracing::info!("WS v2: client disconnected mid-turn, continuing agent execution");
+                    }
+                    _ => {}
                 }
             }
 
