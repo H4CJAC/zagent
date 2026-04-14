@@ -1,0 +1,26 @@
+src/tools/sw_student_analysis.rs
+  29dccb33ca9eaaf5 37,45-48,54,59,76,89,102,112
+src/tools/sw_classroom_observation.rs
+  29dccb33ca9eaaf5 37,45-48,54,59,76,89,102,112
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.1",
+  "base_commit_sha": "28ba6d1677b5638d4bce1ac4146826cd21ce1b44",
+  "prompts": {
+    "29dccb33ca9eaaf5": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a2be1d93-ec7c-4269-97e5-e1a05185d2b0",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 28,
+      "total_deletions": 58,
+      "accepted_lines": 23,
+      "overriden_lines": 6,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/a0ad68ee84c5976fb7687c9d411215ec8dd52395739f349947c4b928379a930a"
+    }
+  }
+}
