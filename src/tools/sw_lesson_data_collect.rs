@@ -33,7 +33,7 @@ impl Tool for SwLessonDataCollectTool {
     }
 
     fn description(&self) -> &str {
-        "备课使用此工具前，要先使用sw_classroom_observation和sw_student_analysis工具收集课堂观察和学生表现分析数据，\
+        "备课使用此工具前，要先使用 sw_teaching_reflection 和 sw_student_feedback 工具收集教学反思和学生反馈信息，\
         然后再使用此工具收集备课剩余的所需数据：课程大纲、课时安排、作业错题等。\
         本工具会输出结构化 JSON 到 artifacts 目录，供后续教案和课件生成使用。"
     }
