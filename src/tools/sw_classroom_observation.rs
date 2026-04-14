@@ -83,10 +83,13 @@ impl Tool for SwClassroomObservationTool {
             .and_then(|v| v.as_u64())
             .unwrap_or(360);
 
+        let full_query =
+            format!("1. {query}\n2. 并提供课堂教学报告中教师授课情况、师生互动数据和课堂观察评估");
+
         let answer = match run_agent_she_query(
             &self.agent_she,
             &token,
-            &query,
+            &full_query,
             &meta,
             "ktgc_question_answer_recommend",
             timeout,

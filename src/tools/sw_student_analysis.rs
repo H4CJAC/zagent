@@ -83,10 +83,13 @@ impl Tool for SwStudentAnalysisTool {
             .and_then(|v| v.as_u64())
             .unwrap_or(360);
 
+        let full_query =
+            format!("1. {query}\n2. 并提供学生课堂参与度、作业完成情况、学习弱项和常见错误等数据");
+
         let answer = match run_agent_she_query(
             &self.agent_she,
             &token,
-            &query,
+            &full_query,
             &meta,
             "ktgc_question_answer_recommend",
             timeout,

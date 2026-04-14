@@ -1,11 +1,12 @@
 //! Built-in tool: collect preparatory data for lesson planning and courseware.
 //!
-//! Focuses on curriculum and scheduling data that is NOT covered by
-//! `sw_classroom_observation` or `sw_student_analysis`.
+//! Accepts a free-form lesson preparation description and delegates to the
+//! agent-she API, which infers the topic, subject, grade, region, progress,
+//! curriculum outline, and recent homework errors.
 
 use super::sw_lesson_common::{
-    AgentSheConfig, artifacts_dir, err_result, fetch_user_meta, gen_session_id, opt_str,
-    require_str, require_sw_token, run_agent_she_query,
+    AgentSheConfig, artifacts_dir, err_result, fetch_user_meta, gen_session_id, require_str,
+    require_sw_token, run_agent_she_query,
 };
 use super::traits::{Tool, ToolResult};
 use async_trait::async_trait;
@@ -33,35 +34,30 @@ impl Tool for SwLessonDataCollectTool {
     }
 
     fn description(&self) -> &str {
-        "备课使用此工具前，要先使用 sw_teaching_reflection 和 sw_student_feedback 工具收集教学反思和学生反馈信息，\
-        然后再使用此工具收集备课剩余的所需数据：课程大纲、课时安排、作业错题等。\
-        本工具会输出结构化 JSON 到 artifacts 目录，供后续教案和课件生成使用。"
+        "备课数据收集：根据备课需求描述，查询接下来要准备的课程主题、学科、学段/年级、地区、\
+         已教进度、课程大纲课时安排和最近批改作业错题情况等信息。\
+         输出结构化 JSON 到 artifacts 目录，供后续教案和课件生成使用。"
     }
 
     fn parameters_schema(&self) -> Value {
         json!({
             "type": "object",
             "properties": {
-                "topic":   { "type": "string", "description": "课程主题" },
-                "subject": { "type": "string", "description": "学科" },
-                "grade":   { "type": "string", "description": "学段/年级" },
-                "region":  { "type": "string", "description": "地区（可选）" },
-                "progress": { "type": "string", "description": "已教进度描述（可选）" },
+                "query": {
+                    "type": "string",
+                    "description": "备课需求描述（自然语言），例如：\"我要准备五年级数学下册《分数的加减法》的备课资料\""
+                },
                 "session_id": { "type": "string", "description": "自定义会话 ID（可选，不填则自动生成 8 位 hex）" },
                 "sp_s_name": { "type": "string", "description": "前端显示的步骤名称，建议值：\"准备备课数据\"" },
                 "sp_s_icon": { "type": "string", "description": "前端显示的步骤图标，固定值：\"icon-data-collect\"" },
                 "timeout_secs": { "type": "integer", "description": "查询的超时秒数（默认 360）", "default": 360 }
             },
-            "required": ["topic", "subject", "grade", "sp_s_name", "sp_s_icon"]
+            "required": ["query", "sp_s_name", "sp_s_icon"]
         })
     }
 
     async fn execute(&self, args: Value) -> anyhow::Result<ToolResult> {
-        let topic = require_str(&args, "topic")?;
-        let subject = require_str(&args, "subject")?;
-        let grade = require_str(&args, "grade")?;
-        let region = opt_str(&args, "region");
-        let progress = opt_str(&args, "progress");
+        let query = require_str(&args, "query")?;
 
         let session_id = args
             .get("session_id")
@@ -78,24 +74,24 @@ impl Tool for SwLessonDataCollectTool {
         let out_dir = artifacts_dir(&self.workspace_dir, &session_id);
         std::fs::create_dir_all(&out_dir)?;
 
-        let mut meta = match fetch_user_meta(&token).await {
+        let meta = match fetch_user_meta(&token).await {
             Ok(m) => m,
             Err(e) => return Ok(err_result(format!("获取用户信息失败: {e}"))),
         };
-        meta.subject_name = subject.clone();
-
-        let question =
-            format!("查询{subject}{grade}{topic}的课程大纲课时安排和最近批改作业错题情况");
 
         let timeout = args
             .get("timeout_secs")
             .and_then(|v| v.as_u64())
             .unwrap_or(360);
 
+        let full_query = format!(
+            "1. {query}\n2. 并推理接下来要准备的课程主题、学科、学段/年级、地区、已教进度、课程大纲课时安排和最近批改作业错题情况"
+        );
+
         let answer = match run_agent_she_query(
             &self.agent_she,
             &token,
-            &question,
+            &full_query,
             &meta,
             "ktgc_question_answer_recommend",
             timeout,
@@ -108,11 +104,7 @@ impl Tool for SwLessonDataCollectTool {
 
         let mut results = serde_json::Map::new();
         results.insert("session_id".into(), json!(session_id));
-        results.insert("topic".into(), json!(topic));
-        results.insert("subject".into(), json!(subject));
-        results.insert("grade".into(), json!(grade));
-        results.insert("region".into(), json!(region));
-        results.insert("progress".into(), json!(progress));
+        results.insert("query".into(), json!(query));
         results.insert("collected_data".into(), json!(answer));
 
         let data = Value::Object(results);
@@ -122,7 +114,7 @@ impl Tool for SwLessonDataCollectTool {
         Ok(ToolResult {
             success: true,
             output: format!(
-                "数据收集完成。session_id={session_id}\n文件: {}\n摘要: topic={topic}, subject={subject}, grade={grade}",
+                "数据收集完成。session_id={session_id}\n文件: {}",
                 data_path.display()
             ),
             error: None,
