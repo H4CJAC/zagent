@@ -23,7 +23,8 @@ impl Tool for SwLessonGenCwTool {
     }
 
     fn description(&self) -> &str {
-        "根据备课数据和教案生成课件。通过浏览器自动化调用希沃课件生成服务，\
+        "（用户无特殊要求情况下，调用此工具前，先要用 sw_prepare_lesson_01_data_collect 工具收集备课数据，用 sw_prepare_lesson_02_gen_plan 工具生成教案。）\
+        根据备课数据和教案生成课件。通过浏览器自动化调用希沃课件生成服务，\
          分两阶段（草稿 + 最终结果）完成，输出 XML 交付信息和课件文件。"
     }
 
