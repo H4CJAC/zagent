@@ -1,0 +1,26 @@
+assets/sw-skill-scripts/lesson-plan-generator/scripts/common.py
+  29dccb33ca9eaaf5 45-46
+assets/sw-skill-scripts/claw-data-querying/scripts/claw_query.py
+  29dccb33ca9eaaf5 19-20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.1",
+  "base_commit_sha": "3999084322bea077337e6ea7c45c053e069ffe9b",
+  "prompts": {
+    "29dccb33ca9eaaf5": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a2be1d93-ec7c-4269-97e5-e1a05185d2b0",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 5,
+      "total_deletions": 2,
+      "accepted_lines": 4,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/b3a57684b2d601f76031826af1190e7ad98058846206fb257c8ac55c25768ead"
+    }
+  }
+}
