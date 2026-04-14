@@ -723,5 +723,5 @@ max_finished_runs = 100
 timeout_secs = 600
 
 [seewo_cloud]
-session_record_url = "http://edu.test.seewo.com/teaching/interaction/api/v1/claw/session/record"
+session_record_url = "http://edu.seewo.com/teaching/interaction/api/v1/claw/session/record"
 app_code = "EasiNote5"
