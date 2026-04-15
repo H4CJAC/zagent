@@ -1,6 +1,8 @@
 //! Built-in tool: generate courseware using the embedded create-courseware scripts.
 
-use super::sw_lesson_common::{artifacts_dir, ensure_skill_scripts, err_result, run_script};
+use super::sw_lesson_common::{
+    artifacts_dir, cache_key, cached_query, ensure_skill_scripts, err_result, run_script,
+};
 use super::traits::{Tool, ToolResult};
 use async_trait::async_trait;
 use serde_json::{Value, json};
@@ -8,11 +10,17 @@ use std::path::PathBuf;
 
 pub struct SwLessonGenCwTool {
     workspace_dir: PathBuf,
+    cache_ttl_secs: u64,
+    cw_cache_delay_ms: u64,
 }
 
 impl SwLessonGenCwTool {
-    pub fn new(workspace_dir: PathBuf) -> Self {
-        Self { workspace_dir }
+    pub fn new(workspace_dir: PathBuf, cache_ttl_secs: u64, cw_cache_delay_ms: u64) -> Self {
+        Self {
+            workspace_dir,
+            cache_ttl_secs,
+            cw_cache_delay_ms,
+        }
     }
 }
 
@@ -55,7 +63,7 @@ impl Tool for SwLessonGenCwTool {
 
     async fn execute(&self, args: Value) -> anyhow::Result<ToolResult> {
         let session_id = match args.get("session_id").and_then(|v| v.as_str()) {
-            Some(s) if !s.is_empty() => s,
+            Some(s) if !s.is_empty() => s.to_string(),
             _ => return Ok(err_result("缺少必填参数: session_id".into())),
         };
         let topic = match args.get("topic").and_then(|v| v.as_str()) {
@@ -65,7 +73,8 @@ impl Tool for SwLessonGenCwTool {
         let extra_context = args
             .get("context_file")
             .and_then(|v| v.as_str())
-            .unwrap_or("");
+            .unwrap_or("")
+            .to_string();
         let phase1_timeout = args
             .get("phase1_timeout_secs")
             .and_then(|v| v.as_u64())
@@ -75,7 +84,7 @@ impl Tool for SwLessonGenCwTool {
             .and_then(|v| v.as_u64())
             .unwrap_or(960);
 
-        let out_dir = artifacts_dir(&self.workspace_dir, session_id);
+        let out_dir = artifacts_dir(&self.workspace_dir, &session_id);
         std::fs::create_dir_all(&out_dir)?;
 
         let scripts_dir = match ensure_skill_scripts(&self.workspace_dir) {
@@ -90,10 +99,9 @@ impl Tool for SwLessonGenCwTool {
             ));
         }
 
-        // Determine context file: prefer plan.md if available
         let plan_path = out_dir.join("plan.md");
         let context_path = if !extra_context.is_empty() {
-            extra_context.to_string()
+            extra_context.clone()
         } else if plan_path.exists() {
             plan_path.to_string_lossy().to_string()
         } else {
@@ -101,100 +109,131 @@ impl Tool for SwLessonGenCwTool {
         };
 
         let cw_output = out_dir.join("courseware.json");
-        let cw_scripts = scripts_dir.join("create-courseware/scripts");
-        let script1 = cw_scripts.join("run-generate-courseware.js");
-        let script2 = cw_scripts.join("wait-courseware-result.js");
 
-        // ── Phase 1: start + draft ──
-        let mut envs: Vec<(&str, String)> = vec![
-            ("SEEWO_CLAW_TOPIC", topic.clone()),
-            ("SEEWO_CLAW_X_TOKEN", token),
-            ("SEEWO_CLAW_OUTPUT", cw_output.to_string_lossy().to_string()),
-            ("SEEWO_CLAW_SESSION", format!("claw-{session_id}")),
-        ];
-        if !context_path.is_empty() {
-            envs.push(("SEEWO_CLAW_CONTEXT_FILE", context_path));
-        }
+        // Run the two-phase generation through cache.
+        // The cached payload is a JSON object with task_xml, notice_xml, piece_id.
+        let key = cache_key(&[&topic]);
+        let ws = self.workspace_dir.clone();
+        let cw_output_str = cw_output.to_string_lossy().to_string();
+        let session_id_owned = session_id.clone();
 
-        let env_refs: Vec<(&str, &str)> = envs.iter().map(|(k, v)| (*k, v.as_str())).collect();
-        let script1_str = script1.to_string_lossy().to_string();
+        let cached_json = cached_query(
+            &ws,
+            "courseware/gen_cw",
+            &key,
+            self.cache_ttl_secs,
+            self.cw_cache_delay_ms,
+            || {
+                let scripts_dir = scripts_dir.clone();
+                let topic = topic.clone();
+                let token = token.clone();
+                let cw_output_str = cw_output_str.clone();
+                let session_id = session_id_owned.clone();
+                let context_path = context_path.clone();
 
-        let (stdout1, stderr1, ok1) = run_script(
-            "node",
-            &[&script1_str],
-            &env_refs,
-            &cw_scripts,
-            phase1_timeout,
+                async move {
+                    let cw_scripts = scripts_dir.join("create-courseware/scripts");
+                    let script1 = cw_scripts.join("run-generate-courseware.js");
+                    let script2 = cw_scripts.join("wait-courseware-result.js");
+
+                    // Phase 1
+                    let mut envs: Vec<(&str, String)> = vec![
+                        ("SEEWO_CLAW_TOPIC", topic.clone()),
+                        ("SEEWO_CLAW_X_TOKEN", token),
+                        ("SEEWO_CLAW_OUTPUT", cw_output_str.clone()),
+                        ("SEEWO_CLAW_SESSION", format!("claw-{session_id}")),
+                    ];
+                    if !context_path.is_empty() {
+                        envs.push(("SEEWO_CLAW_CONTEXT_FILE", context_path));
+                    }
+
+                    let env_refs: Vec<(&str, &str)> =
+                        envs.iter().map(|(k, v)| (*k, v.as_str())).collect();
+                    let script1_str = script1.to_string_lossy().to_string();
+
+                    let (stdout1, stderr1, ok1) = run_script(
+                        "node",
+                        &[&script1_str],
+                        &env_refs,
+                        &cw_scripts,
+                        phase1_timeout,
+                    )
+                    .await?;
+
+                    if !ok1 {
+                        let detail = if stderr1.is_empty() {
+                            &stdout1
+                        } else {
+                            &stderr1
+                        };
+                        anyhow::bail!("课件生成 Phase 1 失败: {}", detail.trim());
+                    }
+
+                    let cw_session = extract_field(&stderr1, "SESSION_NAME=")
+                        .unwrap_or_else(|| format!("claw-{session_id}"));
+                    let task_id = extract_field(&stderr1, "TASK_ID=")
+                        .unwrap_or_else(|| format!("task-{session_id}"));
+                    let task_xml = extract_xml_block(&stdout1, "task");
+                    let piece_id = extract_xml_field(&stdout1, "pieceId");
+
+                    // Phase 2
+                    let script2_str = script2.to_string_lossy().to_string();
+                    let phase2_envs: Vec<(&str, String)> = vec![
+                        ("SEEWO_CLAW_SESSION", cw_session),
+                        ("SEEWO_CLAW_TASK_ID", task_id),
+                        ("SEEWO_CLAW_TOPIC", topic),
+                        ("SEEWO_CLAW_OUTPUT", cw_output_str),
+                    ];
+                    let phase2_refs: Vec<(&str, &str)> =
+                        phase2_envs.iter().map(|(k, v)| (*k, v.as_str())).collect();
+
+                    let (stdout2, stderr2, ok2) = run_script(
+                        "node",
+                        &[&script2_str],
+                        &phase2_refs,
+                        &cw_scripts,
+                        phase2_timeout,
+                    )
+                    .await?;
+
+                    if !ok2 {
+                        let detail = if stderr2.is_empty() {
+                            &stdout2
+                        } else {
+                            &stderr2
+                        };
+                        anyhow::bail!("课件生成 Phase 2 失败: {}", detail.trim());
+                    }
+
+                    let notice_xml = extract_xml_block(&stdout2, "notice");
+
+                    Ok(serde_json::to_string(&json!({
+                        "task_xml": task_xml,
+                        "notice_xml": notice_xml,
+                        "piece_id": piece_id,
+                    }))?)
+                }
+            },
         )
         .await?;
 
-        if !ok1 {
-            let detail = if stderr1.is_empty() {
-                &stdout1
-            } else {
-                &stderr1
-            };
-            return Ok(err_result(format!(
-                "课件生成 Phase 1 失败: {}",
-                detail.trim()
-            )));
-        }
+        // Deserialize cached components and assemble output with a fresh task_id.
+        let parts: Value = serde_json::from_str(&cached_json)?;
+        let task_xml = parts["task_xml"].as_str().unwrap_or("");
+        let notice_xml = parts["notice_xml"].as_str().unwrap_or("");
+        let piece_id = parts["piece_id"].as_str().unwrap_or("");
+        let task_id = format!("task-{session_id}");
 
-        let cw_session = extract_field(&stderr1, "SESSION_NAME=")
-            .unwrap_or_else(|| format!("claw-{session_id}"));
-        let task_id =
-            extract_field(&stderr1, "TASK_ID=").unwrap_or_else(|| format!("task-{session_id}"));
-        let task_xml = extract_xml_block(&stdout1, "task");
-        let piece_id = extract_xml_field(&stdout1, "pieceId");
-
-        // ── Phase 2: wait for final result ──
-        let script2_str = script2.to_string_lossy().to_string();
-        let phase2_envs: Vec<(&str, String)> = vec![
-            ("SEEWO_CLAW_SESSION", cw_session.clone()),
-            ("SEEWO_CLAW_TASK_ID", task_id.clone()),
-            ("SEEWO_CLAW_TOPIC", topic.clone()),
-            ("SEEWO_CLAW_OUTPUT", cw_output.to_string_lossy().to_string()),
-        ];
-        let phase2_refs: Vec<(&str, &str)> =
-            phase2_envs.iter().map(|(k, v)| (*k, v.as_str())).collect();
-
-        let (stdout2, stderr2, ok2) = run_script(
-            "node",
-            &[&script2_str],
-            &phase2_refs,
-            &cw_scripts,
-            phase2_timeout,
-        )
-        .await?;
-
-        if !ok2 {
-            let detail = if stderr2.is_empty() {
-                &stdout2
-            } else {
-                &stderr2
-            };
-            return Ok(ToolResult {
-                success: false,
-                output: format!(
-                    "Phase 1 成功但 Phase 2 失败。\ntask_id={task_id}\n{task_xml}\n\n错误: {}",
-                    detail.trim()
-                ),
-                error: Some("课件生成 Phase 2 失败".into()),
-            });
-        }
-
-        let notice_xml = extract_xml_block(&stdout2, "notice");
-
-        use std::fmt::Write;
         let mut xml_block = String::new();
         if !task_xml.is_empty() {
-            xml_block.push_str(&task_xml);
+            xml_block.push_str(task_xml);
             xml_block.push('\n');
         }
         if !notice_xml.is_empty() {
-            xml_block.push_str(&notice_xml);
+            xml_block.push_str(notice_xml);
         }
 
+        use std::fmt::Write;
         let mut output = String::new();
         let _ = write!(
             output,

@@ -544,6 +544,11 @@ pub struct SeewoCloudConfig {
     /// Makes cached responses feel more natural. 0 = no delay.
     #[serde(default)]
     pub cache_delay_ms: u64,
+    /// Artificial delay in milliseconds when returning a cached courseware result.
+    /// Separate from cache_delay_ms because courseware generation is much slower.
+    /// 0 = no delay.
+    #[serde(default)]
+    pub cw_cache_delay_ms: u64,
 }
 
 /// Multi-client workspace isolation configuration.

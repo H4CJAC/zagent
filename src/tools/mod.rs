@@ -486,6 +486,8 @@ pub fn all_tools_with_runtime(
         )),
         Arc::new(sw_lesson_gen_cw::SwLessonGenCwTool::new(
             workspace_dir.to_path_buf(),
+            root_config.seewo_cloud.cache_ttl_secs,
+            root_config.seewo_cloud.cw_cache_delay_ms,
         )),
         Arc::new(sw_my_data_query::SwMyDataQueryTool::new(
             workspace_dir.to_path_buf(),
