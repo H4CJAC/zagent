@@ -80,6 +80,11 @@ pub trait SessionBackend: Send + Sync {
         Vec::new()
     }
 
+    /// Check whether a session exists (has metadata), regardless of message count.
+    fn session_exists(&self, session_key: &str) -> bool {
+        !self.load(session_key).is_empty()
+    }
+
     /// Delete all messages for a session. Returns `true` if the session existed.
     fn delete_session(&self, _session_key: &str) -> std::io::Result<bool> {
         Ok(false)

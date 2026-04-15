@@ -1287,10 +1287,10 @@ fn resolve_gw_key(
 ) -> Option<String> {
     GW_PREFIXES.iter().find_map(|&(prefix, _)| {
         let key = format!("{prefix}{id}");
-        if backend.load(&key).is_empty() {
-            None
-        } else {
+        if backend.session_exists(&key) {
             Some(key)
+        } else {
+            None
         }
     })
 }
