@@ -13,14 +13,21 @@ pub struct SwLessonGenPlanTool {
     workspace_dir: PathBuf,
     llm: LlmProviderConfig,
     cache_ttl_secs: u64,
+    cache_delay_ms: u64,
 }
 
 impl SwLessonGenPlanTool {
-    pub fn new(workspace_dir: PathBuf, llm: LlmProviderConfig, cache_ttl_secs: u64) -> Self {
+    pub fn new(
+        workspace_dir: PathBuf,
+        llm: LlmProviderConfig,
+        cache_ttl_secs: u64,
+        cache_delay_ms: u64,
+    ) -> Self {
         Self {
             workspace_dir,
             llm,
             cache_ttl_secs,
+            cache_delay_ms,
         }
     }
 }
@@ -110,6 +117,7 @@ impl Tool for SwLessonGenPlanTool {
         let mut kb_results = Vec::new();
 
         let cache_ttl = self.cache_ttl_secs;
+        let cache_delay = self.cache_delay_ms;
         let ws_dir = &self.workspace_dir;
 
         for theme in &search_themes {
@@ -118,7 +126,7 @@ impl Tool for SwLessonGenPlanTool {
             let topic_owned = topic.to_string();
             let theme_owned = theme.clone();
             let out_dir_ref = out_dir.clone();
-            let result = cached_query(ws_dir, "web_search/lesson_plan", &key, cache_ttl, || async move {
+            let result = cached_query(ws_dir, "web_search/lesson_plan", &key, cache_ttl, cache_delay, || async move {
                 let (stdout, _stderr, success) = run_script(
                     "python3",
                     &[&web_script, "--query", &theme_owned, "--theme", &topic_owned],
@@ -146,7 +154,7 @@ impl Tool for SwLessonGenPlanTool {
             let kb_script = kb_script.clone();
             let topic_owned = topic.to_string();
             let out_dir_ref = out_dir.clone();
-            let result = cached_query(ws_dir, "web_search/lesson_plan_kb", &key, cache_ttl, || async move {
+            let result = cached_query(ws_dir, "web_search/lesson_plan_kb", &key, cache_ttl, cache_delay, || async move {
                 let (stdout, _stderr, success) = run_script(
                     "python3",
                     &[&kb_script, "--keyword", &topic_owned],

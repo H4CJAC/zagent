@@ -733,3 +733,4 @@ data_query_base_url = "https://agent-she.seewo.com"
 data_query_create_workflow_id = 997
 data_query_run_workflow_id = 998
 cache_ttl_secs = 8640000
+cache_delay_ms = 3000

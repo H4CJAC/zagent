@@ -200,6 +200,7 @@ pub struct AgentSheConfig {
     pub create_workflow_id: u64,
     pub run_workflow_id: u64,
     pub cache_ttl_secs: u64,
+    pub cache_delay_ms: u64,
 }
 
 impl Default for AgentSheConfig {
@@ -209,6 +210,7 @@ impl Default for AgentSheConfig {
             create_workflow_id: DEFAULT_CREATE_WORKFLOW_ID,
             run_workflow_id: DEFAULT_RUN_WORKFLOW_ID,
             cache_ttl_secs: 0,
+            cache_delay_ms: 0,
         }
     }
 }
@@ -227,6 +229,7 @@ impl AgentSheConfig {
                 .data_query_run_workflow_id
                 .unwrap_or(DEFAULT_RUN_WORKFLOW_ID),
             cache_ttl_secs: cfg.cache_ttl_secs,
+            cache_delay_ms: cfg.cache_delay_ms,
         }
     }
 }
@@ -599,6 +602,7 @@ pub async fn cached_query<F, Fut>(
     category: &str,
     key: &str,
     ttl_secs: u64,
+    delay_ms: u64,
     fetch_fn: F,
 ) -> Result<String>
 where
@@ -621,8 +625,12 @@ where
                         category,
                         key,
                         age_secs = age.as_secs(),
+                        delay_ms,
                         "sw cache hit"
                     );
+                    if delay_ms > 0 {
+                        tokio::time::sleep(std::time::Duration::from_millis(delay_ms)).await;
+                    }
                     return Ok(content);
                 }
             }
@@ -651,12 +659,18 @@ pub async fn run_claw_query_cached(
     workspace_dir: &Path,
     caller: &str,
     cache_ttl_secs: u64,
+    cache_delay_ms: u64,
 ) -> Result<String> {
     let key = cache_key(&[question]);
     let category = format!("claw_query/{caller}");
-    cached_query(workspace_dir, &category, &key, cache_ttl_secs, || {
-        run_claw_query(scripts_dir, token, question, cwd, timeout_secs)
-    })
+    cached_query(
+        workspace_dir,
+        &category,
+        &key,
+        cache_ttl_secs,
+        cache_delay_ms,
+        || run_claw_query(scripts_dir, token, question, cwd, timeout_secs),
+    )
     .await
 }
 
@@ -670,6 +684,7 @@ pub async fn run_agent_she_query_cached(
     workspace_dir: &Path,
     caller: &str,
     cache_ttl_secs: u64,
+    cache_delay_ms: u64,
 ) -> Result<String> {
     let key = cache_key(&[
         question,
@@ -678,9 +693,14 @@ pub async fn run_agent_she_query_cached(
         request_type,
     ]);
     let category = format!("agent_she/{caller}");
-    cached_query(workspace_dir, &category, &key, cache_ttl_secs, || {
-        run_agent_she_query(config, token, question, meta, request_type, timeout_secs)
-    })
+    cached_query(
+        workspace_dir,
+        &category,
+        &key,
+        cache_ttl_secs,
+        cache_delay_ms,
+        || run_agent_she_query(config, token, question, meta, request_type, timeout_secs),
+    )
     .await
 }
 

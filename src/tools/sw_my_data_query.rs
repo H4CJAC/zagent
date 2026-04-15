@@ -15,13 +15,15 @@ use std::path::PathBuf;
 pub struct SwMyDataQueryTool {
     workspace_dir: PathBuf,
     cache_ttl_secs: u64,
+    cache_delay_ms: u64,
 }
 
 impl SwMyDataQueryTool {
-    pub fn new(workspace_dir: PathBuf, cache_ttl_secs: u64) -> Self {
+    pub fn new(workspace_dir: PathBuf, cache_ttl_secs: u64, cache_delay_ms: u64) -> Self {
         Self {
             workspace_dir,
             cache_ttl_secs,
+            cache_delay_ms,
         }
     }
 }
@@ -127,6 +129,7 @@ impl Tool for SwMyDataQueryTool {
             &self.workspace_dir,
             "my_data",
             self.cache_ttl_secs,
+            self.cache_delay_ms,
         )
         .await?;
 

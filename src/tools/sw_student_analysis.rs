@@ -96,6 +96,7 @@ impl Tool for SwStudentAnalysisTool {
             &self.workspace_dir,
             "student_analysis",
             self.agent_she.cache_ttl_secs,
+            self.agent_she.cache_delay_ms,
         )
         .await
         {

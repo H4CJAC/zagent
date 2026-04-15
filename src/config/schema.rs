@@ -540,6 +540,10 @@ pub struct SeewoCloudConfig {
     /// 0 = disabled (default). Set to e.g. 86400 for demo/rehearsal.
     #[serde(default)]
     pub cache_ttl_secs: u64,
+    /// Artificial delay in milliseconds when returning a cached result.
+    /// Makes cached responses feel more natural. 0 = no delay.
+    #[serde(default)]
+    pub cache_delay_ms: u64,
 }
 
 /// Multi-client workspace isolation configuration.

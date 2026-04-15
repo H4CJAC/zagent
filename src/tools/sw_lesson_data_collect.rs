@@ -99,6 +99,7 @@ impl Tool for SwLessonDataCollectTool {
             &self.workspace_dir,
             "data_collect",
             self.agent_she.cache_ttl_secs,
+            self.agent_she.cache_delay_ms,
         )
         .await
         {

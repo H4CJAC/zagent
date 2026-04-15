@@ -96,6 +96,7 @@ impl Tool for SwClassroomObservationTool {
             &self.workspace_dir,
             "classroom_obs",
             self.agent_she.cache_ttl_secs,
+            self.agent_she.cache_delay_ms,
         )
         .await
         {

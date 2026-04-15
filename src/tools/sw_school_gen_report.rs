@@ -16,14 +16,21 @@ pub struct SwSchoolGenReportTool {
     workspace_dir: PathBuf,
     llm: LlmProviderConfig,
     cache_ttl_secs: u64,
+    cache_delay_ms: u64,
 }
 
 impl SwSchoolGenReportTool {
-    pub fn new(workspace_dir: PathBuf, llm: LlmProviderConfig, cache_ttl_secs: u64) -> Self {
+    pub fn new(
+        workspace_dir: PathBuf,
+        llm: LlmProviderConfig,
+        cache_ttl_secs: u64,
+        cache_delay_ms: u64,
+    ) -> Self {
         Self {
             workspace_dir,
             llm,
             cache_ttl_secs,
+            cache_delay_ms,
         }
     }
 }
@@ -188,6 +195,7 @@ impl Tool for SwSchoolGenReportTool {
             &self.workspace_dir,
             "school_report",
             self.cache_ttl_secs,
+            self.cache_delay_ms,
         )
         .await
         {
