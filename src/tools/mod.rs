@@ -525,34 +525,30 @@ pub fn all_tools_with_runtime(
             llm_task_runtime_options.clone(),
         )));
 
-        // Lesson plan generator reuses the same provider config
+        let llm_config = sw_lesson_common::LlmProviderConfig {
+            provider_name: llm_task_provider,
+            model: llm_task_model,
+            temperature: root_config.default_temperature,
+            api_key: root_config.api_key.clone(),
+            api_url: root_config.api_url.clone(),
+            runtime_options: llm_task_runtime_options,
+            reliability: root_config.reliability.clone(),
+            model_routes: root_config.model_routes.clone(),
+        };
+
         tool_arcs.push(Arc::new(sw_lesson_gen_plan::SwLessonGenPlanTool::new(
             workspace_dir.to_path_buf(),
-            llm_task_provider.clone(),
-            llm_task_model.clone(),
-            root_config.default_temperature,
-            root_config.api_key.clone(),
-            llm_task_runtime_options.clone(),
+            llm_config.clone(),
         )));
-
         tool_arcs.push(Arc::new(
             sw_teaching_reflection::SwTeachingReflectionTool::new(
                 workspace_dir.to_path_buf(),
-                llm_task_provider.clone(),
-                llm_task_model.clone(),
-                root_config.default_temperature,
-                root_config.api_key.clone(),
-                llm_task_runtime_options.clone(),
+                llm_config.clone(),
             ),
         ));
-
         tool_arcs.push(Arc::new(sw_student_feedback::SwStudentFeedbackTool::new(
             workspace_dir.to_path_buf(),
-            llm_task_provider,
-            llm_task_model,
-            root_config.default_temperature,
-            root_config.api_key.clone(),
-            llm_task_runtime_options,
+            llm_config,
         )));
     }
 

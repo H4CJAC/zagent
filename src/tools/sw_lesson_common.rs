@@ -497,6 +497,38 @@ pub fn truncate_str(s: &str, max_bytes: usize) -> &str {
     &s[..end]
 }
 
+// ── LLM provider config (shared by sw_* tools) ─────────────────────
+
+/// Shared LLM provider configuration for sw_* tools.
+///
+/// Wraps all parameters needed to create a `ReliableProvider` with retry,
+/// provider fallback, model fallback, and API key rotation.
+#[derive(Clone)]
+pub struct LlmProviderConfig {
+    pub provider_name: String,
+    pub model: String,
+    pub temperature: f64,
+    pub api_key: Option<String>,
+    pub api_url: Option<String>,
+    pub runtime_options: crate::providers::ProviderRuntimeOptions,
+    pub reliability: crate::config::ReliabilityConfig,
+    pub model_routes: Vec<crate::config::ModelRouteConfig>,
+}
+
+impl LlmProviderConfig {
+    pub fn create_provider(&self) -> anyhow::Result<Box<dyn crate::providers::Provider>> {
+        crate::providers::create_routed_provider_with_options(
+            &self.provider_name,
+            self.api_key.as_deref(),
+            self.api_url.as_deref(),
+            &self.reliability,
+            &self.model_routes,
+            &self.model,
+            &self.runtime_options,
+        )
+    }
+}
+
 // ── Script execution ────────────────────────────────────────────────
 
 /// Run an external script, streaming stdout/stderr via `ToolChunk` events.

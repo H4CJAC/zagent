@@ -5,40 +5,21 @@
 //! actionable communication strategies.
 
 use super::sw_lesson_common::{
-    analysis_artifacts_dir, err_result, opt_str, require_str, truncate_str,
+    LlmProviderConfig, analysis_artifacts_dir, err_result, opt_str, require_str, truncate_str,
 };
 use super::traits::{Tool, ToolResult};
-use crate::providers::{self, Provider, ProviderRuntimeOptions};
 use async_trait::async_trait;
 use serde_json::{Value, json};
 use std::path::PathBuf;
 
 pub struct SwStudentFeedbackTool {
     workspace_dir: PathBuf,
-    provider_name: String,
-    model: String,
-    temperature: f64,
-    api_key: Option<String>,
-    runtime_options: ProviderRuntimeOptions,
+    llm: LlmProviderConfig,
 }
 
 impl SwStudentFeedbackTool {
-    pub fn new(
-        workspace_dir: PathBuf,
-        provider_name: String,
-        model: String,
-        temperature: f64,
-        api_key: Option<String>,
-        runtime_options: ProviderRuntimeOptions,
-    ) -> Self {
-        Self {
-            workspace_dir,
-            provider_name,
-            model,
-            temperature,
-            api_key,
-            runtime_options,
-        }
+    pub fn new(workspace_dir: PathBuf, llm: LlmProviderConfig) -> Self {
+        Self { workspace_dir, llm }
     }
 }
 
@@ -183,11 +164,7 @@ impl Tool for SwStudentFeedbackTool {
             );
         }
 
-        let provider: Box<dyn Provider> = match providers::create_provider_with_options(
-            &self.provider_name,
-            self.api_key.as_deref(),
-            &self.runtime_options,
-        ) {
+        let provider = match self.llm.create_provider() {
             Ok(p) => p,
             Err(e) => return Ok(err_result(format!("创建 LLM provider 失败: {e}"))),
         };
@@ -196,8 +173,8 @@ impl Tool for SwStudentFeedbackTool {
             .chat_with_system(
                 Some(SYSTEM_PROMPT),
                 &user_prompt,
-                &self.model,
-                self.temperature,
+                &self.llm.model,
+                self.llm.temperature,
             )
             .await
         {
