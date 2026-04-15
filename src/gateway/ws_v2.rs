@@ -321,7 +321,7 @@ async fn handle_socket_v2(
 
     let session_id = session_id.unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
     let session_key = format!("{GW_V2_SESSION_PREFIX}{session_id}");
-    let session_name = session_name.unwrap_or_else(|| "WS v2 Session".to_string());
+    let session_name = session_name.unwrap_or_else(|| "新建会话".to_string());
 
     let config = state.config.lock().clone();
     let mut session = match WsSession::from_config(&config).await {

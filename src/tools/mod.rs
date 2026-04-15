@@ -107,6 +107,7 @@ pub mod sw_lesson_data_collect;
 pub mod sw_lesson_gen_cw;
 pub mod sw_lesson_gen_plan;
 pub mod sw_my_data_query;
+pub mod sw_school_gen_report;
 pub mod sw_student_analysis;
 pub mod sw_student_feedback;
 pub mod sw_teaching_reflection;
@@ -548,8 +549,14 @@ pub fn all_tools_with_runtime(
         ));
         tool_arcs.push(Arc::new(sw_student_feedback::SwStudentFeedbackTool::new(
             workspace_dir.to_path_buf(),
-            llm_config,
+            llm_config.clone(),
         )));
+        tool_arcs.push(Arc::new(
+            sw_school_gen_report::SwSchoolGenReportTool::new(
+                workspace_dir.to_path_buf(),
+                llm_config,
+            ),
+        ));
     }
 
     if matches!(
