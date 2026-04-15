@@ -1,0 +1,43 @@
+src/gateway/api.rs
+  dd9a7ab298799cca 1391-1394,1408-1426
+src/config/schema.rs
+  dd9a7ab298799cca 524-526
+src/config/presets/seewo.toml
+  dd9a7ab298799cca 730
+src/gateway/cloud_report.rs
+  dd9a7ab298799cca 7,9-15,24-25,27,32,36,39,48-49,51-73
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.1",
+  "base_commit_sha": "f7766056cd97ba3b76577f69b6e7560d3b51a4f0",
+  "prompts": {
+    "29dccb33ca9eaaf5": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "a2be1d93-ec7c-4269-97e5-e1a05185d2b0",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 1,
+      "overriden_lines": 0
+    },
+    "dd9a7ab298799cca": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "49f768fd-534d-460d-bfe8-417620332917",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 69,
+      "total_deletions": 30,
+      "accepted_lines": 69,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/0452c50f63afd8724bdf4a763378b401ce6304c97f503766ed435bd0abace67d"
+    }
+  }
+}
