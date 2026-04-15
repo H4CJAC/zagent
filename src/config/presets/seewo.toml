@@ -727,6 +727,7 @@ timeout_secs = 600
 
 [seewo_cloud]
 session_record_url = "http://edu.seewo.com/teaching/interaction/api/v1/claw/session/record"
+session_delete_url = "http://edu.seewo.com/teaching/interaction/api/v1/claw/session/delete"
 app_code = "EasiNote5"
 data_query_base_url = "https://agent-she.seewo.com"
 data_query_create_workflow_id = 997

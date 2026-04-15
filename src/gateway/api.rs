@@ -1388,7 +1388,10 @@ pub async fn handle_api_session_delete(
 
     let session_key = resolve_gw_key(backend.as_ref(), &id).unwrap_or_else(|| format!("gw_{id}"));
     match backend.delete_session(&session_key) {
-        Ok(true) => Json(serde_json::json!({"deleted": true, "session_id": id})).into_response(),
+        Ok(true) => {
+            spawn_cloud_delete(&state, &id);
+            Json(serde_json::json!({"deleted": true, "session_id": id})).into_response()
+        }
         Ok(false) => (
             StatusCode::NOT_FOUND,
             Json(serde_json::json!({"error": "Session not found"})),
@@ -1400,6 +1403,27 @@ pub async fn handle_api_session_delete(
         )
             .into_response(),
     }
+}
+
+/// Spawn a fire-and-forget cloud session deletion if credentials are available.
+fn spawn_cloud_delete(state: &AppState, session_id: &str) {
+    let config = state.config.lock().clone();
+    let url = match config.seewo_cloud.session_delete_url {
+        Some(ref u) if !u.is_empty() => u.clone(),
+        _ => return,
+    };
+    let app_code = match config.seewo_cloud.app_code {
+        Some(ref c) if !c.is_empty() => c.clone(),
+        _ => return,
+    };
+    let token = match super::sw_state::get_sw_token() {
+        Some(t) => t,
+        None => return,
+    };
+    let uid = session_id.to_owned();
+    tokio::spawn(super::cloud_report::delete_session(
+        url, token, app_code, uid,
+    ));
 }
 
 /// PUT /api/sessions/{id} — rename a gateway session

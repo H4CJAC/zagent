@@ -521,6 +521,9 @@ pub struct SeewoCloudConfig {
     /// URL for session record reporting (e.g. `POST /claw/session/record`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub session_record_url: Option<String>,
+    /// URL for session deletion (e.g. `POST /claw/session/delete`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub session_delete_url: Option<String>,
     /// Application code sent as `x-auth-app` cookie.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub app_code: Option<String>,
