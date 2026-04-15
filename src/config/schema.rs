@@ -536,6 +536,10 @@ pub struct SeewoCloudConfig {
     /// Workflow ID used when running an SSE query (default: 998).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub data_query_run_workflow_id: Option<u64>,
+    /// Cache TTL in seconds for sw_* tool data queries.
+    /// 0 = disabled (default). Set to e.g. 86400 for demo/rehearsal.
+    #[serde(default)]
+    pub cache_ttl_secs: u64,
 }
 
 /// Multi-client workspace isolation configuration.

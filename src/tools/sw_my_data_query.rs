@@ -5,7 +5,7 @@
 
 use super::sw_lesson_common::{
     ensure_skill_scripts, err_result, fetch_sw_user_data, require_str, require_sw_token,
-    run_claw_query,
+    run_claw_query_cached,
 };
 use super::traits::{Tool, ToolResult};
 use async_trait::async_trait;
@@ -14,11 +14,15 @@ use std::path::PathBuf;
 
 pub struct SwMyDataQueryTool {
     workspace_dir: PathBuf,
+    cache_ttl_secs: u64,
 }
 
 impl SwMyDataQueryTool {
-    pub fn new(workspace_dir: PathBuf) -> Self {
-        Self { workspace_dir }
+    pub fn new(workspace_dir: PathBuf, cache_ttl_secs: u64) -> Self {
+        Self {
+            workspace_dir,
+            cache_ttl_secs,
+        }
     }
 }
 
@@ -114,8 +118,17 @@ impl Tool for SwMyDataQueryTool {
         let work_dir = self.workspace_dir.join(".local/sw-query-tmp");
         std::fs::create_dir_all(&work_dir)?;
 
-        let answer =
-            run_claw_query(&scripts_dir, &token, &scoped_question, &work_dir, timeout).await?;
+        let answer = run_claw_query_cached(
+            &scripts_dir,
+            &token,
+            &scoped_question,
+            &work_dir,
+            timeout,
+            &self.workspace_dir,
+            "my_data",
+            self.cache_ttl_secs,
+        )
+        .await?;
 
         Ok(ToolResult {
             success: true,

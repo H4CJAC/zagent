@@ -6,7 +6,7 @@
 
 use super::sw_lesson_common::{
     AgentSheConfig, artifacts_dir, err_result, fetch_user_meta, gen_session_id, require_str,
-    require_sw_token, run_agent_she_query,
+    require_sw_token, run_agent_she_query_cached,
 };
 use super::traits::{Tool, ToolResult};
 use async_trait::async_trait;
@@ -89,13 +89,16 @@ impl Tool for SwLessonDataCollectTool {
             "1. {query}\n2. 并推理接下来要准备的课程主题、学科、学段/年级、地区、已教进度、课程大纲课时安排和最近批改作业错题情况"
         );
 
-        let answer = match run_agent_she_query(
+        let answer = match run_agent_she_query_cached(
             &self.agent_she,
             &token,
             &full_query,
             &meta,
             "ktgc_question_answer_recommend",
             timeout,
+            &self.workspace_dir,
+            "data_collect",
+            self.agent_she.cache_ttl_secs,
         )
         .await
         {

@@ -6,7 +6,7 @@
 
 use super::sw_lesson_common::{
     AgentSheConfig, analysis_artifacts_dir, err_result, fetch_user_meta, gen_session_id,
-    require_str, require_sw_token, run_agent_she_query,
+    require_str, require_sw_token, run_agent_she_query_cached,
 };
 use super::traits::{Tool, ToolResult};
 use async_trait::async_trait;
@@ -86,13 +86,16 @@ impl Tool for SwClassroomObservationTool {
         let full_query =
             format!("1. {query}\n2. 并提供课堂教学报告中教师授课情况、师生互动数据和课堂观察评估");
 
-        let answer = match run_agent_she_query(
+        let answer = match run_agent_she_query_cached(
             &self.agent_she,
             &token,
             &full_query,
             &meta,
             "ktgc_question_answer_recommend",
             timeout,
+            &self.workspace_dir,
+            "classroom_obs",
+            self.agent_she.cache_ttl_secs,
         )
         .await
         {

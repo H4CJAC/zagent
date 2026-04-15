@@ -489,6 +489,7 @@ pub fn all_tools_with_runtime(
         )),
         Arc::new(sw_my_data_query::SwMyDataQueryTool::new(
             workspace_dir.to_path_buf(),
+            root_config.seewo_cloud.cache_ttl_secs,
         )),
         Arc::new(CanvasTool::new(canvas_store.unwrap_or_default())),
     ];
@@ -540,6 +541,7 @@ pub fn all_tools_with_runtime(
         tool_arcs.push(Arc::new(sw_lesson_gen_plan::SwLessonGenPlanTool::new(
             workspace_dir.to_path_buf(),
             llm_config.clone(),
+            root_config.seewo_cloud.cache_ttl_secs,
         )));
         tool_arcs.push(Arc::new(
             sw_teaching_reflection::SwTeachingReflectionTool::new(
@@ -555,6 +557,7 @@ pub fn all_tools_with_runtime(
             sw_school_gen_report::SwSchoolGenReportTool::new(
                 workspace_dir.to_path_buf(),
                 llm_config,
+                root_config.seewo_cloud.cache_ttl_secs,
             ),
         ));
     }

@@ -6,7 +6,7 @@
 
 use super::sw_lesson_common::{
     AgentSheConfig, analysis_artifacts_dir, err_result, fetch_user_meta, gen_session_id,
-    require_str, require_sw_token, run_agent_she_query,
+    require_str, require_sw_token, run_agent_she_query_cached,
 };
 use super::traits::{Tool, ToolResult};
 use async_trait::async_trait;
@@ -86,13 +86,16 @@ impl Tool for SwStudentAnalysisTool {
         let full_query =
             format!("1. {query}\n2. 并提供学生课堂参与度、作业完成情况、学习弱项和常见错误等数据");
 
-        let answer = match run_agent_she_query(
+        let answer = match run_agent_she_query_cached(
             &self.agent_she,
             &token,
             &full_query,
             &meta,
             "ktgc_question_answer_recommend",
             timeout,
+            &self.workspace_dir,
+            "student_analysis",
+            self.agent_she.cache_ttl_secs,
         )
         .await
         {

@@ -5,7 +5,7 @@
 
 use super::sw_lesson_common::{
     LlmProviderConfig, ensure_skill_scripts, err_result, fetch_sw_user_data, gen_session_id,
-    opt_str, require_str, require_sw_token, run_claw_query, truncate_str,
+    opt_str, require_str, require_sw_token, run_claw_query_cached, truncate_str,
 };
 use super::traits::{Tool, ToolResult};
 use async_trait::async_trait;
@@ -15,11 +15,16 @@ use std::path::PathBuf;
 pub struct SwSchoolGenReportTool {
     workspace_dir: PathBuf,
     llm: LlmProviderConfig,
+    cache_ttl_secs: u64,
 }
 
 impl SwSchoolGenReportTool {
-    pub fn new(workspace_dir: PathBuf, llm: LlmProviderConfig) -> Self {
-        Self { workspace_dir, llm }
+    pub fn new(workspace_dir: PathBuf, llm: LlmProviderConfig, cache_ttl_secs: u64) -> Self {
+        Self {
+            workspace_dir,
+            llm,
+            cache_ttl_secs,
+        }
     }
 }
 
@@ -174,9 +179,19 @@ impl Tool for SwSchoolGenReportTool {
         let work_dir = self.workspace_dir.join(".local/sw-report-tmp");
         std::fs::create_dir_all(&work_dir)?;
 
-        let school_data =
-            match run_claw_query(&scripts_dir, &token, &query_text, &work_dir, timeout).await {
-                Ok(data) => data,
+        let school_data = match run_claw_query_cached(
+            &scripts_dir,
+            &token,
+            &query_text,
+            &work_dir,
+            timeout,
+            &self.workspace_dir,
+            "school_report",
+            self.cache_ttl_secs,
+        )
+        .await
+        {
+            Ok(data) => data,
                 Err(e) => return Ok(err_result(format!("学校数据查询失败: {e}"))),
             };
 

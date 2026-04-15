@@ -199,6 +199,7 @@ pub struct AgentSheConfig {
     pub base_url: String,
     pub create_workflow_id: u64,
     pub run_workflow_id: u64,
+    pub cache_ttl_secs: u64,
 }
 
 impl Default for AgentSheConfig {
@@ -207,6 +208,7 @@ impl Default for AgentSheConfig {
             base_url: DEFAULT_AGENT_SHE_BASE_URL.into(),
             create_workflow_id: DEFAULT_CREATE_WORKFLOW_ID,
             run_workflow_id: DEFAULT_RUN_WORKFLOW_ID,
+            cache_ttl_secs: 0,
         }
     }
 }
@@ -224,6 +226,7 @@ impl AgentSheConfig {
             run_workflow_id: cfg
                 .data_query_run_workflow_id
                 .unwrap_or(DEFAULT_RUN_WORKFLOW_ID),
+            cache_ttl_secs: cfg.cache_ttl_secs,
         }
     }
 }
@@ -527,6 +530,158 @@ impl LlmProviderConfig {
             &self.runtime_options,
         )
     }
+}
+
+// ── Disk cache for sw_* data queries ────────────────────────────────
+
+const PREFIX_PARTICLES: &[&str] = &[
+    "啊", "嗯", "呃", "哦", "嘿", "喂", "那个", "那", "就是", "然后",
+];
+const SUFFIX_PARTICLES: &[&str] = &[
+    "吧", "呢", "啊", "呀", "哦", "哈", "嘛", "了", "的",
+];
+
+fn normalize_for_cache(s: &str) -> String {
+    let no_punct: String = s
+        .chars()
+        .filter(|c| {
+            !c.is_ascii_punctuation()
+                && !matches!(
+                    c,
+                    '，' | '。'
+                        | '、'
+                        | '？'
+                        | '！'
+                        | '；'
+                        | '：'
+                        | '\u{201c}'
+                        | '\u{201d}'
+                        | '（'
+                        | '）'
+                        | '【'
+                        | '】'
+                        | '《'
+                        | '》'
+                )
+        })
+        .collect();
+    no_punct
+        .split_whitespace()
+        .map(|seg| {
+            let mut t = seg;
+            for p in PREFIX_PARTICLES {
+                t = t.strip_prefix(p).unwrap_or(t);
+            }
+            for p in SUFFIX_PARTICLES {
+                t = t.strip_suffix(p).unwrap_or(t);
+            }
+            t
+        })
+        .filter(|t| !t.is_empty())
+        .collect::<Vec<_>>()
+        .join("")
+}
+
+pub fn cache_key(parts: &[&str]) -> String {
+    use sha2::{Digest, Sha256};
+    let mut hasher = Sha256::new();
+    for p in parts {
+        hasher.update(normalize_for_cache(p).as_bytes());
+        hasher.update(b"\x00");
+    }
+    hex::encode(hasher.finalize())
+}
+
+/// Disk-backed cache wrapper. Returns cached result when fresh enough,
+/// otherwise calls `fetch_fn` and persists the result on success.
+pub async fn cached_query<F, Fut>(
+    workspace_dir: &Path,
+    category: &str,
+    key: &str,
+    ttl_secs: u64,
+    fetch_fn: F,
+) -> Result<String>
+where
+    F: FnOnce() -> Fut,
+    Fut: std::future::Future<Output = Result<String>>,
+{
+    if ttl_secs == 0 {
+        return fetch_fn().await;
+    }
+
+    let cache_dir = workspace_dir.join(".cache/sw-tools").join(category);
+    let cache_file = cache_dir.join(format!("{key}.json"));
+
+    if let Ok(meta) = std::fs::metadata(&cache_file) {
+        if let Ok(modified) = meta.modified() {
+            let age = modified.elapsed().unwrap_or(std::time::Duration::MAX);
+            if age.as_secs() < ttl_secs {
+                if let Ok(content) = std::fs::read_to_string(&cache_file) {
+                    tracing::info!(
+                        category,
+                        key,
+                        age_secs = age.as_secs(),
+                        "sw cache hit"
+                    );
+                    return Ok(content);
+                }
+            }
+        }
+    }
+
+    let result = fetch_fn().await?;
+
+    if let Err(e) = std::fs::create_dir_all(&cache_dir) {
+        tracing::warn!("sw cache: failed to create dir {}: {e}", cache_dir.display());
+    } else if let Err(e) = std::fs::write(&cache_file, &result) {
+        tracing::warn!("sw cache: failed to write {}: {e}", cache_file.display());
+    } else {
+        tracing::info!(category, key, "sw cache stored");
+    }
+
+    Ok(result)
+}
+
+pub async fn run_claw_query_cached(
+    scripts_dir: &Path,
+    token: &str,
+    question: &str,
+    cwd: &Path,
+    timeout_secs: u64,
+    workspace_dir: &Path,
+    caller: &str,
+    cache_ttl_secs: u64,
+) -> Result<String> {
+    let key = cache_key(&[question]);
+    let category = format!("claw_query/{caller}");
+    cached_query(workspace_dir, &category, &key, cache_ttl_secs, || {
+        run_claw_query(scripts_dir, token, question, cwd, timeout_secs)
+    })
+    .await
+}
+
+pub async fn run_agent_she_query_cached(
+    config: &AgentSheConfig,
+    token: &str,
+    question: &str,
+    meta: &AgentSheMeta,
+    request_type: &str,
+    timeout_secs: u64,
+    workspace_dir: &Path,
+    caller: &str,
+    cache_ttl_secs: u64,
+) -> Result<String> {
+    let key = cache_key(&[
+        question,
+        &meta.school_uid,
+        &meta.teacher_uid,
+        request_type,
+    ]);
+    let category = format!("agent_she/{caller}");
+    cached_query(workspace_dir, &category, &key, cache_ttl_secs, || {
+        run_agent_she_query(config, token, question, meta, request_type, timeout_secs)
+    })
+    .await
 }
 
 // ── Script execution ────────────────────────────────────────────────

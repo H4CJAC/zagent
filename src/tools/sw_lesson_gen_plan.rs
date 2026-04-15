@@ -1,7 +1,8 @@
 //! Built-in tool: generate a lesson plan from collected data via search + LLM.
 
 use super::sw_lesson_common::{
-    LlmProviderConfig, artifacts_dir, ensure_skill_scripts, err_result, run_script, truncate_str,
+    LlmProviderConfig, artifacts_dir, cache_key, cached_query, ensure_skill_scripts, err_result,
+    run_script, truncate_str,
 };
 use super::traits::{Tool, ToolResult};
 use async_trait::async_trait;
@@ -11,11 +12,16 @@ use std::path::PathBuf;
 pub struct SwLessonGenPlanTool {
     workspace_dir: PathBuf,
     llm: LlmProviderConfig,
+    cache_ttl_secs: u64,
 }
 
 impl SwLessonGenPlanTool {
-    pub fn new(workspace_dir: PathBuf, llm: LlmProviderConfig) -> Self {
-        Self { workspace_dir, llm }
+    pub fn new(workspace_dir: PathBuf, llm: LlmProviderConfig, cache_ttl_secs: u64) -> Self {
+        Self {
+            workspace_dir,
+            llm,
+            cache_ttl_secs,
+        }
     }
 }
 
@@ -103,35 +109,65 @@ impl Tool for SwLessonGenPlanTool {
         let mut web_results = Vec::new();
         let mut kb_results = Vec::new();
 
+        let cache_ttl = self.cache_ttl_secs;
+        let ws_dir = &self.workspace_dir;
+
         for theme in &search_themes {
-            let (stdout, _stderr, success) = run_script(
-                "python3",
-                &[&web_script, "--query", theme, "--theme", topic],
-                &[],
-                &out_dir,
-                script_timeout,
-            )
-            .await?;
-            if success {
+            let key = cache_key(&[theme]);
+            let web_script = web_script.clone();
+            let topic_owned = topic.to_string();
+            let theme_owned = theme.clone();
+            let out_dir_ref = out_dir.clone();
+            let result = cached_query(ws_dir, "web_search/lesson_plan", &key, cache_ttl, || async move {
+                let (stdout, _stderr, success) = run_script(
+                    "python3",
+                    &[&web_script, "--query", &theme_owned, "--theme", &topic_owned],
+                    &[],
+                    &out_dir_ref,
+                    script_timeout,
+                )
+                .await?;
+                if success {
+                    Ok(stdout)
+                } else {
+                    anyhow::bail!("web_search script failed for theme: {theme_owned}")
+                }
+            })
+            .await;
+            if let Ok(stdout) = result {
                 web_results.push(
                     serde_json::from_str::<Value>(&stdout).unwrap_or_else(|_| json!(stdout.trim())),
                 );
             }
         }
 
-        let (kb_stdout, _kb_stderr, kb_ok) = run_script(
-            "python3",
-            &[&kb_script, "--keyword", topic],
-            &[],
-            &out_dir,
-            script_timeout,
-        )
-        .await?;
-        if kb_ok {
-            kb_results.push(
-                serde_json::from_str::<Value>(&kb_stdout)
-                    .unwrap_or_else(|_| json!(kb_stdout.trim())),
-            );
+        {
+            let key = cache_key(&[topic]);
+            let kb_script = kb_script.clone();
+            let topic_owned = topic.to_string();
+            let out_dir_ref = out_dir.clone();
+            let result = cached_query(ws_dir, "web_search/lesson_plan_kb", &key, cache_ttl, || async move {
+                let (stdout, _stderr, success) = run_script(
+                    "python3",
+                    &[&kb_script, "--keyword", &topic_owned],
+                    &[],
+                    &out_dir_ref,
+                    script_timeout,
+                )
+                .await?;
+                if success {
+                    Ok(stdout)
+                } else {
+                    anyhow::bail!("kb_search script failed for topic: {topic_owned}")
+                }
+            })
+            .await;
+            if let Ok(stdout) = result {
+                kb_results.push(
+                    serde_json::from_str::<Value>(&stdout)
+                        .unwrap_or_else(|_| json!(stdout.trim())),
+                );
+            }
         }
 
         let research = json!({
