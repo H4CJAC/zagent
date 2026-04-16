@@ -14,6 +14,12 @@ embedding_routes = []
 [extra_body]
 thinking = { type = "enabled" }
 
+[logging]
+terminal_level = "info"
+file_level = "debug"
+log_dir = "logs"
+rotation = "daily"
+
 [observability]
 backend = "none"
 runtime_trace_mode = "none"

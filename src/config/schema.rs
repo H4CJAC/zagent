@@ -508,6 +508,11 @@ pub struct Config {
     #[nested]
     pub shell_tool: ShellToolConfig,
 
+    /// Logging configuration: terminal and file log levels, file output (`[logging]`).
+    #[serde(default)]
+    #[nested]
+    pub logging: LoggingConfig,
+
     /// Seewo cloud integration (`[seewo_cloud]`).
     #[serde(default)]
     #[nested]
@@ -5427,6 +5432,57 @@ fn default_runtime_trace_max_entries() -> usize {
     200
 }
 
+// ── Logging ──────────────────────────────────────────────────────
+
+/// Logging configuration (`[logging]` section).
+///
+/// Controls terminal and file log levels independently. File logging is
+/// activated only when `log_dir` is set to a non-empty path.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Configurable)]
+#[prefix = "logging"]
+pub struct LoggingConfig {
+    /// Log level for terminal (stdout) output.
+    /// Accepts standard tracing directives: "error", "warn", "info", "debug", "trace".
+    #[serde(default = "default_terminal_level")]
+    pub terminal_level: String,
+
+    /// Log level for file output. Only effective when `log_dir` is set.
+    #[serde(default = "default_file_level")]
+    pub file_level: String,
+
+    /// Directory for log files (relative to workspace or absolute).
+    /// When empty, file logging is disabled.
+    #[serde(default)]
+    pub log_dir: Option<String>,
+
+    /// Log file rotation strategy: "daily", "hourly", or "never".
+    #[serde(default = "default_rotation")]
+    pub rotation: String,
+}
+
+impl Default for LoggingConfig {
+    fn default() -> Self {
+        Self {
+            terminal_level: default_terminal_level(),
+            file_level: default_file_level(),
+            log_dir: None,
+            rotation: default_rotation(),
+        }
+    }
+}
+
+fn default_terminal_level() -> String {
+    "info".to_string()
+}
+
+fn default_file_level() -> String {
+    "debug".to_string()
+}
+
+fn default_rotation() -> String {
+    "daily".to_string()
+}
+
 // ── Hooks ────────────────────────────────────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Configurable)]
@@ -9023,6 +9079,7 @@ impl Default for Config {
             opencode_cli: OpenCodeCliConfig::default(),
             sop: SopConfig::default(),
             shell_tool: ShellToolConfig::default(),
+            logging: LoggingConfig::default(),
             seewo_cloud: SeewoCloudConfig::default(),
         }
     }
@@ -11538,6 +11595,7 @@ auto_save = true
             opencode_cli: OpenCodeCliConfig::default(),
             sop: SopConfig::default(),
             shell_tool: ShellToolConfig::default(),
+            logging: LoggingConfig::default(),
             seewo_cloud: SeewoCloudConfig::default(),
         };
 
@@ -12070,6 +12128,7 @@ default_temperature = 0.7
             opencode_cli: OpenCodeCliConfig::default(),
             sop: SopConfig::default(),
             shell_tool: ShellToolConfig::default(),
+            logging: LoggingConfig::default(),
             seewo_cloud: SeewoCloudConfig::default(),
         };
 

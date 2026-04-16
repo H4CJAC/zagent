@@ -40,7 +40,7 @@ use serde::{Deserialize, Serialize};
 use std::io::{IsTerminal, Write};
 use std::path::PathBuf;
 use tracing::{info, warn};
-use tracing_subscriber::{EnvFilter, fmt};
+use tracing_subscriber::{EnvFilter, Layer, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
 fn parse_temperature(s: &str) -> std::result::Result<f64, String> {
     let t: f64 = s.parse().map_err(|e| format!("{e}"))?;
@@ -892,6 +892,60 @@ enum MemoryCommands {
     },
 }
 
+/// Initialize dual-layer logging: terminal (stdout) + optional file output,
+/// each with its own independently configurable log level.
+///
+/// Returns a guard that must be held until program exit to ensure all buffered
+/// file log entries are flushed.
+fn init_logging(
+    cfg: &config::schema::LoggingConfig,
+    workspace_dir: &std::path::Path,
+) -> Option<tracing_appender::non_blocking::WorkerGuard> {
+    let terminal_filter = EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| EnvFilter::new(&cfg.terminal_level));
+    let stdout_layer = fmt::layer()
+        .with_ansi(std::io::stderr().is_terminal())
+        .with_filter(terminal_filter);
+
+    let (file_layer, guard) = match cfg.log_dir.as_deref().filter(|s| !s.is_empty()) {
+        Some(dir) => {
+            let dir_path = if std::path::Path::new(dir).is_absolute() {
+                PathBuf::from(dir)
+            } else {
+                workspace_dir.join(dir)
+            };
+            if let Err(e) = std::fs::create_dir_all(&dir_path) {
+                eprintln!(
+                    "Warning: failed to create log directory {}: {e}",
+                    dir_path.display()
+                );
+                (None, None)
+            } else {
+                let appender = match cfg.rotation.as_str() {
+                    "hourly" => tracing_appender::rolling::hourly(&dir_path, "zeroclaw.log"),
+                    "never" => tracing_appender::rolling::never(&dir_path, "zeroclaw.log"),
+                    _ => tracing_appender::rolling::daily(&dir_path, "zeroclaw.log"),
+                };
+                let (non_blocking, guard) = tracing_appender::non_blocking(appender);
+                let file_filter = EnvFilter::new(&cfg.file_level);
+                let layer = fmt::layer()
+                    .with_ansi(false)
+                    .with_writer(non_blocking)
+                    .with_filter(file_filter);
+                (Some(layer), Some(guard))
+            }
+        }
+        None => (None, None),
+    };
+
+    tracing_subscriber::registry()
+        .with(stdout_layer)
+        .with(file_layer)
+        .init();
+
+    guard
+}
+
 #[tokio::main]
 #[allow(clippy::too_many_lines)]
 async fn main() -> Result<()> {
@@ -923,15 +977,6 @@ async fn main() -> Result<()> {
         write_shell_completion(*shell, &mut stdout)?;
         return Ok(());
     }
-
-    // Initialize logging - respects RUST_LOG env var, defaults to INFO
-    let subscriber = fmt::Subscriber::builder()
-        .with_env_filter(
-            EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")),
-        )
-        .finish();
-
-    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
 
     // Onboard auto-detects the environment: if stdin/stdout are a TTY and no
     // provider flags were given, it runs the full interactive wizard; otherwise
@@ -1079,6 +1124,7 @@ async fn main() -> Result<()> {
     // All other commands need config loaded first
     let mut config = Box::pin(Config::load_or_init()).await?;
     config.apply_env_overrides();
+    let _log_guard = init_logging(&config.logging, &config.workspace_dir);
     observability::runtime_trace::init_from_config(&config.observability, &config.workspace_dir);
     if config.security.otp.enabled {
         let config_dir = config

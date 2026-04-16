@@ -66,6 +66,7 @@ schemars = "1.2"
 # Logging - minimal
 tracing = { version = "0.1", default-features = false }
 tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "ansi", "env-filter"] }
+tracing-appender = "0.2"
 
 # Observability - Prometheus metrics (optional; requires AtomicU64, unavailable on 32-bit)
 prometheus = { version = "0.14", default-features = false, optional = true }
