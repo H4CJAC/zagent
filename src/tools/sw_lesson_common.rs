@@ -540,9 +540,7 @@ impl LlmProviderConfig {
 const PREFIX_PARTICLES: &[&str] = &[
     "啊", "嗯", "呃", "哦", "嘿", "喂", "那个", "那", "就是", "然后",
 ];
-const SUFFIX_PARTICLES: &[&str] = &[
-    "吧", "呢", "啊", "呀", "哦", "哈", "嘛", "了", "的",
-];
+const SUFFIX_PARTICLES: &[&str] = &["吧", "呢", "啊", "呀", "哦", "哈", "嘛", "了", "的"];
 
 fn normalize_for_cache(s: &str) -> String {
     let no_punct: String = s
@@ -595,14 +593,158 @@ pub fn cache_key(parts: &[&str]) -> String {
     hex::encode(hasher.finalize())
 }
 
-/// Disk-backed cache wrapper. Returns cached result when fresh enough,
-/// otherwise calls `fetch_fn` and persists the result on success.
+/// Read the result payload from a cache file, supporting both the new JSON
+/// envelope format (`{"query":"...","result":"..."}`) and the legacy plain-text
+/// format (entire file content is the result).
+fn read_cache_result(content: &str) -> String {
+    if let Ok(obj) = serde_json::from_str::<serde_json::Value>(content) {
+        if let Some(r) = obj.get("result").and_then(|v| v.as_str()) {
+            return r.to_string();
+        }
+    }
+    content.to_string()
+}
+
+/// Read the original query text stored in a cache file. Returns `None` for
+/// legacy plain-text files that don't contain a `query` field.
+fn read_cache_query(content: &str) -> Option<String> {
+    serde_json::from_str::<serde_json::Value>(content)
+        .ok()
+        .and_then(|obj| obj.get("query").and_then(|v| v.as_str()).map(String::from))
+}
+
+const MAX_SEMANTIC_CANDIDATES: usize = 20;
+
+const SEMANTIC_MATCH_PROMPT: &str = "\
+判断以下新查询与哪个已缓存查询在语义上等价（即会产生相同的数据查询结果）。
+
+新查询：\"{query}\"
+
+已缓存查询：
+{candidates}
+
+如果有匹配，只回复对应编号（如\"1\"）。如果没有匹配，回复\"0\"。";
+
+/// Scan all cache entries in `cache_dir`, filter by TTL, and use LLM to find a
+/// semantically equivalent entry for `query_text`. Returns the cached result
+/// string on match, or `None`.
+async fn semantic_match_cached(
+    cache_dir: &Path,
+    query_text: &str,
+    ttl_secs: u64,
+    llm: &LlmProviderConfig,
+) -> Option<String> {
+    let entries = match std::fs::read_dir(cache_dir) {
+        Ok(rd) => rd,
+        Err(_) => return None,
+    };
+
+    let now = std::time::SystemTime::now();
+    let mut candidates: Vec<(String, std::path::PathBuf)> = Vec::new();
+
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.extension().and_then(|e| e.to_str()) != Some("json") {
+            continue;
+        }
+        if let Ok(meta) = path.metadata() {
+            if let Ok(modified) = meta.modified() {
+                let age = now
+                    .duration_since(modified)
+                    .unwrap_or(std::time::Duration::MAX);
+                if age.as_secs() >= ttl_secs {
+                    continue;
+                }
+            }
+        }
+        if let Ok(content) = std::fs::read_to_string(&path) {
+            if let Some(q) = read_cache_query(&content) {
+                if !q.is_empty() {
+                    candidates.push((q, path));
+                }
+            }
+        }
+    }
+
+    if candidates.is_empty() {
+        return None;
+    }
+
+    // Sort by modification time descending (most recent first), take top N.
+    candidates.sort_by(|a, b| {
+        let t = |p: &std::path::PathBuf| {
+            p.metadata()
+                .and_then(|m| m.modified())
+                .unwrap_or(std::time::UNIX_EPOCH)
+        };
+        t(&b.1).cmp(&t(&a.1))
+    });
+    candidates.truncate(MAX_SEMANTIC_CANDIDATES);
+
+    let candidate_list: String = candidates
+        .iter()
+        .enumerate()
+        .map(|(i, (q, _))| format!("{}. \"{}\"", i + 1, q))
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    let prompt = SEMANTIC_MATCH_PROMPT
+        .replace("{query}", query_text)
+        .replace("{candidates}", &candidate_list);
+
+    tracing::debug!("sw cache semantic: prompt: {prompt}");
+
+    let provider = match llm.create_provider() {
+        Ok(p) => p,
+        Err(e) => {
+            tracing::warn!("sw cache semantic: failed to create provider: {e}");
+            return None;
+        }
+    };
+
+    let reply = match provider
+        .chat_with_system(None, &prompt, &llm.model, 0.0)
+        .await
+    {
+        Ok(r) => r.trim().to_string(),
+        Err(e) => {
+            tracing::warn!("sw cache semantic: LLM call failed: {e}");
+            return None;
+        }
+    };
+
+    let idx: usize = reply.trim().parse().unwrap_or(0);
+    if idx == 0 || idx > candidates.len() {
+        tracing::debug!("sw cache semantic: no match (LLM replied \"{reply}\")");
+        return None;
+    }
+
+    let matched_path = &candidates[idx - 1].1;
+    if let Ok(content) = std::fs::read_to_string(matched_path) {
+        tracing::info!(
+            matched_query = %candidates[idx - 1].0,
+            "sw cache semantic hit"
+        );
+        Some(read_cache_result(&content))
+    } else {
+        None
+    }
+}
+
+/// Disk-backed cache wrapper with optional LLM semantic matching.
+///
+/// Lookup order:
+/// 1. SHA256 hash exact match (zero cost)
+/// 2. LLM semantic match across all unexpired entries in the category (when `llm` is `Some`)
+/// 3. Execute `fetch_fn` and persist result
 pub async fn cached_query<F, Fut>(
     workspace_dir: &Path,
     category: &str,
     key: &str,
+    query_text: &str,
     ttl_secs: u64,
     delay_ms: u64,
+    llm: Option<&LlmProviderConfig>,
     fetch_fn: F,
 ) -> Result<String>
 where
@@ -616,6 +758,7 @@ where
     let cache_dir = workspace_dir.join(".cache/sw-tools").join(category);
     let cache_file = cache_dir.join(format!("{key}.json"));
 
+    // Fast path: exact hash match.
     if let Ok(meta) = std::fs::metadata(&cache_file) {
         if let Ok(modified) = meta.modified() {
             let age = modified.elapsed().unwrap_or(std::time::Duration::MAX);
@@ -626,22 +769,46 @@ where
                         key,
                         age_secs = age.as_secs(),
                         delay_ms,
-                        "sw cache hit"
+                        "sw cache hash hit"
                     );
                     if delay_ms > 0 {
                         tokio::time::sleep(std::time::Duration::from_millis(delay_ms)).await;
                     }
-                    return Ok(content);
+                    return Ok(read_cache_result(&content));
                 }
+            }
+        }
+    }
+
+    // Slow path: LLM semantic match.
+    if let Some(llm_cfg) = llm {
+        if !query_text.is_empty() {
+            if let Some(result) =
+                semantic_match_cached(&cache_dir, query_text, ttl_secs, llm_cfg).await
+            {
+                if delay_ms > 0 {
+                    tokio::time::sleep(std::time::Duration::from_millis(delay_ms)).await;
+                }
+                return Ok(result);
             }
         }
     }
 
     let result = fetch_fn().await?;
 
+    // Persist with query metadata for future semantic matching.
+    let payload = if query_text.is_empty() {
+        result.clone()
+    } else {
+        serde_json::json!({ "query": query_text, "result": result }).to_string()
+    };
+
     if let Err(e) = std::fs::create_dir_all(&cache_dir) {
-        tracing::warn!("sw cache: failed to create dir {}: {e}", cache_dir.display());
-    } else if let Err(e) = std::fs::write(&cache_file, &result) {
+        tracing::warn!(
+            "sw cache: failed to create dir {}: {e}",
+            cache_dir.display()
+        );
+    } else if let Err(e) = std::fs::write(&cache_file, &payload) {
         tracing::warn!("sw cache: failed to write {}: {e}", cache_file.display());
     } else {
         tracing::info!(category, key, "sw cache stored");
@@ -660,6 +827,7 @@ pub async fn run_claw_query_cached(
     caller: &str,
     cache_ttl_secs: u64,
     cache_delay_ms: u64,
+    llm: Option<&LlmProviderConfig>,
 ) -> Result<String> {
     let key = cache_key(&[question]);
     let category = format!("claw_query/{caller}");
@@ -667,13 +835,16 @@ pub async fn run_claw_query_cached(
         workspace_dir,
         &category,
         &key,
+        question,
         cache_ttl_secs,
         cache_delay_ms,
+        llm,
         || run_claw_query(scripts_dir, token, question, cwd, timeout_secs),
     )
     .await
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn run_agent_she_query_cached(
     config: &AgentSheConfig,
     token: &str,
@@ -685,20 +856,23 @@ pub async fn run_agent_she_query_cached(
     caller: &str,
     cache_ttl_secs: u64,
     cache_delay_ms: u64,
+    llm: Option<&LlmProviderConfig>,
 ) -> Result<String> {
-    let key = cache_key(&[
-        question,
-        &meta.school_uid,
-        &meta.teacher_uid,
-        request_type,
-    ]);
-    let category = format!("agent_she/{caller}");
+    let key = cache_key(&[question]);
+    // Encode exact-match parts (UIDs, request_type) into the category path so
+    // that LLM semantic matching only compares the question within the same
+    // user + request_type scope.
+    let uid_hash = cache_key(&[&meta.school_uid, &meta.teacher_uid]);
+    let uid_short = &uid_hash[..16];
+    let category = format!("agent_she/{caller}/{uid_short}/{request_type}");
     cached_query(
         workspace_dir,
         &category,
         &key,
+        question,
         cache_ttl_secs,
         cache_delay_ms,
+        llm,
         || run_agent_she_query(config, token, question, meta, request_type, timeout_secs),
     )
     .await

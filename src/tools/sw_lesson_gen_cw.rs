@@ -1,7 +1,8 @@
 //! Built-in tool: generate courseware using the embedded create-courseware scripts.
 
 use super::sw_lesson_common::{
-    artifacts_dir, cache_key, cached_query, ensure_skill_scripts, err_result, run_script,
+    LlmProviderConfig, artifacts_dir, cache_key, cached_query, ensure_skill_scripts, err_result,
+    run_script,
 };
 use super::traits::{Tool, ToolResult};
 use async_trait::async_trait;
@@ -12,14 +13,21 @@ pub struct SwLessonGenCwTool {
     workspace_dir: PathBuf,
     cache_ttl_secs: u64,
     cw_cache_delay_ms: u64,
+    llm: Option<LlmProviderConfig>,
 }
 
 impl SwLessonGenCwTool {
-    pub fn new(workspace_dir: PathBuf, cache_ttl_secs: u64, cw_cache_delay_ms: u64) -> Self {
+    pub fn new(
+        workspace_dir: PathBuf,
+        cache_ttl_secs: u64,
+        cw_cache_delay_ms: u64,
+        llm: Option<LlmProviderConfig>,
+    ) -> Self {
         Self {
             workspace_dir,
             cache_ttl_secs,
             cw_cache_delay_ms,
+            llm,
         }
     }
 }
@@ -121,8 +129,10 @@ impl Tool for SwLessonGenCwTool {
             &ws,
             "courseware/gen_cw",
             &key,
+            &topic,
             self.cache_ttl_secs,
             self.cw_cache_delay_ms,
+            self.llm.as_ref(),
             || {
                 let scripts_dir = scripts_dir.clone();
                 let topic = topic.clone();

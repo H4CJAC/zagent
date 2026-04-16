@@ -5,8 +5,8 @@
 //! instructional research workflows.
 
 use super::sw_lesson_common::{
-    AgentSheConfig, analysis_artifacts_dir, err_result, fetch_user_meta, gen_session_id,
-    require_str, require_sw_token, run_agent_she_query_cached,
+    AgentSheConfig, LlmProviderConfig, analysis_artifacts_dir, err_result, fetch_user_meta,
+    gen_session_id, require_str, require_sw_token, run_agent_she_query_cached,
 };
 use super::traits::{Tool, ToolResult};
 use async_trait::async_trait;
@@ -16,13 +16,19 @@ use std::path::PathBuf;
 pub struct SwClassroomObservationTool {
     workspace_dir: PathBuf,
     agent_she: AgentSheConfig,
+    llm: Option<LlmProviderConfig>,
 }
 
 impl SwClassroomObservationTool {
-    pub fn new(workspace_dir: PathBuf, agent_she: AgentSheConfig) -> Self {
+    pub fn new(
+        workspace_dir: PathBuf,
+        agent_she: AgentSheConfig,
+        llm: Option<LlmProviderConfig>,
+    ) -> Self {
         Self {
             workspace_dir,
             agent_she,
+            llm,
         }
     }
 }
@@ -97,6 +103,7 @@ impl Tool for SwClassroomObservationTool {
             "classroom_obs",
             self.agent_she.cache_ttl_secs,
             self.agent_she.cache_delay_ms,
+            self.llm.as_ref(),
         )
         .await
         {

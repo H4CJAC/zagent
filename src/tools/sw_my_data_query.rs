@@ -4,8 +4,8 @@
 //! teacher's identity **and** their school to prevent cross-org data access.
 
 use super::sw_lesson_common::{
-    ensure_skill_scripts, err_result, fetch_sw_user_data, require_str, require_sw_token,
-    run_claw_query_cached,
+    LlmProviderConfig, ensure_skill_scripts, err_result, fetch_sw_user_data, require_str,
+    require_sw_token, run_claw_query_cached,
 };
 use super::traits::{Tool, ToolResult};
 use async_trait::async_trait;
@@ -16,14 +16,21 @@ pub struct SwMyDataQueryTool {
     workspace_dir: PathBuf,
     cache_ttl_secs: u64,
     cache_delay_ms: u64,
+    llm: Option<LlmProviderConfig>,
 }
 
 impl SwMyDataQueryTool {
-    pub fn new(workspace_dir: PathBuf, cache_ttl_secs: u64, cache_delay_ms: u64) -> Self {
+    pub fn new(
+        workspace_dir: PathBuf,
+        cache_ttl_secs: u64,
+        cache_delay_ms: u64,
+        llm: Option<LlmProviderConfig>,
+    ) -> Self {
         Self {
             workspace_dir,
             cache_ttl_secs,
             cache_delay_ms,
+            llm,
         }
     }
 }
@@ -130,6 +137,7 @@ impl Tool for SwMyDataQueryTool {
             "my_data",
             self.cache_ttl_secs,
             self.cache_delay_ms,
+            self.llm.as_ref(),
         )
         .await?;
 

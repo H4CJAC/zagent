@@ -124,12 +124,14 @@ impl Tool for SwLessonGenPlanTool {
             let key = cache_key(&[theme]);
             let web_script = web_script.clone();
             let topic_owned = topic.to_string();
-            let theme_owned = theme.clone();
+            let theme_query = theme.clone();
+            let theme_for_closure = theme.clone();
             let out_dir_ref = out_dir.clone();
-            let result = cached_query(ws_dir, "web_search/lesson_plan", &key, cache_ttl, cache_delay, || async move {
+            let llm_ref = &self.llm;
+            let result = cached_query(ws_dir, "web_search/lesson_plan", &key, &theme_query, cache_ttl, cache_delay, Some(llm_ref), || async move {
                 let (stdout, _stderr, success) = run_script(
                     "python3",
-                    &[&web_script, "--query", &theme_owned, "--theme", &topic_owned],
+                    &[&web_script, "--query", &theme_for_closure, "--theme", &topic_owned],
                     &[],
                     &out_dir_ref,
                     script_timeout,
@@ -138,7 +140,7 @@ impl Tool for SwLessonGenPlanTool {
                 if success {
                     Ok(stdout)
                 } else {
-                    anyhow::bail!("web_search script failed for theme: {theme_owned}")
+                    anyhow::bail!("web_search script failed for theme: {theme_for_closure}")
                 }
             })
             .await;
@@ -154,7 +156,8 @@ impl Tool for SwLessonGenPlanTool {
             let kb_script = kb_script.clone();
             let topic_owned = topic.to_string();
             let out_dir_ref = out_dir.clone();
-            let result = cached_query(ws_dir, "web_search/lesson_plan_kb", &key, cache_ttl, cache_delay, || async move {
+            let llm_ref = &self.llm;
+            let result = cached_query(ws_dir, "web_search/lesson_plan_kb", &key, topic, cache_ttl, cache_delay, Some(llm_ref), || async move {
                 let (stdout, _stderr, success) = run_script(
                     "python3",
                     &[&kb_script, "--keyword", &topic_owned],

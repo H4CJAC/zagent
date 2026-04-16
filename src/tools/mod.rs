@@ -428,6 +428,32 @@ pub fn all_tools_with_runtime(
 ) {
     let has_shell_access = runtime.has_shell_access();
     let sandbox = create_sandbox(&root_config.security);
+
+    // LLM config for semantic cache matching across all sw_* tools.
+    let sw_cache_llm: Option<sw_lesson_common::LlmProviderConfig> = root_config
+        .api_key
+        .as_ref()
+        .filter(|k| !k.is_empty())
+        .map(|_| {
+            let opts = crate::providers::provider_runtime_options_from_config(root_config);
+            sw_lesson_common::LlmProviderConfig {
+                provider_name: root_config
+                    .default_provider
+                    .clone()
+                    .unwrap_or_else(|| "openrouter".into()),
+                model: root_config
+                    .default_model
+                    .clone()
+                    .unwrap_or_else(|| "openai/gpt-4o-mini".into()),
+                temperature: 0.0,
+                api_key: root_config.api_key.clone(),
+                api_url: root_config.api_url.clone(),
+                runtime_options: opts,
+                reliability: root_config.reliability.clone(),
+                model_routes: root_config.model_routes.clone(),
+            }
+        });
+
     let mut tool_arcs: Vec<Arc<dyn Tool>> = vec![
         Arc::new(RateLimitedTool::new(
             PathGuardedTool::new(
@@ -475,24 +501,29 @@ pub fn all_tools_with_runtime(
         Arc::new(sw_classroom_observation::SwClassroomObservationTool::new(
             workspace_dir.to_path_buf(),
             sw_lesson_common::AgentSheConfig::from_seewo_cloud(&root_config.seewo_cloud),
+            sw_cache_llm.clone(),
         )),
         Arc::new(sw_student_analysis::SwStudentAnalysisTool::new(
             workspace_dir.to_path_buf(),
             sw_lesson_common::AgentSheConfig::from_seewo_cloud(&root_config.seewo_cloud),
+            sw_cache_llm.clone(),
         )),
         Arc::new(sw_lesson_data_collect::SwLessonDataCollectTool::new(
             workspace_dir.to_path_buf(),
             sw_lesson_common::AgentSheConfig::from_seewo_cloud(&root_config.seewo_cloud),
+            sw_cache_llm.clone(),
         )),
         Arc::new(sw_lesson_gen_cw::SwLessonGenCwTool::new(
             workspace_dir.to_path_buf(),
             root_config.seewo_cloud.cache_ttl_secs,
             root_config.seewo_cloud.cw_cache_delay_ms,
+            sw_cache_llm.clone(),
         )),
         Arc::new(sw_my_data_query::SwMyDataQueryTool::new(
             workspace_dir.to_path_buf(),
             root_config.seewo_cloud.cache_ttl_secs,
             root_config.seewo_cloud.cache_delay_ms,
+            sw_cache_llm.clone(),
         )),
         Arc::new(CanvasTool::new(canvas_store.unwrap_or_default())),
     ];

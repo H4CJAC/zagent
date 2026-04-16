@@ -196,6 +196,7 @@ impl Tool for SwSchoolGenReportTool {
             "school_report",
             self.cache_ttl_secs,
             self.cache_delay_ms,
+            Some(&self.llm),
         )
         .await
         {
