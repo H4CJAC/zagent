@@ -294,7 +294,8 @@ debounce_ms = 0
 
 [memory]
 backend = "sqlite"
-auto_save = true
+auto_save = false
+consolidation_temperature = 1.0
 hygiene_enabled = true
 archive_after_days = 7
 purge_after_days = 30

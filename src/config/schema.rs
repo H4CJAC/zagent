@@ -5244,6 +5244,12 @@ pub struct MemoryConfig {
     #[serde(default)]
     pub sqlite_open_timeout_secs: Option<u64>,
 
+    // ── Consolidation ─────────────────────────────────────────
+    /// Override temperature for memory consolidation LLM calls.
+    /// When set, this value is used instead of the global `default_temperature`.
+    #[serde(default)]
+    pub consolidation_temperature: Option<f64>,
+
     // ── Qdrant backend options ─────────────────────────────────
     /// Configuration for Qdrant vector database backend.
     /// Only used when `backend = "qdrant"`.
@@ -5370,6 +5376,7 @@ impl Default for MemoryConfig {
             audit_enabled: false,
             audit_retention_days: default_audit_retention_days(),
             policy: MemoryPolicyConfig::default(),
+            consolidation_temperature: None,
             sqlite_open_timeout_secs: None,
             qdrant: QdrantConfig::default(),
         }

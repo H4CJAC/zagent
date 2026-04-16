@@ -472,6 +472,7 @@ async fn process_chat_message(
                 let model = state.model.clone();
                 let user_msg = content.to_string();
                 let assistant_resp = response.clone();
+                let consolidation_temp = state.config.lock().memory.consolidation_temperature;
                 tokio::spawn(async move {
                     if let Err(e) = crate::memory::consolidation::consolidate_turn(
                         provider.as_ref(),
@@ -479,6 +480,7 @@ async fn process_chat_message(
                         mem.as_ref(),
                         &user_msg,
                         &assistant_resp,
+                        consolidation_temp,
                     )
                     .await
                     {

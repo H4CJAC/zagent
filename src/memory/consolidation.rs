@@ -58,7 +58,9 @@ pub async fn consolidate_turn(
     memory: &dyn Memory,
     user_message: &str,
     assistant_response: &str,
+    temperature: Option<f64>,
 ) -> anyhow::Result<()> {
+    let temperature = temperature.unwrap_or(0.1);
     let turn_text = format!(
         "User: {}\nAssistant: {}",
         strip_media_markers(user_message),
@@ -80,7 +82,7 @@ pub async fn consolidate_turn(
     };
 
     let raw = provider
-        .chat_with_system(Some(CONSOLIDATION_SYSTEM_PROMPT), &truncated, model, 0.1)
+        .chat_with_system(Some(CONSOLIDATION_SYSTEM_PROMPT), &truncated, model, temperature)
         .await?;
 
     let result: ConsolidationResult = parse_consolidation_response(&raw, &turn_text);

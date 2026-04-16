@@ -75,6 +75,7 @@ struct WsSession {
     excluded_tools: Vec<String>,
     dedup_exempt_tools: Vec<String>,
     auto_save: bool,
+    consolidation_temperature: Option<f64>,
     cancel_token: CancellationToken,
 }
 
@@ -244,6 +245,7 @@ impl WsSession {
             excluded_tools: config.autonomy.non_cli_excluded_tools.clone(),
             dedup_exempt_tools: config.agent.tool_call_dedup_exempt.clone(),
             auto_save: config.memory.auto_save,
+            consolidation_temperature: config.memory.consolidation_temperature,
             cancel_token: CancellationToken::new(),
         })
     }
@@ -683,6 +685,7 @@ async fn process_turn(
         let mem = Arc::clone(&state.mem);
         let user_msg = content.to_string();
         let assistant_resp = full_response.clone();
+        let consolidation_temp = session.consolidation_temperature;
         tokio::spawn(async move {
             if let Err(e) = crate::memory::consolidation::consolidate_turn(
                 provider.as_ref(),
@@ -690,6 +693,7 @@ async fn process_turn(
                 mem.as_ref(),
                 &user_msg,
                 &assistant_resp,
+                consolidation_temp,
             )
             .await
             {

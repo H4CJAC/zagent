@@ -368,6 +368,7 @@ struct ChannelRuntimeContext {
     model: Arc<String>,
     temperature: f64,
     auto_save_memory: bool,
+    consolidation_temperature: Option<f64>,
     max_tool_iterations: usize,
     min_relevance_score: f64,
     conversation_histories: ConversationHistoryMap,
@@ -3334,6 +3335,7 @@ async fn process_channel_message(
                 let memory = Arc::clone(&ctx.memory);
                 let user_msg = msg.content.clone();
                 let assistant_resp = delivered_response.clone();
+                let consolidation_temp = ctx.consolidation_temperature;
                 tokio::spawn(async move {
                     if let Err(e) = crate::memory::consolidation::consolidate_turn(
                         provider.as_ref(),
@@ -3341,6 +3343,7 @@ async fn process_channel_message(
                         memory.as_ref(),
                         &user_msg,
                         &assistant_resp,
+                        consolidation_temp,
                     )
                     .await
                     {
@@ -5860,6 +5863,7 @@ pub async fn start_channels(config: Config) -> Result<()> {
         model: Arc::new(model.clone()),
         temperature,
         auto_save_memory: config.memory.auto_save,
+        consolidation_temperature: config.memory.consolidation_temperature,
         max_tool_iterations: config.agent.max_tool_iterations,
         min_relevance_score: config.memory.min_relevance_score,
         conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -6328,6 +6332,7 @@ mod tests {
             model: Arc::new("test-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 5,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(histories)),
@@ -6450,6 +6455,7 @@ mod tests {
             model: Arc::new("test-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 5,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -6533,6 +6539,7 @@ mod tests {
             model: Arc::new("test-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 5,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(histories)),
@@ -6631,6 +6638,7 @@ mod tests {
             model: Arc::new("test-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 5,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(histories)),
@@ -7228,6 +7236,7 @@ BTC is currently around $65,000 based on latest tool output."#
             model: Arc::new("test-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 10,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -7318,6 +7327,7 @@ BTC is currently around $65,000 based on latest tool output."#
             model: Arc::new("test-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 10,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -7422,6 +7432,7 @@ BTC is currently around $65,000 based on latest tool output."#
             model: Arc::new("test-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 10,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -7511,6 +7522,7 @@ BTC is currently around $65,000 based on latest tool output."#
             model: Arc::new("test-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 10,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -7610,6 +7622,7 @@ BTC is currently around $65,000 based on latest tool output."#
             model: Arc::new("default-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 5,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -7730,6 +7743,7 @@ BTC is currently around $65,000 based on latest tool output."#
             model: Arc::new("default-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 5,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -7831,6 +7845,7 @@ BTC is currently around $65,000 based on latest tool output."#
             model: Arc::new("default-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 5,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -7944,6 +7959,7 @@ BTC is currently around $65,000 based on latest tool output."#
             model: Arc::new("startup-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 5,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -8048,6 +8064,7 @@ BTC is currently around $65,000 based on latest tool output."#
             model: Arc::new("test-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 12,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -8142,6 +8159,7 @@ BTC is currently around $65,000 based on latest tool output."#
             model: Arc::new("test-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 3,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -8362,6 +8380,7 @@ BTC is currently around $65,000 based on latest tool output."#
             model: Arc::new("test-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 10,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -8474,6 +8493,7 @@ BTC is currently around $65,000 based on latest tool output."#
             model: Arc::new("test-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 10,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -8605,6 +8625,7 @@ BTC is currently around $65,000 based on latest tool output."#
             model: Arc::new("test-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 10,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -8733,6 +8754,7 @@ BTC is currently around $65,000 based on latest tool output."#
             model: Arc::new("test-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 10,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -8839,6 +8861,7 @@ BTC is currently around $65,000 based on latest tool output."#
             model: Arc::new("test-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 10,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -8926,6 +8949,7 @@ BTC is currently around $65,000 based on latest tool output."#
             model: Arc::new("test-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 10,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -9013,6 +9037,7 @@ BTC is currently around $65,000 based on latest tool output."#
             model: Arc::new("test-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 10,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -9805,6 +9830,7 @@ BTC is currently around $65,000 based on latest tool output."#
             model: Arc::new("test-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 5,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -9946,6 +9972,7 @@ BTC is currently around $65,000 based on latest tool output."#
             model: Arc::new("test-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 5,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -10130,6 +10157,7 @@ BTC is currently around $65,000 based on latest tool output."#
             model: Arc::new("test-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 5,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -10248,6 +10276,7 @@ BTC is currently around $65,000 based on latest tool output."#
             model: Arc::new("test-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 5,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(histories)),
@@ -10834,6 +10863,7 @@ This is an example JSON object for profile settings."#;
             model: Arc::new("test-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 5,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -10930,6 +10960,7 @@ This is an example JSON object for profile settings."#;
             model: Arc::new("test-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 5,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -11060,6 +11091,7 @@ This is an example JSON object for profile settings."#;
             model: Arc::new("test-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 5,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -11234,6 +11266,7 @@ This is an example JSON object for profile settings."#;
             model: Arc::new("default-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 5,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -11354,6 +11387,7 @@ This is an example JSON object for profile settings."#;
             model: Arc::new("default-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 5,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -11466,6 +11500,7 @@ This is an example JSON object for profile settings."#;
             model: Arc::new("default-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 5,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -11598,6 +11633,7 @@ This is an example JSON object for profile settings."#;
             model: Arc::new("default-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 5,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
@@ -11872,6 +11908,7 @@ This is an example JSON object for profile settings."#;
             model: Arc::new("test-model".to_string()),
             temperature: 0.0,
             auto_save_memory: false,
+            consolidation_temperature: None,
             max_tool_iterations: 10,
             min_relevance_score: 0.0,
             conversation_histories: Arc::new(Mutex::new(lru::LruCache::new(
