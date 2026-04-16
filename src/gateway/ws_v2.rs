@@ -395,6 +395,7 @@ async fn handle_socket_v2(
                     Message::Close(_) => break,
                     _ => continue,
                 };
+                tracing::debug!(direction = "in", "WS v2 → {text}");
 
                 let parsed: serde_json::Value = match serde_json::from_str(&text) {
                     Ok(v) => v,
@@ -600,6 +601,7 @@ async fn process_turn(
             frame = receiver.next(), if !client_gone => {
                 match frame {
                     Some(Ok(Message::Text(text))) => {
+                        tracing::debug!(direction = "in", "WS v2 (mid-turn) → {text}");
                         if let Ok(v) = serde_json::from_str::<serde_json::Value>(&text) {
                             if v["type"].as_str() == Some("cancel") {
                                 cancel.cancel();
@@ -707,6 +709,7 @@ async fn send_json(
     sender: &mut futures_util::stream::SplitSink<WebSocket, Message>,
     value: serde_json::Value,
 ) -> Result<(), axum::Error> {
+    tracing::debug!(direction = "out", r#type = value["type"].as_str().unwrap_or("?"), "WS v2 ← {value}");
     sender.send(Message::Text(value.to_string().into())).await
 }
 
