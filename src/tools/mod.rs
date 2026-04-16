@@ -582,11 +582,15 @@ pub fn all_tools_with_runtime(
             sw_teaching_reflection::SwTeachingReflectionTool::new(
                 workspace_dir.to_path_buf(),
                 llm_config.clone(),
+                root_config.seewo_cloud.cache_ttl_secs,
+                root_config.seewo_cloud.cache_delay_ms,
             ),
         ));
         tool_arcs.push(Arc::new(sw_student_feedback::SwStudentFeedbackTool::new(
             workspace_dir.to_path_buf(),
             llm_config.clone(),
+            root_config.seewo_cloud.cache_ttl_secs,
+            root_config.seewo_cloud.cache_delay_ms,
         )));
         tool_arcs.push(Arc::new(
             sw_school_gen_report::SwSchoolGenReportTool::new(

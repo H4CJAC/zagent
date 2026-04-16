@@ -5,7 +5,8 @@
 //! actionable communication strategies.
 
 use super::sw_lesson_common::{
-    LlmProviderConfig, analysis_artifacts_dir, err_result, opt_str, require_str, truncate_str,
+    LlmProviderConfig, analysis_artifacts_dir, cache_key, cached_query, err_result, opt_str,
+    require_str, truncate_str,
 };
 use super::traits::{Tool, ToolResult};
 use async_trait::async_trait;
@@ -15,11 +16,23 @@ use std::path::PathBuf;
 pub struct SwStudentFeedbackTool {
     workspace_dir: PathBuf,
     llm: LlmProviderConfig,
+    cache_ttl_secs: u64,
+    cache_delay_ms: u64,
 }
 
 impl SwStudentFeedbackTool {
-    pub fn new(workspace_dir: PathBuf, llm: LlmProviderConfig) -> Self {
-        Self { workspace_dir, llm }
+    pub fn new(
+        workspace_dir: PathBuf,
+        llm: LlmProviderConfig,
+        cache_ttl_secs: u64,
+        cache_delay_ms: u64,
+    ) -> Self {
+        Self {
+            workspace_dir,
+            llm,
+            cache_ttl_secs,
+            cache_delay_ms,
+        }
     }
 }
 
@@ -164,19 +177,27 @@ impl Tool for SwStudentFeedbackTool {
             );
         }
 
-        let provider = match self.llm.create_provider() {
-            Ok(p) => p,
-            Err(e) => return Ok(err_result(format!("创建 LLM provider 失败: {e}"))),
-        };
+        let key = cache_key(&[&session_id, &subject, &topic, &extra_req, &student_data]);
+        let query_text = format!("{subject} {topic} 学生跟进反馈");
+        let llm = self.llm.clone();
 
-        let feedback_text = match provider
-            .chat_with_system(
-                Some(SYSTEM_PROMPT),
-                &user_prompt,
-                &self.llm.model,
-                self.llm.temperature,
-            )
-            .await
+        let feedback_text = match cached_query(
+            &self.workspace_dir,
+            "llm_feedback/student_feedback",
+            &key,
+            &query_text,
+            self.cache_ttl_secs,
+            self.cache_delay_ms,
+            Some(&self.llm),
+            || async {
+                let provider = llm.create_provider()
+                    .map_err(|e| anyhow::anyhow!("创建 LLM provider 失败: {e}"))?;
+                provider
+                    .chat_with_system(Some(SYSTEM_PROMPT), &user_prompt, &llm.model, llm.temperature)
+                    .await
+            },
+        )
+        .await
         {
             Ok(text) => text,
             Err(e) => return Ok(err_result(format!("LLM 学生反馈生成失败: {e}"))),
