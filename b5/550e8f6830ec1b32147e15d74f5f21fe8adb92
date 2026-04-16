@@ -1,0 +1,32 @@
+src/agent/prompt.rs
+  dd9a7ab298799cca 188-192
+src/security/policy.rs
+  dd9a7ab298799cca 804-821,1026-1029,1117-1242,3606-3757
+src/channels/mod.rs
+  dd9a7ab298799cca 3964-3968
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "b5550e8f6830ec1b32147e15d74f5f21fe8adb92",
+  "prompts": {
+    "dd9a7ab298799cca": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "49f768fd-534d-460d-bfe8-417620332917",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 310,
+      "total_deletions": 0,
+      "accepted_lines": 310,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_f38e4123063fc1": {
+      "author": "hac"
+    }
+  }
+}
