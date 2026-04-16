@@ -1,0 +1,55 @@
+src/memory/consolidation.rs
+  dd9a7ab298799cca 61,63,85
+src/gateway/ws_v2.rs
+  dd9a7ab298799cca 78,248,688,696
+src/channels/mod.rs
+  dd9a7ab298799cca 371,3338,3346,5866,6335,6458,6542,6641,7239,7330,7435,7525,7625,7746,7848,7962,8067,8162,8383,8496,8628,8757,8864,8952,9040,9833,9975,10160,10279,10866,10963,11094,11269,11390,11503,11636,11911
+src/onboard/wizard.rs
+  dd9a7ab298799cca 450
+src/config/schema.rs
+  dd9a7ab298799cca 5247-5252,5379
+src/gateway/ws.rs
+  dd9a7ab298799cca 475,483
+tests/integration/memory_loop_continuity.rs
+  dd9a7ab298799cca 461,493
+src/config/presets/seewo.toml
+  h_f38e4123063fc1 297-298
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "a380968b1f01608eebbb9193bf2e6d811a7b7d3f",
+  "prompts": {
+    "dd9a7ab298799cca": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "49f768fd-534d-460d-bfe8-417620332917",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 67,
+      "total_deletions": 12,
+      "accepted_lines": 56,
+      "overriden_lines": 0
+    },
+    "fbd0a7434a0e56c7": {
+      "agent_id": {
+        "tool": "known_human",
+        "id": "known_human_session",
+        "model": "unknown"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 2,
+      "total_deletions": 1,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_f38e4123063fc1": {
+      "author": "hac"
+    }
+  }
+}
