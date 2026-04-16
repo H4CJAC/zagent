@@ -694,11 +694,33 @@ async fn semantic_match_cached(
 
     tracing::debug!("sw cache semantic: prompt: {prompt}");
 
-    let provider = match llm.create_provider() {
-        Ok(p) => p,
-        Err(e) => {
-            tracing::warn!("sw cache semantic: failed to create provider: {e}");
-            return None;
+    let provider = {
+        let mut opts = llm.runtime_options.clone();
+        opts.reasoning_enabled = Some(false);
+        if let Some(ref mut body) = opts.extra_body {
+            if let Some(obj) = body.as_object_mut() {
+                if obj.contains_key("thinking") {
+                    obj.insert(
+                        "thinking".into(),
+                        serde_json::json!({"type": "disabled"}),
+                    );
+                }
+            }
+        }
+        match crate::providers::create_routed_provider_with_options(
+            &llm.provider_name,
+            llm.api_key.as_deref(),
+            llm.api_url.as_deref(),
+            &llm.reliability,
+            &llm.model_routes,
+            &llm.model,
+            &opts,
+        ) {
+            Ok(p) => p,
+            Err(e) => {
+                tracing::warn!("sw cache semantic: failed to create provider: {e}");
+                return None;
+            }
         }
     };
 
