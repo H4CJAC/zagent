@@ -1,5 +1,7 @@
 default_provider = "custom:http://ai-open.seewo.com/openai/deployments/ALI_KIMI_SPECIAL_K2_5"
 default_model = "kimi-k2.5"
+# default_provider = "moonshot"
+# api_key = "sk-I9N1F7HoSQOxBKSvtdF98vryrvnkcntZzkSrFBaUtA9V859Y"
 api_url = ""
 api_key = "eef3c35188e94e91a8a622180a436d48"
 default_temperature = 1
@@ -181,6 +183,7 @@ fallback_providers = [
     "custom:http://ai-open.seewo.com/openai/deployments/ALI_KIMI_K2_5"
 ]
 api_keys = []
+# api_keys = ["sk-3vVztAWMM4UD5MI0QOJJeoPX13FoNMs6xl4VPojbdYEx9slp"]
 channel_initial_backoff_secs = 2
 channel_max_backoff_secs = 60
 scheduler_poll_secs = 15
