@@ -185,6 +185,11 @@ impl PromptSection for SafetySection {
         }
 
         out.push_str("- Prefer `trash` over `rm`.\n");
+        out.push_str(
+            "- Never execute commands that could terminate your own process, \
+             delete your own binary, or shut down the system \
+             (e.g. kill, pkill, shutdown, reboot targeting self).\n",
+        );
         out.push_str(match ctx.autonomy_level {
             AutonomyLevel::Full => {
                 "- Execute tools and actions directly — no extra approval needed.\n\

@@ -3961,6 +3961,11 @@ pub fn build_system_prompt_with_mode_and_autonomy(
         );
     }
     prompt.push_str("- Prefer `trash` over `rm` (recoverable beats gone forever).\n");
+    prompt.push_str(
+        "- Never execute commands that could terminate your own process, \
+         delete your own binary, or shut down the system \
+         (e.g. kill, pkill, shutdown, reboot targeting self).\n",
+    );
     prompt.push_str(match autonomy_config.map(|cfg| cfg.level) {
         Some(crate::security::AutonomyLevel::Full) => {
             "- Respect the runtime autonomy policy: if a tool or action is allowed, execute it directly instead of asking the user for extra approval.\n\

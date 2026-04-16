@@ -801,6 +801,24 @@ fn command_basename(raw: &str) -> &str {
     after_fwd.rsplit('\\').next().unwrap_or(after_fwd)
 }
 
+/// Check if any non-flag argument in a command matches the agent's own binary
+/// name (case-insensitive, bidirectional substring match).
+fn match_own_binary_in_args(args: &[&str], own_binary: &str) -> Option<String> {
+    if own_binary.is_empty() {
+        return None;
+    }
+    let lower_bin = own_binary.to_ascii_lowercase();
+    for arg in args {
+        if !arg.starts_with('-') {
+            let lower_arg = arg.to_ascii_lowercase();
+            if lower_arg.contains(&lower_bin) || lower_bin.contains(&lower_arg) {
+                return Some("cannot kill the agent's own process by name".into());
+            }
+        }
+    }
+    None
+}
+
 /// Strip common Windows executable suffixes (.exe, .cmd, .bat) for uniform
 /// matching against allowlists and risk tables. On non-Windows platforms this
 /// is a no-op that returns the input unchanged.
@@ -1005,6 +1023,10 @@ impl SecurityPolicy {
         command: &str,
         approved: bool,
     ) -> Result<CommandRiskLevel, String> {
+        if let Some(reason) = Self::is_self_destructive(command) {
+            return Err(format!("Command blocked: {reason}"));
+        }
+
         if !self.is_command_allowed(command) {
             return Err(format!("Command not allowed by security policy: {command}"));
         }
@@ -1090,6 +1112,132 @@ impl SecurityPolicy {
             let s = skip_env_assignments(s.trim());
             s.split_whitespace().next().is_some_and(|w| !w.is_empty())
         })
+    }
+
+    // ── Self-destruction guard (unconditional, cannot be bypassed) ─────────
+
+    /// Detect commands that would terminate the agent's own process or shut
+    /// down the system.  Returns `Some(reason)` when the command is
+    /// self-destructive.  This check is **not** gated by `allowed_commands`,
+    /// `block_high_risk_commands`, or autonomy level — it is always enforced.
+    fn is_self_destructive(command: &str) -> Option<String> {
+        let own_pid = std::process::id().to_string();
+        let own_binary = std::env::current_exe()
+            .ok()
+            .and_then(|p| p.file_stem().map(|s| s.to_string_lossy().to_string()))
+            .unwrap_or_default();
+        let own_binary_exe = if own_binary.is_empty() {
+            String::new()
+        } else {
+            format!("{own_binary}.exe")
+        };
+
+        for segment in split_unquoted_segments(command) {
+            let cmd_part = skip_env_assignments(&segment);
+            let words: Vec<&str> = cmd_part.split_whitespace().collect();
+            if words.is_empty() {
+                continue;
+            }
+            let cmd = command_basename(words[0]);
+
+            match cmd {
+                "shutdown" | "reboot" | "halt" | "poweroff" | "init" => {
+                    return Some(
+                        "system shutdown/reboot commands are not allowed".into(),
+                    );
+                }
+                "kill" => {
+                    for arg in &words[1..] {
+                        let stripped = arg.trim_start_matches('-');
+                        if *arg == own_pid
+                            || stripped == own_pid
+                            || *arg == "0"
+                            || *arg == "-1"
+                        {
+                            return Some(
+                                "cannot kill the agent's own process".into(),
+                            );
+                        }
+                    }
+                }
+                "pkill" | "killall" | "xkill" => {
+                    if let Some(reason) =
+                        match_own_binary_in_args(&words[1..], &own_binary)
+                    {
+                        return Some(reason);
+                    }
+                }
+                "taskkill" | "taskkill.exe" => {
+                    let args = &words[1..];
+                    for (i, arg) in args.iter().enumerate() {
+                        let upper = arg.to_ascii_uppercase();
+                        if upper == "/PID" || upper == "-PID" {
+                            if let Some(pid_str) = args.get(i + 1) {
+                                if *pid_str == own_pid {
+                                    return Some(
+                                        "cannot kill the agent's own process"
+                                            .into(),
+                                    );
+                                }
+                            }
+                        }
+                        if upper == "/IM" || upper == "-IM" {
+                            if let Some(name) = args.get(i + 1) {
+                                let lower = name.to_ascii_lowercase();
+                                let lower_bin = own_binary.to_ascii_lowercase();
+                                let lower_exe =
+                                    own_binary_exe.to_ascii_lowercase();
+                                if !lower_bin.is_empty()
+                                    && (lower.contains(&lower_bin)
+                                        || lower_bin.contains(&lower)
+                                        || lower == lower_exe)
+                                {
+                                    return Some(
+                                        "cannot kill the agent's own process by name".into(),
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+                "wmic" | "wmic.exe" => {
+                    let joined =
+                        words[1..].join(" ").to_ascii_lowercase();
+                    if joined.contains("process")
+                        && joined.contains("delete")
+                        && (joined.contains(&own_pid)
+                            || (!own_binary.is_empty()
+                                && joined.contains(
+                                    &own_binary.to_ascii_lowercase(),
+                                )))
+                    {
+                        return Some(
+                            "cannot kill the agent's own process via wmic"
+                                .into(),
+                        );
+                    }
+                }
+                "am" => {
+                    if words.get(1).copied() == Some("force-stop") {
+                        if let Some(pkg) = words.get(2) {
+                            let lower = pkg.to_ascii_lowercase();
+                            let lower_bin =
+                                own_binary.to_ascii_lowercase();
+                            if !lower_bin.is_empty()
+                                && (lower.contains(&lower_bin)
+                                    || lower_bin.contains(&lower))
+                            {
+                                return Some(
+                                    "cannot force-stop the agent's own package".into(),
+                                );
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+        None
     }
 
     // ── Layered Command Allowlist ──────────────────────────────────────────
@@ -3454,5 +3602,157 @@ mod tests {
         let t = PerSenderTracker::new();
         // Key "ghost" has never been recorded — should not be exhausted at max=1
         assert!(!t.is_exhausted("ghost", 1));
+    }
+
+    // ── Self-destruction guard tests ────────────────────────────────────
+
+    #[test]
+    fn self_destruct_kill_own_pid() {
+        let pid = std::process::id().to_string();
+        assert!(
+            SecurityPolicy::is_self_destructive(&format!("kill {pid}")).is_some(),
+            "kill with own PID should be blocked"
+        );
+        assert!(
+            SecurityPolicy::is_self_destructive(&format!("kill -9 {pid}")).is_some(),
+            "kill -9 with own PID should be blocked"
+        );
+    }
+
+    #[test]
+    fn self_destruct_kill_broadcast_pids() {
+        assert!(
+            SecurityPolicy::is_self_destructive("kill 0").is_some(),
+            "kill 0 (process group) should be blocked"
+        );
+        assert!(
+            SecurityPolicy::is_self_destructive("kill -1").is_some(),
+            "kill -1 (all processes) should be blocked"
+        );
+    }
+
+    #[test]
+    fn self_destruct_kill_other_pid_allowed() {
+        assert!(
+            SecurityPolicy::is_self_destructive("kill 99999").is_none(),
+            "kill with a different PID should be allowed"
+        );
+    }
+
+    #[test]
+    fn self_destruct_pkill_own_binary() {
+        let own = std::env::current_exe()
+            .ok()
+            .and_then(|p| p.file_stem().map(|s| s.to_string_lossy().to_string()))
+            .unwrap_or_default();
+        if !own.is_empty() {
+            assert!(
+                SecurityPolicy::is_self_destructive(&format!("pkill {own}")).is_some(),
+                "pkill with own binary name should be blocked"
+            );
+            assert!(
+                SecurityPolicy::is_self_destructive(&format!("killall {own}")).is_some(),
+                "killall with own binary name should be blocked"
+            );
+        }
+    }
+
+    #[test]
+    fn self_destruct_pkill_other_allowed() {
+        assert!(
+            SecurityPolicy::is_self_destructive("pkill node").is_none(),
+            "pkill node should be allowed"
+        );
+    }
+
+    #[test]
+    fn self_destruct_shutdown_reboot() {
+        for cmd in &["shutdown", "reboot", "halt", "poweroff", "init"] {
+            assert!(
+                SecurityPolicy::is_self_destructive(cmd).is_some(),
+                "{cmd} should be blocked"
+            );
+        }
+    }
+
+    #[test]
+    fn self_destruct_piped_kill() {
+        let pid = std::process::id().to_string();
+        assert!(
+            SecurityPolicy::is_self_destructive(&format!("ls | kill {pid}")).is_some(),
+            "piped kill with own PID should be blocked"
+        );
+    }
+
+    #[test]
+    fn self_destruct_taskkill_pid() {
+        let pid = std::process::id().to_string();
+        assert!(
+            SecurityPolicy::is_self_destructive(&format!("taskkill /PID {pid} /F"))
+                .is_some(),
+            "taskkill /PID with own PID should be blocked"
+        );
+    }
+
+    #[test]
+    fn self_destruct_taskkill_im() {
+        let own = std::env::current_exe()
+            .ok()
+            .and_then(|p| p.file_stem().map(|s| s.to_string_lossy().to_string()))
+            .unwrap_or_default();
+        if !own.is_empty() {
+            assert!(
+                SecurityPolicy::is_self_destructive(&format!(
+                    "taskkill /IM {own}.exe /F"
+                ))
+                .is_some(),
+                "taskkill /IM with own binary should be blocked"
+            );
+        }
+    }
+
+    #[test]
+    fn self_destruct_taskkill_other_allowed() {
+        assert!(
+            SecurityPolicy::is_self_destructive("taskkill /PID 99999").is_none(),
+            "taskkill with a different PID should be allowed"
+        );
+    }
+
+    #[test]
+    fn self_destruct_wmic() {
+        let pid = std::process::id().to_string();
+        assert!(
+            SecurityPolicy::is_self_destructive(&format!(
+                "wmic process where ProcessId={pid} delete"
+            ))
+            .is_some(),
+            "wmic process delete with own PID should be blocked"
+        );
+    }
+
+    #[test]
+    fn self_destruct_am_force_stop() {
+        let own = std::env::current_exe()
+            .ok()
+            .and_then(|p| p.file_stem().map(|s| s.to_string_lossy().to_string()))
+            .unwrap_or_default();
+        if !own.is_empty() {
+            assert!(
+                SecurityPolicy::is_self_destructive(&format!(
+                    "am force-stop com.{own}.agent"
+                ))
+                .is_some(),
+                "am force-stop with own package should be blocked"
+            );
+        }
+    }
+
+    #[test]
+    fn self_destruct_am_force_stop_other_allowed() {
+        assert!(
+            SecurityPolicy::is_self_destructive("am force-stop com.other.app").is_none(),
+            "am force-stop with a different package should be allowed"
+        );
     }
 }
