@@ -1,0 +1,49 @@
+src/config/presets/seewo_soul.md
+  h_f38e4123063fc1 25
+src/tools/mod.rs
+  dd9a7ab298799cca 449-451,571
+src/tools/sw_lesson_common.rs
+  dd9a7ab298799cca 517-520,679,681,799,801
+src/config/presets/seewo.toml
+  h_f38e4123063fc1 748
+src/config/schema.rs
+  dd9a7ab298799cca 562-566
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.3",
+  "base_commit_sha": "21993f00623c89d59bea386728a41db35bb7e123",
+  "prompts": {
+    "dd9a7ab298799cca": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "49f768fd-534d-460d-bfe8-417620332917",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 17,
+      "total_deletions": 2,
+      "accepted_lines": 17,
+      "overriden_lines": 0
+    },
+    "fbd0a7434a0e56c7": {
+      "agent_id": {
+        "tool": "known_human",
+        "id": "known_human_session",
+        "model": "unknown"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 12,
+      "total_deletions": 11,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_f38e4123063fc1": {
+      "author": "hac"
+    }
+  }
+}
