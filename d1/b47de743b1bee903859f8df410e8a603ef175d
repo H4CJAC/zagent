@@ -1,0 +1,28 @@
+src/tools/sw_school_gen_report.rs
+  dd9a7ab298799cca 7-9,275-283,285-310,313
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.3",
+  "base_commit_sha": "d1b47de743b1bee903859f8df410e8a603ef175d",
+  "prompts": {
+    "dd9a7ab298799cca": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "49f768fd-534d-460d-bfe8-417620332917",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 39,
+      "total_deletions": 15,
+      "accepted_lines": 39,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_f38e4123063fc1": {
+      "author": "hac"
+    }
+  }
+}
