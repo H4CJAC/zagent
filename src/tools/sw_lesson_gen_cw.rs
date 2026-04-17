@@ -62,7 +62,7 @@ impl Tool for SwLessonGenCwTool {
                 },
                 "sp_s_name": { "type": "string", "description": "前端显示的步骤名称，建议值：\"生成课件-{生成的课件名}\"" },
                 "sp_s_icon": { "type": "string", "description": "前端显示的步骤图标，固定值：\"icon-gen-cw\"" },
-                "phase1_timeout_secs": { "type": "integer", "description": "课件生成 Phase 1 超时秒数（默认 300）", "default": 300 },
+                "phase1_timeout_secs": { "type": "integer", "description": "课件生成 Phase 1 超时秒数（默认 960）", "default": 960 },
                 "phase2_timeout_secs": { "type": "integer", "description": "课件生成 Phase 2 超时秒数（默认 960）", "default": 960 }
             },
             "required": ["session_id", "topic", "sp_s_name", "sp_s_icon"]
@@ -86,7 +86,7 @@ impl Tool for SwLessonGenCwTool {
         let phase1_timeout = args
             .get("phase1_timeout_secs")
             .and_then(|v| v.as_u64())
-            .unwrap_or(300);
+            .unwrap_or(960);
         let phase2_timeout = args
             .get("phase2_timeout_secs")
             .and_then(|v| v.as_u64())
