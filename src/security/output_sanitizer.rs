@@ -11,37 +11,86 @@ use std::collections::HashMap;
 /// Default replacement text for built-in sensitive word rules.
 /// Change this single constant to rebrand the replacement across the
 /// entire default ruleset and all tests.
-pub const DEFAULT_REPLACEMENT: &str = "AI 助手";
+pub const DEFAULT_REPLACEMENT: &str = "希沃AI助手";
 
 const DEFAULT_RULES: &[(&[&str], &str)] = &[(
     &[
+        // OpenAI
         "GPT-4o",
         "GPT-4",
         "GPT-3.5",
         "ChatGPT",
         "OpenAI",
+        "o1-preview",
+        "o1-mini",
+        // Anthropic
+        "Claude-3.5",
+        "Claude-3",
         "Claude",
         "Anthropic",
+        // DeepSeek
         "DeepSeek-R1",
         "DeepSeek-V3",
+        "DeepSeek-V2",
         "DeepSeek",
+        // Moonshot / Kimi
+        "Kimi-K2.5",
+        "Kimi-K2",
+        "Kimi-K1.5",
+        "Kimi-K1",
         "Kimi",
+        "Moonshot-v1",
         "Moonshot",
+        // Alibaba
         "通义千问",
+        "Qwen-Max",
+        "Qwen-Plus",
+        "Qwen2.5",
+        "Qwen2",
         "Qwen",
         "通义",
+        // Baidu
         "文心一言",
         "文心",
+        "ERNIE-4",
         "ERNIE",
+        // ByteDance
         "豆包",
         "Doubao",
+        // Zhipu
+        "ChatGLM-4",
         "ChatGLM",
+        "GLM-4",
         "GLM",
+        "智谱清言",
         "智谱",
+        // Meta
+        "Llama-3",
         "Llama",
+        // Google
+        "Gemini-Pro",
         "Gemini",
+        // Mistral / Groq
+        "Mixtral",
         "Mistral",
         "Groq",
+        // 讯飞
+        "讯飞星火",
+        "星火大模型",
+        "SparkDesk",
+        // 百川
+        "百川智能",
+        "Baichuan",
+        // MiniMax
+        "MiniMax",
+        "abab",
+        // 零一万物
+        "零一万物",
+        "Yi-Large",
+        "Yi-34B",
+        // 阶跃星辰
+        "阶跃星辰",
+        "Step",
     ],
     DEFAULT_REPLACEMENT,
 )];

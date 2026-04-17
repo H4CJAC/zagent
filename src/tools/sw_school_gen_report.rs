@@ -72,7 +72,12 @@ const REPORT_SYSTEM_PROMPT: &str = "\
 ## 输出要求
 - 直接输出汇报正文，不需要额外解释
 - 使用 Markdown 格式
-- 如果提供的数据中缺少某些信息，在对应位置标注 [待补充]";
+- 如果提供的数据中缺少某些信息，在对应位置标注 [待补充]
+
+## 特别注意
+- 你不知道的内容，不知道的数据，不要保留，不放着待补充，你直接忽略
+- 如果有学校改进成效要点，需要点出
+";
 
 #[async_trait]
 impl Tool for SwSchoolGenReportTool {
@@ -82,7 +87,9 @@ impl Tool for SwSchoolGenReportTool {
 
     fn description(&self) -> &str {
         "学校汇报材料生成：根据主题自动查询学校数据并生成结构化、专业化的汇报文档。\
-         适用于教育信息化建设成果汇报、工作总结报告、教育类正式公文材料等场景。"
+         适用于教育信息化建设成果汇报、工作总结报告、教育类正式公文材料等场景。\
+         输出完成后，再通过 word-docx skill 将 markdown 转换为 word 文档，并输出 word 文档路径。\
+         最终把 markdown标签组 和 word文档路径 原样输出给用户。"
     }
 
     fn parameters_schema(&self) -> Value {
@@ -190,10 +197,19 @@ impl Tool for SwSchoolGenReportTool {
                      信息化设备数量及覆盖范围、网络建设情况、\
                      云课件和云教案数量、教研活动次数及培训数据、\
                      学生课堂参与度及点评数据、\
-                     特色应用案例和成果、获奖情况"
+                     特色应用案例和成果、获奖情况、学校改进成效要点（本学期与上学期对比）"
                 )
             } else {
-                data_query
+                format!(
+                    "查询需求：\
+                    {data_query}\
+                    查询{resolved_school}的以下数据用于撰写「{topic}」汇报材料：\
+                     学校基本情况、教职工人数、班级数量、学生人数、\
+                     信息化设备数量及覆盖范围、网络建设情况、\
+                     云课件和云教案数量、教研活动次数及培训数据、\
+                     学生课堂参与度及点评数据、\
+                     特色应用案例和成果、获奖情况、学校改进成效要点（本学期与上学期对比）"
+                )
             };
             format!("以下查询仅限{school_scope}的数据：{raw}")
         };
@@ -216,8 +232,8 @@ impl Tool for SwSchoolGenReportTool {
         .await
         {
             Ok(data) => data,
-                Err(e) => return Ok(err_result(format!("学校数据查询失败: {e}"))),
-            };
+            Err(e) => return Ok(err_result(format!("学校数据查询失败: {e}"))),
+        };
 
         // Build the LLM prompts.
         let length_hint = match length {
