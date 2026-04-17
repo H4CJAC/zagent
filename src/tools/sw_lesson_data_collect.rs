@@ -5,8 +5,8 @@
 //! curriculum outline, and recent homework errors.
 
 use super::sw_lesson_common::{
-    AgentSheConfig, LlmProviderConfig, artifacts_dir, err_result, fetch_user_meta, gen_session_id,
-    require_str, require_sw_token, run_agent_she_query_cached,
+    AgentSheConfig, LlmProviderConfig, artifacts_dir, err_result, extract_structured_fields,
+    fetch_user_meta, gen_session_id, require_str, require_sw_token, run_agent_she_query_cached,
 };
 use super::traits::{Tool, ToolResult};
 use async_trait::async_trait;
@@ -92,7 +92,10 @@ impl Tool for SwLessonDataCollectTool {
             .unwrap_or(360);
 
         let full_query = format!(
-            "1. {query}\n2. 并推理接下来要准备的课程主题、学科、学段/年级、地区、已教进度、课程大纲课时安排和最近批改作业错题情况"
+            "1. {query}\n\
+             2. 并推理接下来要准备的课程主题、学科、学段/年级、地区、已教进度、课程大纲课时安排和最近批改作业错题情况\n\
+             3. 请在回答末尾以如下格式输出关键信息：\n\
+             【主题】xxx【学科】xxx【年级】xxx【课时时长】xxx分钟"
         );
 
         let answer = match run_agent_she_query_cached(
@@ -117,7 +120,19 @@ impl Tool for SwLessonDataCollectTool {
         let mut results = serde_json::Map::new();
         results.insert("session_id".into(), json!(session_id));
         results.insert("query".into(), json!(query));
-        results.insert("collected_data".into(), json!(answer));
+        results.insert("collected_data".into(), json!(answer.clone()));
+
+        if let Some(ref llm) = self.llm {
+            if let Some(fields) = extract_structured_fields(llm, &query, &answer).await {
+                for (k, v) in fields {
+                    if let Some(s) = v.as_str() {
+                        if !s.is_empty() {
+                            results.insert(k, v);
+                        }
+                    }
+                }
+            }
+        }
 
         let data = Value::Object(results);
         let data_path = out_dir.join("data.json");

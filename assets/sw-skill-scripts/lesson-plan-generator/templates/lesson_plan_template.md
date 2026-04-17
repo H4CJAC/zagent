@@ -9,16 +9,23 @@
 
 ---
 
-## 一、教学目标
+## 一、教学目标（核心素养导向）
 
-### 1. 知识与技能
-{{knowledge_skills}}
+根据《义务教育{{subject}}课程标准（2022年版）》，本节课聚焦以下教学学科核心素养：
 
-### 2. 过程与方法
-{{process_methods}}
+{{core_literacy_overview}}
 
-### 3. 情感态度与价值观
-{{emotion_values}}
+【主素养 1】{{main_literacy_1_name}}
+
+{{main_literacy_1_description}}
+
+【主素养 2】{{main_literacy_2_name}}
+
+{{main_literacy_2_description}}
+
+【伴随渗透】{{supporting_literacy_name}}
+
+{{supporting_literacy_description}}
 
 ---
 

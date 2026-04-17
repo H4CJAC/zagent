@@ -613,6 +613,95 @@ fn read_cache_query(content: &str) -> Option<String> {
         .and_then(|obj| obj.get("query").and_then(|v| v.as_str()).map(String::from))
 }
 
+/// Create an LLM provider with thinking/reasoning disabled.
+fn create_no_thinking_provider(
+    llm: &LlmProviderConfig,
+) -> anyhow::Result<Box<dyn crate::providers::Provider>> {
+    let mut opts = llm.runtime_options.clone();
+    opts.reasoning_enabled = Some(false);
+    if let Some(ref mut body) = opts.extra_body {
+        if let Some(obj) = body.as_object_mut() {
+            if obj.contains_key("thinking") {
+                obj.insert(
+                    "thinking".into(),
+                    serde_json::json!({"type": "disabled"}),
+                );
+            }
+        }
+    }
+    crate::providers::create_routed_provider_with_options(
+        &llm.provider_name,
+        llm.api_key.as_deref(),
+        llm.api_url.as_deref(),
+        &llm.reliability,
+        &llm.model_routes,
+        &llm.model,
+        &opts,
+    )
+}
+
+const EXTRACT_FIELDS_PROMPT: &str = "\
+从以下备课信息中提取结构化字段，以 JSON 格式输出。
+如果某字段无法确定，值设为空字符串。只输出 JSON，不要其他内容。
+
+输出格式：{\"topic\":\"课程主题\",\"subject\":\"学科\",\"grade\":\"年级\",\"duration\":\"课时时长\"}
+
+用户需求：
+{query}
+
+备课信息：
+{answer}";
+
+/// Extract structured fields (topic, subject, grade, duration) from
+/// free-form text using a lightweight no-thinking LLM call.
+/// Returns a JSON map on success; on any failure returns `None` silently.
+pub async fn extract_structured_fields(
+    llm: &LlmProviderConfig,
+    query: &str,
+    answer: &str,
+) -> Option<serde_json::Map<String, Value>> {
+    let prompt = EXTRACT_FIELDS_PROMPT
+        .replace("{query}", query)
+        .replace("{answer}", answer);
+
+    let provider = match create_no_thinking_provider(llm) {
+        Ok(p) => p,
+        Err(e) => {
+            tracing::debug!("extract_structured_fields: provider creation failed: {e}");
+            return None;
+        }
+    };
+
+    let reply = match provider
+        .chat_with_system(None, &prompt, &llm.model, 0.0)
+        .await
+    {
+        Ok(r) => r.trim().to_string(),
+        Err(e) => {
+            tracing::debug!("extract_structured_fields: LLM call failed: {e}");
+            return None;
+        }
+    };
+
+    // Strip markdown code fences if present.
+    let json_str = reply
+        .trim_start_matches("```json")
+        .trim_start_matches("```")
+        .trim_end_matches("```")
+        .trim();
+
+    match serde_json::from_str::<Value>(json_str) {
+        Ok(Value::Object(map)) => {
+            tracing::info!("extract_structured_fields: extracted {:?}", map.keys().collect::<Vec<_>>());
+            Some(map)
+        }
+        _ => {
+            tracing::debug!("extract_structured_fields: failed to parse JSON: {json_str}");
+            None
+        }
+    }
+}
+
 const MAX_SEMANTIC_CANDIDATES: usize = 20;
 
 const SEMANTIC_MATCH_PROMPT: &str = "\
@@ -694,33 +783,11 @@ async fn semantic_match_cached(
 
     tracing::debug!("sw cache semantic: prompt: {prompt}");
 
-    let provider = {
-        let mut opts = llm.runtime_options.clone();
-        opts.reasoning_enabled = Some(false);
-        if let Some(ref mut body) = opts.extra_body {
-            if let Some(obj) = body.as_object_mut() {
-                if obj.contains_key("thinking") {
-                    obj.insert(
-                        "thinking".into(),
-                        serde_json::json!({"type": "disabled"}),
-                    );
-                }
-            }
-        }
-        match crate::providers::create_routed_provider_with_options(
-            &llm.provider_name,
-            llm.api_key.as_deref(),
-            llm.api_url.as_deref(),
-            &llm.reliability,
-            &llm.model_routes,
-            &llm.model,
-            &opts,
-        ) {
-            Ok(p) => p,
-            Err(e) => {
-                tracing::warn!("sw cache semantic: failed to create provider: {e}");
-                return None;
-            }
+    let provider = match create_no_thinking_provider(llm) {
+        Ok(p) => p,
+        Err(e) => {
+            tracing::warn!("sw cache semantic: failed to create provider: {e}");
+            return None;
         }
     };
 

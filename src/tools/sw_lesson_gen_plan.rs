@@ -89,6 +89,7 @@ impl Tool for SwLessonGenPlanTool {
         let topic = data.get("topic").and_then(|v| v.as_str()).unwrap_or("");
         let subject = data.get("subject").and_then(|v| v.as_str()).unwrap_or("");
         let grade = data.get("grade").and_then(|v| v.as_str()).unwrap_or("");
+        let duration = data.get("duration").and_then(|v| v.as_str()).unwrap_or("");
 
         let scripts_dir = match ensure_skill_scripts(&self.workspace_dir) {
             Ok(d) => d,
@@ -198,7 +199,9 @@ impl Tool for SwLessonGenPlanTool {
              要求：\n\
              - 严格按照教案模板结构输出\n\
              - 教案正文不少于 2000 字\n\
-             - 将搜索资料中的高质量内容融入教案\n\
+             - 教学目标必须使用核心素养导向写法：先引用《义务教育课程标准（2022年版）》，\
+             然后用「总述 + 2 条主素养 + 1 条伴随渗透」结构；不要使用三维目标旧格式（知识与技能/过程与方法/情感态度与价值观）\n\
+             - 搜索资料必须经过筛选：低质量、弱相关或不可靠的内容不能直接进入教案正文，仅保留权威、高度相关的素材\n\
              - 所有模板占位符都必须填充实际内容\n\n\
              教案模板：\n```\n{template}\n```"
         );
@@ -206,11 +209,16 @@ impl Tool for SwLessonGenPlanTool {
         let data_summary = serde_json::to_string_pretty(&data)?;
         let research_summary = summarize_research(&research);
 
+        let duration_hint = if duration.is_empty() {
+            String::new()
+        } else {
+            format!("、课时时长「{duration}」")
+        };
         let user_prompt = format!(
             "## 备课数据\n\n{data_summary}\n\n\
              ## 搜索资料摘要\n\n{research_summary}\n\n\
              {extra}\n\n\
-             请生成主题为「{topic}」、学科「{subject}」、年级「{grade}」的完整教案。\
+             请生成主题为「{topic}」、学科「{subject}」、年级「{grade}」{duration_hint}的完整教案。\
              直接输出教案正文，不需要额外解释。",
             extra = if extra_req.is_empty() {
                 String::new()
