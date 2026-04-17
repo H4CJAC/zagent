@@ -559,6 +559,11 @@ pub struct SeewoCloudConfig {
     /// 0 = no delay.
     #[serde(default)]
     pub cw_cache_delay_ms: u64,
+    /// Temperature for no-thinking LLM calls (cache semantic matching,
+    /// structured field extraction, etc.). Default: None → 0.0.
+    /// Override for models that reject 0.0 (e.g. Kimi → set to 1.0).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub no_thinking_temperature: Option<f64>,
 }
 
 /// Multi-client workspace isolation configuration.

@@ -514,6 +514,10 @@ pub struct LlmProviderConfig {
     pub provider_name: String,
     pub model: String,
     pub temperature: f64,
+    /// Temperature used by `create_no_thinking_provider` calls (cache semantic
+    /// matching, structured field extraction, etc.). Defaults to 0.0 for
+    /// deterministic output; override for models that reject 0.0 (e.g. Kimi → 1.0).
+    pub no_thinking_temperature: Option<f64>,
     pub api_key: Option<String>,
     pub api_url: Option<String>,
     pub runtime_options: crate::providers::ProviderRuntimeOptions,
@@ -672,8 +676,9 @@ pub async fn extract_structured_fields(
         }
     };
 
+    let temp = llm.no_thinking_temperature.unwrap_or(0.0);
     let reply = match provider
-        .chat_with_system(None, &prompt, &llm.model, 0.0)
+        .chat_with_system(None, &prompt, &llm.model, temp)
         .await
     {
         Ok(r) => r.trim().to_string(),
@@ -791,8 +796,9 @@ async fn semantic_match_cached(
         }
     };
 
+    let temp = llm.no_thinking_temperature.unwrap_or(0.0);
     let reply = match provider
-        .chat_with_system(None, &prompt, &llm.model, 0.0)
+        .chat_with_system(None, &prompt, &llm.model, temp)
         .await
     {
         Ok(r) => r.trim().to_string(),

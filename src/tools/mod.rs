@@ -446,6 +446,9 @@ pub fn all_tools_with_runtime(
                     .clone()
                     .unwrap_or_else(|| "openai/gpt-4o-mini".into()),
                 temperature: 0.0,
+                no_thinking_temperature: root_config
+                    .seewo_cloud
+                    .no_thinking_temperature,
                 api_key: root_config.api_key.clone(),
                 api_url: root_config.api_url.clone(),
                 runtime_options: opts,
@@ -565,6 +568,7 @@ pub fn all_tools_with_runtime(
             provider_name: llm_task_provider,
             model: llm_task_model,
             temperature: root_config.default_temperature,
+            no_thinking_temperature: root_config.seewo_cloud.no_thinking_temperature,
             api_key: root_config.api_key.clone(),
             api_url: root_config.api_url.clone(),
             runtime_options: llm_task_runtime_options,
