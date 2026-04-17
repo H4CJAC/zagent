@@ -434,23 +434,50 @@ async fn process_chat_message(
 
     // Drive both futures concurrently: the agent turn produces events
     // and we relay them over WebSocket.
+    // Build output sanitizer from config.
+    let replacer = {
+        let cfg = state.config.lock();
+        if cfg.output_sanitizer.enabled {
+            crate::security::WordReplacer::from_config(&cfg.output_sanitizer.rules)
+        } else {
+            crate::security::WordReplacer::new(vec![])
+        }
+    };
+    let mut content_sanitizer = crate::security::StreamSanitizer::new(replacer.clone());
+    let mut thinking_sanitizer = crate::security::StreamSanitizer::new(replacer.clone());
+
     let forward_fut = async {
         while let Some(event) = event_rx.recv().await {
             let ws_msg = match event {
                 TurnEvent::Chunk { delta } => {
-                    serde_json::json!({ "type": "chunk", "content": delta })
+                    let safe = content_sanitizer.push(&delta);
+                    if safe.is_empty() { continue; }
+                    serde_json::json!({ "type": "chunk", "content": safe })
                 }
                 TurnEvent::Thinking { delta } => {
-                    serde_json::json!({ "type": "thinking", "content": delta })
+                    let safe = thinking_sanitizer.push(&delta);
+                    if safe.is_empty() { continue; }
+                    serde_json::json!({ "type": "thinking", "content": safe })
                 }
                 TurnEvent::ToolCall { name, args } => {
                     serde_json::json!({ "type": "tool_call", "name": name, "args": args })
                 }
                 TurnEvent::ToolResult { name, output } => {
-                    serde_json::json!({ "type": "tool_result", "name": name, "output": output })
+                    serde_json::json!({ "type": "tool_result", "name": name, "output": replacer.sanitize(&output) })
                 }
             };
             let _ = sender.send(Message::Text(ws_msg.to_string().into())).await;
+        }
+        // Flush remaining buffered content.
+        let remaining_content = content_sanitizer.flush();
+        if !remaining_content.is_empty() {
+            let msg = serde_json::json!({ "type": "chunk", "content": remaining_content });
+            let _ = sender.send(Message::Text(msg.to_string().into())).await;
+        }
+        let remaining_thinking = thinking_sanitizer.flush();
+        if !remaining_thinking.is_empty() {
+            let msg = serde_json::json!({ "type": "thinking", "content": remaining_thinking });
+            let _ = sender.send(Message::Text(msg.to_string().into())).await;
         }
     };
 
@@ -496,7 +523,7 @@ async fn process_chat_message(
 
             let done = serde_json::json!({
                 "type": "done",
-                "full_response": response,
+                "full_response": replacer.sanitize(&response),
             });
             let _ = sender.send(Message::Text(done.to_string().into())).await;
 
@@ -520,6 +547,7 @@ async fn process_chat_message(
 
             tracing::error!(error = %e, "Agent turn failed");
             let sanitized = crate::providers::sanitize_api_error(&e.to_string());
+            let sanitized = replacer.sanitize(&sanitized);
             let error_code = if sanitized.to_lowercase().contains("api key")
                 || sanitized.to_lowercase().contains("authentication")
                 || sanitized.to_lowercase().contains("unauthorized")

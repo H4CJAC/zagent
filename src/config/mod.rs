@@ -25,6 +25,7 @@ pub use schema::{
     ProjectIntelConfig, ProxyConfig, ProxyScope, QdrantConfig, QueryClassificationConfig,
     ReliabilityConfig, ResourceLimitsConfig, RuntimeConfig, SandboxBackend, SandboxConfig,
     SchedulerConfig, SearchMode, SecretsConfig, SecurityConfig, SecurityOpsConfig,
+    OutputSanitizerConfig, SanitizeRule,
     SeewoCloudConfig, ShellToolConfig, SkillCreationConfig, SkillImprovementConfig, SkillsConfig,
     SkillsPromptInjectionMode, SlackConfig, SopConfig, StorageConfig, StorageProviderConfig,
     StorageProviderSection, StreamMode, SwarmConfig, SwarmStrategy, TelegramConfig,
