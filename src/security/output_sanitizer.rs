@@ -8,6 +8,11 @@ use std::collections::HashMap;
 
 // ── Default built-in rules ──────────────────────────────────────────
 
+/// Default replacement text for built-in sensitive word rules.
+/// Change this single constant to rebrand the replacement across the
+/// entire default ruleset and all tests.
+pub const DEFAULT_REPLACEMENT: &str = "AI 助手";
+
 const DEFAULT_RULES: &[(&[&str], &str)] = &[(
     &[
         "GPT-4o",
@@ -38,7 +43,7 @@ const DEFAULT_RULES: &[(&[&str], &str)] = &[(
         "Mistral",
         "Groq",
     ],
-    "AI 助手",
+    DEFAULT_REPLACEMENT,
 )];
 
 /// Expand `DEFAULT_RULES` into flat `(pattern, replacement)` pairs.
@@ -231,12 +236,14 @@ fn floor_char_boundary(s: &str, idx: usize) -> usize {
 mod tests {
     use super::*;
 
+    const R: &str = DEFAULT_REPLACEMENT;
+
     fn test_replacer() -> WordReplacer {
         WordReplacer::new(vec![
-            ("DeepSeek-R1".into(), "AI 助手".into()),
-            ("DeepSeek".into(), "AI 助手".into()),
-            ("GPT-4o".into(), "AI 助手".into()),
-            ("GPT-4".into(), "AI 助手".into()),
+            ("DeepSeek-R1".into(), R.into()),
+            ("DeepSeek".into(), R.into()),
+            ("GPT-4o".into(), R.into()),
+            ("GPT-4".into(), R.into()),
             ("Kimi".into(), "机器人".into()),
         ])
     }
@@ -244,28 +251,28 @@ mod tests {
     #[test]
     fn sanitize_full_basic() {
         let r = test_replacer();
-        assert_eq!(r.sanitize("我是DeepSeek模型"), "我是AI 助手模型");
-        assert_eq!(r.sanitize("使用GPT-4o生成"), "使用AI 助手生成");
+        assert_eq!(r.sanitize("我是DeepSeek模型"), format!("我是{R}模型"));
+        assert_eq!(r.sanitize("使用GPT-4o生成"), format!("使用{R}生成"));
     }
 
     #[test]
     fn sanitize_case_insensitive() {
         let r = test_replacer();
-        assert_eq!(r.sanitize("deepseek很强"), "AI 助手很强");
-        assert_eq!(r.sanitize("DEEPSEEK很强"), "AI 助手很强");
+        assert_eq!(r.sanitize("deepseek很强"), format!("{R}很强"));
+        assert_eq!(r.sanitize("DEEPSEEK很强"), format!("{R}很强"));
     }
 
     #[test]
     fn sanitize_longer_pattern_wins() {
         let r = test_replacer();
-        assert_eq!(r.sanitize("我用DeepSeek-R1"), "我用AI 助手");
-        assert_eq!(r.sanitize("GPT-4o比GPT-4好"), "AI 助手比AI 助手好");
+        assert_eq!(r.sanitize("我用DeepSeek-R1"), format!("我用{R}"));
+        assert_eq!(r.sanitize("GPT-4o比GPT-4好"), format!("{R}比{R}好"));
     }
 
     #[test]
     fn sanitize_different_replacements() {
         let r = test_replacer();
-        assert_eq!(r.sanitize("Kimi和DeepSeek"), "机器人和AI 助手");
+        assert_eq!(r.sanitize("Kimi和DeepSeek"), format!("机器人和{R}"));
     }
 
     #[test]
@@ -290,7 +297,7 @@ mod tests {
         collected.push_str(&s.push("我是Deep"));
         collected.push_str(&s.push("Seek模型，很好用"));
         collected.push_str(&s.flush());
-        assert_eq!(collected, "我是AI 助手模型，很好用");
+        assert_eq!(collected, format!("我是{R}模型，很好用"));
     }
 
     #[test]
