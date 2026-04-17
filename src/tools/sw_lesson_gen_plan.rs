@@ -227,22 +227,41 @@ impl Tool for SwLessonGenPlanTool {
             }
         );
 
-        let provider = match self.llm.create_provider() {
-            Ok(p) => p,
-            Err(e) => return Ok(err_result(format!("创建 LLM provider 失败: {e}"))),
-        };
+        let mut key_parts: Vec<&str> = vec![topic, subject, grade, duration];
+        if !extra_req.is_empty() {
+            key_parts.push(extra_req);
+        }
+        let plan_cache_key = cache_key(&key_parts);
 
-        let plan_text = match provider
-            .chat_with_system(
-                Some(&system_prompt),
-                &user_prompt,
-                &self.llm.model,
-                self.llm.temperature,
-            )
-            .await
+        let llm = self.llm.clone();
+        let ws = self.workspace_dir.clone();
+        let plan_text = match cached_query(
+            &ws,
+            "lesson_plan/gen_plan",
+            &plan_cache_key,
+            topic,
+            self.cache_ttl_secs,
+            self.cache_delay_ms,
+            Some(&self.llm),
+            || async move {
+                let provider = llm
+                    .create_provider()
+                    .map_err(|e| anyhow::anyhow!("创建 LLM provider 失败: {e}"))?;
+                provider
+                    .chat_with_system(
+                        Some(&system_prompt),
+                        &user_prompt,
+                        &llm.model,
+                        llm.temperature,
+                    )
+                    .await
+                    .map_err(|e| anyhow::anyhow!("LLM 教案生成失败: {e}"))
+            },
+        )
+        .await
         {
             Ok(text) => text,
-            Err(e) => return Ok(err_result(format!("LLM 教案生成失败: {e}"))),
+            Err(e) => return Ok(err_result(e.to_string())),
         };
 
         let plan_path = out_dir.join("plan.md");
