@@ -1,0 +1,34 @@
+src/tools/sw_lesson_data_collect.rs
+  dd9a7ab298799cca 8-9,95-98,123-135
+src/tools/sw_lesson_gen_plan.rs
+  dd9a7ab298799cca 92,202-204,212-216,221
+assets/sw-skill-scripts/lesson-plan-generator/templates/lesson_plan_template.md
+  dd9a7ab298799cca 12,14,16,18-28
+src/tools/sw_lesson_common.rs
+  dd9a7ab298799cca 616-704,786-790
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "e9508c6e53e111f0b8e2bb14088688946c54ca05",
+  "prompts": {
+    "dd9a7ab298799cca": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "49f768fd-534d-460d-bfe8-417620332917",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 137,
+      "total_deletions": 40,
+      "accepted_lines": 137,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_f38e4123063fc1": {
+      "author": "hac"
+    }
+  }
+}
