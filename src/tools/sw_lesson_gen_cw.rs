@@ -146,12 +146,18 @@ impl Tool for SwLessonGenCwTool {
                     let script1 = cw_scripts.join("run-generate-courseware.js");
                     let script2 = cw_scripts.join("wait-courseware-result.js");
 
+                    // Reserve 60s buffer so JS exits gracefully before Rust hard-kills.
+                    let js_buffer_ms: u64 = 60_000;
+
                     // Phase 1
+                    let draft_timeout_ms =
+                        (phase1_timeout * 1000).saturating_sub(js_buffer_ms).to_string();
                     let mut envs: Vec<(&str, String)> = vec![
                         ("SEEWO_CLAW_TOPIC", topic.clone()),
                         ("SEEWO_CLAW_X_TOKEN", token),
                         ("SEEWO_CLAW_OUTPUT", cw_output_str.clone()),
                         ("SEEWO_CLAW_SESSION", format!("claw-{session_id}")),
+                        ("SEEWO_CLAW_DRAFT_TIMEOUT_MS", draft_timeout_ms),
                     ];
                     if !context_path.is_empty() {
                         envs.push(("SEEWO_CLAW_CONTEXT_FILE", context_path));
@@ -188,11 +194,14 @@ impl Tool for SwLessonGenCwTool {
 
                     // Phase 2
                     let script2_str = script2.to_string_lossy().to_string();
+                    let result_timeout_ms =
+                        (phase2_timeout * 1000).saturating_sub(js_buffer_ms).to_string();
                     let phase2_envs: Vec<(&str, String)> = vec![
                         ("SEEWO_CLAW_SESSION", cw_session),
                         ("SEEWO_CLAW_TASK_ID", task_id),
                         ("SEEWO_CLAW_TOPIC", topic),
                         ("SEEWO_CLAW_OUTPUT", cw_output_str),
+                        ("SEEWO_CLAW_RESULT_TIMEOUT_MS", result_timeout_ms),
                     ];
                     let phase2_refs: Vec<(&str, &str)> =
                         phase2_envs.iter().map(|(k, v)| (*k, v.as_str())).collect();
