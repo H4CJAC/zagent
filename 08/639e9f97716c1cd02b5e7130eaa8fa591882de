@@ -1,0 +1,40 @@
+src/gateway/ws_v2.rs
+  dd9a7ab298799cca 556-567,576-581,584-589,598,603,612-613,643-655,658,669
+src/security/mod.rs
+  dd9a7ab298799cca 37,80
+src/security/output_sanitizer.rs
+  dd9a7ab298799cca 1-322
+src/config/mod.rs
+  dd9a7ab298799cca 28
+src/gateway/ws.rs
+  dd9a7ab298799cca 437-448,453-455,458-460,466,471-480,526,550
+src/onboard/wizard.rs
+  dd9a7ab298799cca 218,681
+src/config/schema.rs
+  dd9a7ab298799cca 516-520,5498-5538,9136,11653,12187
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.2",
+  "base_commit_sha": "08639e9f97716c1cd02b5e7130eaa8fa591882de",
+  "prompts": {
+    "dd9a7ab298799cca": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "49f768fd-534d-460d-bfe8-417620332917",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 457,
+      "total_deletions": 21,
+      "accepted_lines": 451,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_f38e4123063fc1": {
+      "author": "hac"
+    }
+  }
+}
