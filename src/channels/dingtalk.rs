@@ -130,7 +130,7 @@ impl Channel for DingTalkChannel {
             )
         })?;
 
-        let title = message.subject.as_deref().unwrap_or("ZeroClaw");
+        let title = message.subject.as_deref().unwrap_or("CclawCore");
         let body = serde_json::json!({
             "msgtype": "markdown",
             "markdown": {

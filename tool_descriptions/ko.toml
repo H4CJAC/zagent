@@ -43,7 +43,7 @@ model_routing_config = "기본 모델 설정, 시나리오 기반 프로바이�
 notion = "Notion과 상호작용: 데이터베이스 쿼리, 페이지 읽기/생성/업데이트, 워크스페이스 검색."
 pdf_read = "워크스페이스 내 PDF 파일에서 일반 텍스트를 추출합니다. 읽을 수 있는 모든 텍스트를 반환합니다. 이미지 전용 또는 암호화된 PDF는 빈 결과를 반환합니다. 'rag-pdf' 빌드 기능이 필요합니다."
 project_intel = "프로젝트 전달 인텔리전스: 상태 보고서 생성, 리스크 감지, 고객 업데이트 초안, 스프린트 요약, 공수 추정. 읽기 전용 분석 도구."
-proxy_config = "ZeroClaw proxy 설정 관리(scope: environment | zeroclaw | services), 런타임 및 프로세스 env 적용 포함"
+proxy_config = "CclawCore proxy 설정 관리(scope: environment | cclawcore | services), 런타임 및 프로세스 env 적용 포함"
 pushover = "기기에 Pushover 알림을 보냅니다. .env 파일에 PUSHOVER_TOKEN과 PUSHOVER_USER_KEY가 필요합니다."
 schedule = """셸 전용 예약 작업을 관리합니다. 액션: create/add/once/list/get/cancel/remove/pause/resume. 경고: 이 도구는 셸 작업을 생성하지만 출력은 로그에만 기록되며 채널로 전달되지 않습니다. Discord/Telegram/Slack/Matrix에 예약 메시지를 보내려면 cron_add 도구에서 job_type='agent'와 delivery 설정(예: {"mode":"announce","channel":"discord","to":"<channel_id>"})을 사용하세요."""
 screenshot = "현재 화면의 스크린샷을 캡처합니다. 파일 경로와 base64 인코딩된 PNG 데이터를 반환합니다."

@@ -4,4 +4,4 @@
 
 打包：
 运行：cargo build --release --target aarch64-unknown-linux-musl
-产物在：target/aarch64-unknown-linux-musl/release/zeroclaw
+产物在：target/aarch64-unknown-linux-musl/release/cclawcore

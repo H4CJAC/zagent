@@ -43,7 +43,7 @@ model_routing_config = "إدارة إعدادات النموذج الافترا�
 notion = "التفاعل مع Notion: الاستعلام عن قواعد البيانات، قراءة/إنشاء/تحديث الصفحات، والبحث في مساحة العمل."
 pdf_read = "استخراج نص عادي من ملف PDF في مساحة العمل. يُرجع كل النص القابل للقراءة. ملفات PDF المكونة من صور فقط أو المشفرة تُرجع نتيجة فارغة. يتطلب ميزة البناء 'rag-pdf'."
 project_intel = "ذكاء تسليم المشاريع: توليد تقارير الحالة، اكتشاف المخاطر، صياغة تحديثات العملاء، تلخيص السبرنت، وتقدير الجهد. أداة تحليل للقراءة فقط."
-proxy_config = "إدارة إعدادات وكيل ZeroClaw (النطاق: environment | zeroclaw | services)، بما في ذلك التطبيق أثناء التشغيل ومتغيرات بيئة العملية"
+proxy_config = "إدارة إعدادات وكيل CclawCore (النطاق: environment | cclawcore | services)، بما في ذلك التطبيق أثناء التشغيل ومتغيرات بيئة العملية"
 pushover = "إرسال إشعار Pushover إلى جهازك. يتطلب PUSHOVER_TOKEN وPUSHOVER_USER_KEY في ملف .env."
 schedule = """إدارة المهام المجدولة بالـ shell فقط. الإجراءات: create/add/once/list/get/cancel/remove/pause/resume. تحذير: هذه الأداة تنشئ مهام shell يتم تسجيل مخرجاتها فقط، ولا يتم توصيلها إلى أي قناة. لإرسال رسالة مجدولة إلى Discord/Telegram/Slack/Matrix، استخدم أداة cron_add مع job_type='agent' وتكوين delivery مثل {"mode":"announce","channel":"discord","to":"<channel_id>"}."""
 screenshot = "التقاط لقطة شاشة للشاشة الحالية. يُرجع مسار الملف وبيانات PNG المشفرة بـ base64."

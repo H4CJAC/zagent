@@ -1,4 +1,4 @@
-# ZeroClaw Dokumentasjonssammendrag (Samlet innholdsfortegnelse)
+# CclawCore Dokumentasjonssammendrag (Samlet innholdsfortegnelse)
 
 Denne filen er den kanoniske innholdsfortegnelsen for dokumentasjonssystemet.
 

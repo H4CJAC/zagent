@@ -1,4 +1,4 @@
-# ZeroClaw Troubleshooting
+# CclawCore Troubleshooting
 
 This guide focuses on common setup/runtime failures and fast resolution paths.
 
@@ -78,10 +78,10 @@ cargo build --release --locked --features hardware
 
 Symptoms:
 
-- `cargo check` / `cargo build` appears stuck at `Checking zeroclaw` for a long time
+- `cargo check` / `cargo build` appears stuck at `Checking cclawcore` for a long time
 - repeated `Blocking waiting for file lock on package cache` or `build directory`
 
-Why this happens in ZeroClaw:
+Why this happens in CclawCore:
 
 - Matrix E2EE stack (`matrix-sdk`, `ruma`, `vodozemac`) is large and expensive to type-check.
 - TLS + crypto native build scripts (`aws-lc-sys`, `ring`) add noticeable compile time.
@@ -125,17 +125,17 @@ pgrep -af "cargo (check|build|test)|cargo check|cargo build|cargo test"
 
 Stop unrelated cargo jobs before running your own build.
 
-### `zeroclaw` command not found after install
+### `cclawcore` command not found after install
 
 Symptom:
 
-- install succeeds but shell cannot find `zeroclaw`
+- install succeeds but shell cannot find `cclawcore`
 
 Fix:
 
 ```bash
 export PATH="$HOME/.cargo/bin:$PATH"
-which zeroclaw
+which cclawcore
 ```
 
 Persist in your shell profile if needed.
@@ -147,11 +147,11 @@ Persist in your shell profile if needed.
 Checks:
 
 ```bash
-zeroclaw status
-zeroclaw doctor
+cclawcore status
+cclawcore doctor
 ```
 
-Verify `~/.zeroclaw/config.toml`:
+Verify `~/.cclawcore/config.toml`:
 
 - `[gateway].host` (default `127.0.0.1`)
 - `[gateway].port` (default `42617`)
@@ -166,7 +166,7 @@ Checks:
 3. Re-run diagnostics:
 
 ```bash
-zeroclaw doctor
+cclawcore doctor
 ```
 
 ## Channel Issues
@@ -180,14 +180,14 @@ Cause:
 Fix:
 
 - keep only one active runtime for that token
-- stop extra `zeroclaw daemon` / `zeroclaw channel start` processes
+- stop extra `cclawcore daemon` / `cclawcore channel start` processes
 
 ### Channel unhealthy in `channel doctor`
 
 Checks:
 
 ```bash
-zeroclaw channel doctor
+cclawcore channel doctor
 ```
 
 Then verify channel-specific credentials + allowlist fields in config.
@@ -199,26 +199,26 @@ Then verify channel-specific credentials + allowlist fields in config.
 Checks:
 
 ```bash
-zeroclaw service status
+cclawcore service status
 ```
 
 Recovery:
 
 ```bash
-zeroclaw service stop
-zeroclaw service start
+cclawcore service stop
+cclawcore service start
 ```
 
 Linux logs:
 
 ```bash
-journalctl --user -u zeroclaw.service -f
+journalctl --user -u cclawcore.service -f
 ```
 
 ## Installer URL
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/zeroclaw-labs/zeroclaw/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/cclawcore-labs/cclawcore/master/install.sh | bash
 ```
 
 ## Still Stuck?
@@ -226,10 +226,10 @@ curl -fsSL https://raw.githubusercontent.com/zeroclaw-labs/zeroclaw/master/insta
 Collect and include these outputs when filing an issue:
 
 ```bash
-zeroclaw --version
-zeroclaw status
-zeroclaw doctor
-zeroclaw channel doctor
+cclawcore --version
+cclawcore status
+cclawcore doctor
+cclawcore channel doctor
 ```
 
 Also include OS, install method, and sanitized config snippets (no secrets).

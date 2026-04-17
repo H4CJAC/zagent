@@ -30,7 +30,7 @@ pub struct ClawdTalkChannel {
 
 /// Configuration for ClawdTalk channel from config.toml
 #[derive(
-    Debug, Clone, Default, Serialize, Deserialize, JsonSchema, zeroclaw_macros::Configurable,
+    Debug, Clone, Default, Serialize, Deserialize, JsonSchema, cclawcore_macros::Configurable,
 )]
 #[prefix = "channels.clawdtalk"]
 pub struct ClawdTalkConfig {

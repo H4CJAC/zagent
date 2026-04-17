@@ -1,15 +1,15 @@
 [workspace]
-members = [".", "crates/robot-kit", "crates/aardvark-sys", "crates/zeroclaw-macros", "apps/tauri"]
+members = [".", "crates/robot-kit", "crates/aardvark-sys", "crates/cclawcore-macros", "apps/tauri"]
 resolver = "2"
 
 [package]
-name = "zeroclawlabs"
+name = "cclawcorelabs"
 version = "0.6.9"
 edition = "2024"
 authors = ["theonlyhennygod"]
 license = "MIT OR Apache-2.0"
 description = "Zero overhead. Zero compromise. 100% Rust. The fastest, smallest AI assistant."
-repository = "https://github.com/zeroclaw-labs/zeroclaw"
+repository = "https://github.com/cclawcore-labs/cclawcore"
 readme = "README.md"
 keywords = ["ai", "agent", "cli", "assistant", "chatbot"]
 categories = ["command-line-utilities", "api-bindings"]
@@ -26,16 +26,16 @@ include = [
 ]
 
 [[bin]]
-name = "zeroclaw"
+name = "cclawcore"
 path = "src/main.rs"
 
 [lib]
-name = "zeroclaw"
+name = "cclawcore"
 path = "src/lib.rs"
 
 [dependencies]
 # Internal proc macros
-zeroclaw-macros = { path = "crates/zeroclaw-macros", version = "0.1.0" }
+cclawcore-macros = { path = "crates/cclawcore-macros", version = "0.1.0" }
 # CLI - minimal and fast
 clap = { version = "4.5", features = ["derive"] }
 clap_complete = "4.5"
@@ -195,7 +195,7 @@ mime_guess = "2"
 
 # OpenTelemetry — OTLP trace + metrics export.
 # Use the blocking HTTP exporter client to avoid Tokio-reactor panics in
-# OpenTelemetry background batch threads when ZeroClaw emits spans/metrics from
+# OpenTelemetry background batch threads when CclawCore emits spans/metrics from
 # non-Tokio contexts.
 opentelemetry = { version = "0.31", default-features = false, features = ["trace", "metrics"], optional = true }
 opentelemetry_sdk = { version = "0.31", default-features = false, features = ["trace", "metrics"], optional = true }

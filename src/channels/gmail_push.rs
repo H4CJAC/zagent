@@ -34,7 +34,7 @@ use super::traits::{Channel, ChannelMessage, SendMessage};
 // ── Configuration ────────────────────────────────────────────────
 
 /// Gmail Pub/Sub push notification channel configuration.
-#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, zeroclaw_macros::Configurable)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, cclawcore_macros::Configurable)]
 #[prefix = "channels.gmail"]
 pub struct GmailPushConfig {
     /// Enable the Gmail push channel. Default: `false`.
@@ -527,7 +527,7 @@ impl Channel for GmailPushChannel {
             return Err(anyhow!("Gmail OAuth token is not configured for sending"));
         }
 
-        let subject = message.subject.as_deref().unwrap_or("ZeroClaw Message");
+        let subject = message.subject.as_deref().unwrap_or("CclawCore Message");
         // Sanitize headers to prevent CRLF injection attacks.
         let safe_recipient = sanitize_header_value(&message.recipient);
         let safe_subject = sanitize_header_value(subject);

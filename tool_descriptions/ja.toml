@@ -43,7 +43,7 @@ model_routing_config = "デフォルトモデル設定、シナリオベース�
 notion = "Notionと連携：データベースのクエリ、ページの読み取り/作成/更新、ワークスペースの検索。"
 pdf_read = "ワークスペース内のPDFファイルからプレーンテキストを抽出します。読み取り可能な全テキストを返します。画像のみまたは暗号化されたPDFは空の結果を返します。'rag-pdf'ビルドフィーチャーが必要です。"
 project_intel = "プロジェクト配信インテリジェンス：ステータスレポート生成、リスク検出、クライアント更新の下書き、スプリント要約、工数見積もり。読み取り専用の分析ツール。"
-proxy_config = "ZeroClaw proxyの設定管理（scope: environment | zeroclaw | services）、ランタイムとプロセスenv適用を含む"
+proxy_config = "CclawCore proxyの設定管理（scope: environment | cclawcore | services）、ランタイムとプロセスenv適用を含む"
 pushover = "デバイスにPushover通知を送信します。.envファイルにPUSHOVER_TOKENとPUSHOVER_USER_KEYが必要です。"
 schedule = """シェル専用のスケジュールタスクを管理します。アクション：create/add/once/list/get/cancel/remove/pause/resume。警告：このツールはシェルジョブを作成しますが、出力はログに記録されるだけで、チャンネルには配信されません。Discord/Telegram/Slack/Matrixにスケジュールメッセージを送信するには、cron_addツールでjob_type='agent'とdelivery設定（例：{"mode":"announce","channel":"discord","to":"<channel_id>"}）を使用してください。"""
 screenshot = "現在の画面のスクリーンショットをキャプチャします。ファイルパスとbase64エンコードされたPNGデータを返します。"

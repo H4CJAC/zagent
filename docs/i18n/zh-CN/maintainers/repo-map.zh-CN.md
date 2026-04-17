@@ -1,6 +1,6 @@
-# ZeroClaw 仓库地图
+# CclawCore 仓库地图
 
-ZeroClaw 是一个以 Rust 为优先开发语言的自主代理运行时。它从消息平台接收消息，经由 LLM 路由，执行工具调用，持久化内存，并返回响应。它还可以控制硬件外设并作为长期运行的守护进程。
+CclawCore 是一个以 Rust 为优先开发语言的自主代理运行时。它从消息平台接收消息，经由 LLM 路由，执行工具调用，持久化内存，并返回响应。它还可以控制硬件外设并作为长期运行的守护进程。
 
 ## 运行时流程
 
@@ -38,7 +38,7 @@ ZeroClaw 是一个以 Rust 为优先开发语言的自主代理运行时。它�
 ## 顶层布局
 
 ```
-zeroclaw/
+cclawcore/
 ├── src/                  # Rust 源代码（运行时核心）
 ├── crates/robot-kit/     # 硬件机器人套件的独立 crate
 ├── tests/                # 集成/端到端测试
@@ -66,7 +66,7 @@ zeroclaw/
 
 | 文件 | 行数 | 角色 |
 |---|---|---|
-| `main.rs` | 1,977 | CLI 入口点。Clap 解析器，命令分发。所有 `zeroclaw <子命令>` 路由都在此处。 |
+| `main.rs` | 1,977 | CLI 入口点。Clap 解析器，命令分发。所有 `cclawcore <子命令>` 路由都在此处。 |
 | `lib.rs` | 436 | 模块声明、可见性（`pub` 与 `pub(crate)`）、库和二进制文件之间共享的 CLI 命令枚举（`ServiceCommands`、`ChannelCommands`、`SkillCommands` 等）。 |
 
 ### 核心运行时
@@ -150,7 +150,7 @@ zeroclaw/
 
 | 模块 | 关键文件 | 角色 |
 |---|---|---|
-| `skills/` | `mod.rs` (1.5k)、`audit.rs` | **用户/社区创作的能力。** 从 `~/.zeroclaw/workspace/skills/<name>/SKILL.md` 加载。CLI 命令：列表、安装、审计、移除。可选从开放技能仓库同步社区内容。 |
+| `skills/` | `mod.rs` (1.5k)、`audit.rs` | **用户/社区创作的能力。** 从 `~/.cclawcore/workspace/skills/<name>/SKILL.md` 加载。CLI 命令：列表、安装、审计、移除。可选从开放技能仓库同步社区内容。 |
 | `skillforge/` | `scout.rs`、`evaluate.rs`、`integrate.rs`、`mod.rs` | **技能发现与评估。** 搜寻技能，评估质量/适用性，集成到运行时。 |
 
 ### SOP（标准操作流程）
@@ -230,7 +230,7 @@ main.rs ──▶ daemon/   ──▶ gateway/ + channels/ + cron/ + heartbeat/
 ## CLI 命令树
 
 ```
-zeroclaw
+cclawcore
 ├── onboard [--force] [--reinit] [--channels-only]     # 首次运行设置
 ├── agent [-m "msg"] [-p provider]        # 启动代理循环
 ├── daemon [-p port]                      # 完整运行时（网关+渠道+cron+心跳）

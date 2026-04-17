@@ -1,7 +1,7 @@
 //! Channel subsystem for messaging platform integrations.
 //!
 //! This module provides the multi-channel messaging infrastructure that connects
-//! ZeroClaw to external platforms. Each channel implements the [`Channel`] trait
+//! CclawCore to external platforms. Each channel implements the [`Channel`] trait
 //! defined in [`traits`], which provides a uniform interface for sending messages,
 //! listening for incoming messages, health checking, and typing indicators.
 //!
@@ -321,10 +321,10 @@ fn runtime_config_store() -> &'static Mutex<HashMap<PathBuf, RuntimeConfigState>
     STORE.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
-const SYSTEMD_STATUS_ARGS: [&str; 3] = ["--user", "is-active", "zeroclaw.service"];
-const SYSTEMD_RESTART_ARGS: [&str; 3] = ["--user", "restart", "zeroclaw.service"];
-const OPENRC_STATUS_ARGS: [&str; 2] = ["zeroclaw", "status"];
-const OPENRC_RESTART_ARGS: [&str; 2] = ["zeroclaw", "restart"];
+const SYSTEMD_STATUS_ARGS: [&str; 3] = ["--user", "is-active", "cclawcore.service"];
+const SYSTEMD_RESTART_ARGS: [&str; 3] = ["--user", "restart", "cclawcore.service"];
+const OPENRC_STATUS_ARGS: [&str; 2] = ["cclawcore", "status"];
+const OPENRC_RESTART_ARGS: [&str; 2] = ["cclawcore", "restart"];
 
 #[derive(Clone, Copy)]
 #[allow(clippy::struct_excessive_bools)]
@@ -862,7 +862,7 @@ fn runtime_defaults_from_config(config: &Config) -> ChannelRuntimeDefaults {
 
 fn runtime_config_path(ctx: &ChannelRuntimeContext) -> Option<PathBuf> {
     ctx.provider_runtime_options
-        .zeroclaw_dir
+        .cclawcore_dir
         .as_ref()
         .map(|dir| dir.join("config.toml"))
 }
@@ -921,8 +921,8 @@ async fn load_runtime_defaults_from_config_file(path: &Path) -> Result<ChannelRu
         toml::from_str(&contents).with_context(|| format!("Failed to parse {}", path.display()))?;
     parsed.config_path = path.to_path_buf();
 
-    if let Some(zeroclaw_dir) = path.parent() {
-        let store = crate::security::SecretStore::new(zeroclaw_dir, parsed.secrets.encrypt);
+    if let Some(cclawcore_dir) = path.parent() {
+        let store = crate::security::SecretStore::new(cclawcore_dir, parsed.secrets.encrypt);
         decrypt_optional_secret_for_runtime_reload(&store, &mut parsed.api_key, "config.api_key")?;
         // Decrypt TTS provider API keys for runtime reload
         if let Some(ref mut openai) = parsed.tts.openai {
@@ -1551,7 +1551,7 @@ fn build_models_help_response(
     if cached_models.is_empty() {
         let _ = writeln!(
             response,
-            "\nNo cached model list found for `{}`. Ask the operator to run `zeroclaw models refresh --provider {}`.",
+            "\nNo cached model list found for `{}`. Ask the operator to run `cclawcore models refresh --provider {}`.",
             current.provider, current.provider
         );
     } else {
@@ -1628,7 +1628,7 @@ fn build_config_text_response(
 /// Prefix used to signal that a runtime command response contains raw Block Kit
 /// JSON instead of plain text. [`SlackChannel::send`] detects this and posts
 /// the blocks directly via `chat.postMessage`.
-const BLOCK_KIT_PREFIX: &str = "__ZEROCLAW_BLOCK_KIT__";
+const BLOCK_KIT_PREFIX: &str = "__CCLAWCORE_BLOCK_KIT__";
 
 /// Build a Slack Block Kit JSON payload for the `/config` interactive UI.
 fn build_config_block_kit(
@@ -1712,7 +1712,7 @@ fn build_config_block_kit(
 
     let mut provider_select = serde_json::json!({
         "type": "static_select",
-        "action_id": "zeroclaw_config_provider",
+        "action_id": "cclawcore_config_provider",
         "placeholder": { "type": "plain_text", "text": "Select provider" },
         "options": provider_options
     });
@@ -1722,7 +1722,7 @@ fn build_config_block_kit(
 
     let mut model_select = serde_json::json!({
         "type": "static_select",
-        "action_id": "zeroclaw_config_model",
+        "action_id": "cclawcore_config_model",
         "placeholder": { "type": "plain_text", "text": "Select model" },
         "options": model_options
     });
@@ -1838,7 +1838,7 @@ async fn handle_runtime_command_if_needed(
                     &ctx.model_routes,
                 );
                 // Use a magic prefix so SlackChannel::send() can detect Block Kit JSON.
-                format!("__ZEROCLAW_BLOCK_KIT__{blocks_json}")
+                format!("__CCLAWCORE_BLOCK_KIT__{blocks_json}")
             } else {
                 build_config_text_response(&current, ctx.workspace_dir.as_path(), &ctx.model_routes)
             }
@@ -4101,7 +4101,7 @@ pub fn build_system_prompt_with_mode_and_autonomy(
     }
 
     if prompt.is_empty() {
-        "You are ZeroClaw, a fast and efficient AI assistant built in Rust. Be helpful, concise, and direct."
+        "You are CclawCore, a fast and efficient AI assistant built in Rust. Be helpful, concise, and direct."
             .to_string()
     } else {
         prompt
@@ -4166,7 +4166,7 @@ async fn bind_telegram_identity(config: &Config, identity: &str) -> Result<()> {
     let mut updated = config.clone();
     let Some(telegram) = updated.channels_config.telegram.as_mut() else {
         anyhow::bail!(
-            "Telegram channel is not configured. Run `zeroclaw onboard --channels-only` first"
+            "Telegram channel is not configured. Run `cclawcore onboard --channels-only` first"
         );
     };
 
@@ -4196,13 +4196,13 @@ async fn bind_telegram_identity(config: &Config, identity: &str) -> Result<()> {
         }
         Ok(false) => {
             println!(
-                "ℹ️ No managed daemon service detected. If `zeroclaw daemon`/`channel start` is already running, restart it to load the updated allowlist."
+                "ℹ️ No managed daemon service detected. If `cclawcore daemon`/`channel start` is already running, restart it to load the updated allowlist."
             );
         }
         Err(e) => {
             eprintln!(
                 "⚠️ Allowlist saved, but failed to reload daemon service automatically: {e}\n\
-                 Restart service manually with `zeroclaw service stop && zeroclaw service start`."
+                 Restart service manually with `cclawcore service stop && cclawcore service start`."
             );
         }
     }
@@ -4217,7 +4217,7 @@ fn maybe_restart_managed_daemon_service() -> Result<bool> {
         let plist = home
             .join("Library")
             .join("LaunchAgents")
-            .join("com.zeroclaw.daemon.plist");
+            .join("com.cclawcore.daemon.plist");
         if !plist.exists() {
             return Ok(false);
         }
@@ -4227,15 +4227,15 @@ fn maybe_restart_managed_daemon_service() -> Result<bool> {
             .output()
             .context("Failed to query launchctl list")?;
         let listed = String::from_utf8_lossy(&list_output.stdout);
-        if !listed.contains("com.zeroclaw.daemon") {
+        if !listed.contains("com.cclawcore.daemon") {
             return Ok(false);
         }
 
         let _ = Command::new("launchctl")
-            .args(["stop", "com.zeroclaw.daemon"])
+            .args(["stop", "com.cclawcore.daemon"])
             .output();
         let start_output = Command::new("launchctl")
-            .args(["start", "com.zeroclaw.daemon"])
+            .args(["start", "com.cclawcore.daemon"])
             .output()
             .context("Failed to start launchd daemon service")?;
         if !start_output.status.success() {
@@ -4248,7 +4248,7 @@ fn maybe_restart_managed_daemon_service() -> Result<bool> {
 
     if cfg!(target_os = "linux") {
         // OpenRC (system-wide) takes precedence over systemd (user-level)
-        let openrc_init_script = PathBuf::from("/etc/init.d/zeroclaw");
+        let openrc_init_script = PathBuf::from("/etc/init.d/cclawcore");
         if openrc_init_script.exists() {
             if let Ok(status_output) = Command::new("rc-service").args(OPENRC_STATUS_ARGS).output()
             {
@@ -4275,7 +4275,7 @@ fn maybe_restart_managed_daemon_service() -> Result<bool> {
             .join(".config")
             .join("systemd")
             .join("user")
-            .join("zeroclaw.service");
+            .join("cclawcore.service");
         if !unit_path.exists() {
             return Ok(false);
         }
@@ -4338,9 +4338,9 @@ pub(crate) async fn handle_command(command: crate::ChannelCommands, config: &Con
                     "  ℹ️ Lark/Feishu channel support is disabled in this build (enable `channel-lark`)."
                 );
             }
-            println!("\nTo start channels: zeroclaw channel start");
-            println!("To check health:    zeroclaw channel doctor");
-            println!("To configure:      zeroclaw onboard");
+            println!("\nTo start channels: cclawcore channel start");
+            println!("To check health:    cclawcore channel doctor");
+            println!("To configure:      cclawcore onboard");
             Ok(())
         }
         crate::ChannelCommands::Add {
@@ -4348,11 +4348,11 @@ pub(crate) async fn handle_command(command: crate::ChannelCommands, config: &Con
             config: _,
         } => {
             anyhow::bail!(
-                "Channel type '{channel_type}' — use `zeroclaw onboard` to configure channels"
+                "Channel type '{channel_type}' — use `cclawcore onboard` to configure channels"
             );
         }
         crate::ChannelCommands::Remove { name } => {
-            anyhow::bail!("Remove channel '{name}' — edit ~/.zeroclaw/config.toml directly");
+            anyhow::bail!("Remove channel '{name}' — edit ~/.cclawcore/config.toml directly");
         }
         crate::ChannelCommands::BindTelegram { identity } => {
             Box::pin(bind_telegram_identity(config, &identity)).await
@@ -5389,11 +5389,11 @@ pub async fn doctor_channels(config: Config) -> Result<()> {
     }
 
     if channels.is_empty() {
-        println!("No real-time channels configured. Run `zeroclaw onboard` first.");
+        println!("No real-time channels configured. Run `cclawcore onboard` first.");
         return Ok(());
     }
 
-    println!("🩺 ZeroClaw Channel Doctor");
+    println!("🩺 CclawCore Channel Doctor");
     println!();
 
     let mut healthy = 0_u32;
@@ -5425,7 +5425,7 @@ pub async fn doctor_channels(config: Config) -> Result<()> {
     }
 
     if config.channels_config.webhook.is_some() {
-        println!("  ℹ️  Webhook   check via `zeroclaw gateway` then GET /health");
+        println!("  ℹ️  Webhook   check via `cclawcore gateway` then GET /health");
     }
 
     println!();
@@ -5733,11 +5733,11 @@ pub async fn start_channels(config: Config) -> Result<()> {
         ));
     }
     if channels.is_empty() {
-        println!("No channels configured. Run `zeroclaw onboard` to set up channels.");
+        println!("No channels configured. Run `cclawcore onboard` to set up channels.");
         return Ok(());
     }
 
-    println!("🦀 ZeroClaw Channel Server");
+    println!("🦀 CclawCore Channel Server");
     println!("  🤖 Model:    {model}");
     let effective_backend = memory::effective_memory_backend_name(
         &config.memory.backend,
@@ -6029,7 +6029,11 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         // Create minimal workspace files
         std::fs::write(tmp.path().join("SOUL.md"), "# Soul\nBe helpful.").unwrap();
-        std::fs::write(tmp.path().join("IDENTITY.md"), "# Identity\nName: ZeroClaw").unwrap();
+        std::fs::write(
+            tmp.path().join("IDENTITY.md"),
+            "# Identity\nName: CclawCore",
+        )
+        .unwrap();
         std::fs::write(tmp.path().join("USER.md"), "# User\nName: Test User").unwrap();
         std::fs::write(
             tmp.path().join("AGENTS.md"),
@@ -7972,7 +7976,7 @@ BTC is currently around $65,000 based on latest tool output."#
             api_url: None,
             reliability: Arc::new(crate::config::ReliabilityConfig::default()),
             provider_runtime_options: providers::ProviderRuntimeOptions {
-                zeroclaw_dir: Some(temp.path().to_path_buf()),
+                cclawcore_dir: Some(temp.path().to_path_buf()),
                 ..providers::ProviderRuntimeOptions::default()
             },
             workspace_dir: Arc::new(std::env::temp_dir()),
@@ -9192,7 +9196,7 @@ BTC is currently around $65,000 based on latest tool output."#
         assert!(prompt.contains("Be helpful"), "missing SOUL content");
         assert!(prompt.contains("### IDENTITY.md"), "missing IDENTITY.md");
         assert!(
-            prompt.contains("Name: ZeroClaw"),
+            prompt.contains("Name: CclawCore"),
             "missing IDENTITY content"
         );
         assert!(prompt.contains("### USER.md"), "missing USER.md");
@@ -9430,7 +9434,7 @@ BTC is currently around $65,000 based on latest tool output."#
 
     #[test]
     fn channel_log_truncation_is_utf8_safe_for_multibyte_text() {
-        let msg = "Hello from ZeroClaw 🌍. Current status is healthy, and café-style UTF-8 text stays safe in logs.";
+        let msg = "Hello from CclawCore 🌍. Current status is healthy, and café-style UTF-8 text stays safe in logs.";
 
         // Reproduces the production crash path where channel logs truncate at 80 chars.
         let result = std::panic::catch_unwind(|| crate::util::truncate_with_ellipsis(msg, 80));
@@ -10781,18 +10785,18 @@ This is an example JSON object for profile settings."#;
     fn maybe_restart_daemon_systemd_args_regression() {
         assert_eq!(
             SYSTEMD_STATUS_ARGS,
-            ["--user", "is-active", "zeroclaw.service"]
+            ["--user", "is-active", "cclawcore.service"]
         );
         assert_eq!(
             SYSTEMD_RESTART_ARGS,
-            ["--user", "restart", "zeroclaw.service"]
+            ["--user", "restart", "cclawcore.service"]
         );
     }
 
     #[test]
     fn maybe_restart_daemon_openrc_args_regression() {
-        assert_eq!(OPENRC_STATUS_ARGS, ["zeroclaw", "status"]);
-        assert_eq!(OPENRC_RESTART_ARGS, ["zeroclaw", "restart"]);
+        assert_eq!(OPENRC_STATUS_ARGS, ["cclawcore", "status"]);
+        assert_eq!(OPENRC_RESTART_ARGS, ["cclawcore", "restart"]);
     }
 
     #[test]
@@ -10914,7 +10918,7 @@ This is an example JSON object for profile settings."#;
             runtime_ctx,
             traits::ChannelMessage {
                 id: "msg-photo-1".to_string(),
-                sender: "zeroclaw_user".to_string(),
+                sender: "cclawcore_user".to_string(),
                 reply_target: "chat-photo".to_string(),
                 content: "[IMAGE:/tmp/workspace/photo_99_1.jpg]\n\nWhat is this?".to_string(),
                 channel: "test-channel".to_string(),
@@ -11010,7 +11014,7 @@ This is an example JSON object for profile settings."#;
             Arc::clone(&runtime_ctx),
             traits::ChannelMessage {
                 id: "msg-photo-1".to_string(),
-                sender: "zeroclaw_user".to_string(),
+                sender: "cclawcore_user".to_string(),
                 reply_target: "chat-photo".to_string(),
                 content: "[IMAGE:/tmp/workspace/photo_99_1.jpg]\n\nWhat is this?".to_string(),
                 channel: "test-channel".to_string(),
@@ -11027,7 +11031,7 @@ This is an example JSON object for profile settings."#;
             Arc::clone(&runtime_ctx),
             traits::ChannelMessage {
                 id: "msg-text-2".to_string(),
-                sender: "zeroclaw_user".to_string(),
+                sender: "cclawcore_user".to_string(),
                 reply_target: "chat-photo".to_string(),
                 content: "What is WAL?".to_string(),
                 channel: "test-channel".to_string(),
@@ -11059,7 +11063,7 @@ This is an example JSON object for profile settings."#;
             .lock()
             .unwrap_or_else(|e| e.into_inner());
         let turns = histories
-            .peek("test-channel_chat-photo_zeroclaw_user")
+            .peek("test-channel_chat-photo_cclawcore_user")
             .expect("history should exist for sender");
         assert_eq!(turns.len(), 2);
         assert_eq!(turns[0].role, "user");
@@ -11141,7 +11145,7 @@ This is an example JSON object for profile settings."#;
             Arc::clone(&runtime_ctx),
             traits::ChannelMessage {
                 id: "msg-bad-1".to_string(),
-                sender: "zeroclaw_user".to_string(),
+                sender: "cclawcore_user".to_string(),
                 reply_target: "chat-format".to_string(),
                 content: "trigger format error".to_string(),
                 channel: "test-channel".to_string(),
@@ -11158,7 +11162,7 @@ This is an example JSON object for profile settings."#;
             Arc::clone(&runtime_ctx),
             traits::ChannelMessage {
                 id: "msg-text-2".to_string(),
-                sender: "zeroclaw_user".to_string(),
+                sender: "cclawcore_user".to_string(),
                 reply_target: "chat-format".to_string(),
                 content: "What is WAL?".to_string(),
                 channel: "test-channel".to_string(),
@@ -11190,7 +11194,7 @@ This is an example JSON object for profile settings."#;
             .lock()
             .unwrap_or_else(|e| e.into_inner());
         let turns = histories
-            .peek("test-channel_chat-format_zeroclaw_user")
+            .peek("test-channel_chat-format_cclawcore_user")
             .expect("history should exist for sender");
         assert_eq!(turns.len(), 2);
         assert_eq!(turns[0].role, "user");
@@ -11765,7 +11769,7 @@ This is an example JSON object for profile settings."#;
 
     #[test]
     fn is_stop_command_matches_with_bot_suffix() {
-        assert!(is_stop_command("/stop@zeroclaw_bot"));
+        assert!(is_stop_command("/stop@cclawcore_bot"));
     }
 
     #[test]

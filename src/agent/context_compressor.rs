@@ -4,7 +4,7 @@ use std::time::Duration;
 use anyhow::Result;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use zeroclaw_macros::Configurable;
+use cclawcore_macros::Configurable;
 
 use std::sync::Arc;
 

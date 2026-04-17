@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use schemars::JsonSchema;
-use zeroclaw_macros::Configurable;
+use cclawcore_macros::Configurable;
 
 // ── Complexity estimation ───────────────────────────────────────
 

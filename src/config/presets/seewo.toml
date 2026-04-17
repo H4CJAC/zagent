@@ -106,7 +106,7 @@ challenge_max_attempts = 3
 
 [security.estop]
 enabled = false
-state_file = "~/.zeroclaw/estop-state.json"
+state_file = "~/.cclawcore/estop-state.json"
 require_otp_to_resume = true
 
 [security.nevis]
@@ -123,7 +123,7 @@ session_timeout_secs = 3600
 enabled = false
 rp_id = "localhost"
 rp_origin = "http://localhost:42617"
-rp_name = "ZeroClaw"
+rp_name = "CclawCore"
 
 [backup]
 enabled = true
@@ -158,11 +158,11 @@ well_architected_frameworks = ["aws-waf"]
 
 [security_ops]
 enabled = false
-playbooks_dir = "~/.zeroclaw/playbooks"
+playbooks_dir = "~/.cclawcore/playbooks"
 auto_triage = false
 require_approval_for_actions = true
 max_auto_severity = "low"
-report_output_dir = "~/.zeroclaw/security-reports"
+report_output_dir = "~/.cclawcore/security-reports"
 
 [runtime]
 kind = "native"
@@ -340,7 +340,7 @@ read_only_namespaces = []
 [memory.policy.retention_days_by_category]
 
 [memory.qdrant]
-collection = "zeroclaw_memories"
+collection = "cclawcore_memories"
 
 [storage.provider.config]
 provider = ""
@@ -456,7 +456,7 @@ timeout_secs = 15
 [project_intel]
 enabled = false
 default_language = "en"
-report_output_dir = "~/.zeroclaw/project-reports"
+report_output_dir = "~/.cclawcore/project-reports"
 risk_sensitivity = "medium"
 include_git_data = true
 include_jira_data = false
@@ -472,7 +472,7 @@ audit_log = false
 [proxy]
 enabled = false
 no_proxy = []
-scope = "zeroclaw"
+scope = "cclawcore"
 services = []
 
 [identity]
@@ -588,7 +588,7 @@ max_nodes = 16
 
 [workspace]
 enabled = false
-workspaces_dir = "~/.zeroclaw/workspaces"
+workspaces_dir = "~/.cclawcore/workspaces"
 isolate_memory = true
 isolate_secrets = true
 isolate_audit = true
@@ -624,7 +624,7 @@ connection_pool_size = 4
 
 [knowledge]
 enabled = false
-db_path = "~/.zeroclaw/knowledge.db"
+db_path = "~/.cclawcore/knowledge.db"
 max_nodes = 100000
 auto_capture = false
 suggest_on_query = true
@@ -679,7 +679,7 @@ api_key_env = "FAL_API_KEY"
 
 [plugins]
 enabled = false
-plugins_dir = "~/.zeroclaw/plugins"
+plugins_dir = "~/.cclawcore/plugins"
 auto_discover = false
 max_plugins = 50
 

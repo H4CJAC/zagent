@@ -1,4 +1,4 @@
-# ZeroClaw Operations Runbook
+# CclawCore Operations Runbook
 
 This runbook is for operators who maintain availability, security posture, and incident response.
 
@@ -19,15 +19,15 @@ For first-time installation, start from [one-click-bootstrap.md](../setup-guides
 
 | Mode | Command | When to use |
 |---|---|---|
-| Foreground runtime | `zeroclaw daemon` | local debugging, short-lived sessions |
-| Foreground gateway only | `zeroclaw gateway` | webhook endpoint testing |
-| User service | `zeroclaw service install && zeroclaw service start` | persistent operator-managed runtime |
+| Foreground runtime | `cclawcore daemon` | local debugging, short-lived sessions |
+| Foreground gateway only | `cclawcore gateway` | webhook endpoint testing |
+| User service | `cclawcore service install && cclawcore service start` | persistent operator-managed runtime |
 | Docker / Podman | `docker compose up -d` | containerized deployment |
 
 ## Docker / Podman Runtime
 
 If you installed via `./install.sh --docker`, the container exits after onboarding. To run
-ZeroClaw as a long-lived container, use the repository `docker-compose.yml` or start a
+CclawCore as a long-lived container, use the repository `docker-compose.yml` or start a
 container manually against the persisted data directory.
 
 ### Recommended: docker-compose
@@ -49,27 +49,27 @@ Replace `docker` with `podman` if using Podman.
 
 ```bash
 # Start a new container from the bootstrap image
-docker run -d --name zeroclaw \
+docker run -d --name cclawcore \
   --restart unless-stopped \
-  -v "$PWD/.zeroclaw-docker/.zeroclaw:/zeroclaw-data/.zeroclaw" \
-  -v "$PWD/.zeroclaw-docker/workspace:/zeroclaw-data/workspace" \
-  -e HOME=/zeroclaw-data \
-  -e ZEROCLAW_WORKSPACE=/zeroclaw-data/workspace \
+  -v "$PWD/.cclawcore-docker/.cclawcore:/cclawcore-data/.cclawcore" \
+  -v "$PWD/.cclawcore-docker/workspace:/cclawcore-data/workspace" \
+  -e HOME=/cclawcore-data \
+  -e CCLAWCORE_WORKSPACE=/cclawcore-data/workspace \
   -p 42617:42617 \
-  zeroclaw-bootstrap:local \
+  cclawcore-bootstrap:local \
   gateway
 
 # Stop (preserves config and workspace)
-docker stop zeroclaw
+docker stop cclawcore
 
 # Restart a stopped container
-docker start zeroclaw
+docker start cclawcore
 
 # View logs
-docker logs -f zeroclaw
+docker logs -f cclawcore
 
 # Health check
-docker exec zeroclaw zeroclaw status
+docker exec cclawcore cclawcore status
 ```
 
 For Podman, add `--userns keep-id --user "$(id -u):$(id -g)"` and append `:Z` to volume mounts.
@@ -86,50 +86,50 @@ For full setup instructions, see [one-click-bootstrap.md](../setup-guides/one-cl
 1. Validate configuration:
 
 ```bash
-zeroclaw status
+cclawcore status
 ```
 
 2. Verify diagnostics:
 
 ```bash
-zeroclaw doctor
-zeroclaw channel doctor
+cclawcore doctor
+cclawcore channel doctor
 ```
 
 3. Start runtime:
 
 ```bash
-zeroclaw daemon
+cclawcore daemon
 ```
 
 4. For persistent user session service:
 
 ```bash
-zeroclaw service install
-zeroclaw service start
-zeroclaw service status
+cclawcore service install
+cclawcore service start
+cclawcore service status
 ```
 
 ## Health and State Signals
 
 | Signal | Command / File | Expected |
 |---|---|---|
-| Config validity | `zeroclaw doctor` | no critical errors |
-| Channel connectivity | `zeroclaw channel doctor` | configured channels healthy |
-| Runtime summary | `zeroclaw status` | expected provider/model/channels |
-| Daemon heartbeat/state | `~/.zeroclaw/daemon_state.json` | file updates periodically |
+| Config validity | `cclawcore doctor` | no critical errors |
+| Channel connectivity | `cclawcore channel doctor` | configured channels healthy |
+| Runtime summary | `cclawcore status` | expected provider/model/channels |
+| Daemon heartbeat/state | `~/.cclawcore/daemon_state.json` | file updates periodically |
 
 ## Logs and Diagnostics
 
 ### macOS / Windows (service wrapper logs)
 
-- `~/.zeroclaw/logs/daemon.stdout.log`
-- `~/.zeroclaw/logs/daemon.stderr.log`
+- `~/.cclawcore/logs/daemon.stdout.log`
+- `~/.cclawcore/logs/daemon.stderr.log`
 
 ### Linux (systemd user service)
 
 ```bash
-journalctl --user -u zeroclaw.service -f
+journalctl --user -u cclawcore.service -f
 ```
 
 ## Incident Triage Flow (Fast Path)
@@ -137,25 +137,25 @@ journalctl --user -u zeroclaw.service -f
 1. Snapshot system state:
 
 ```bash
-zeroclaw status
-zeroclaw doctor
-zeroclaw channel doctor
+cclawcore status
+cclawcore doctor
+cclawcore channel doctor
 ```
 
 2. Check service state:
 
 ```bash
-zeroclaw service status
+cclawcore service status
 ```
 
 3. If service is unhealthy, restart cleanly:
 
 ```bash
-zeroclaw service stop
-zeroclaw service start
+cclawcore service stop
+cclawcore service start
 ```
 
-4. If channels still fail, verify allowlists and credentials in `~/.zeroclaw/config.toml`.
+4. If channels still fail, verify allowlists and credentials in `~/.cclawcore/config.toml`.
 
 5. If gateway is involved, verify bind/auth settings (`[gateway]`) and local reachability.
 
@@ -163,9 +163,9 @@ zeroclaw service start
 
 Before applying config changes:
 
-1. backup `~/.zeroclaw/config.toml`
+1. backup `~/.cclawcore/config.toml`
 2. apply one logical change at a time
-3. run `zeroclaw doctor`
+3. run `cclawcore doctor`
 4. restart daemon/service
 5. verify with `status` + `channel doctor`
 

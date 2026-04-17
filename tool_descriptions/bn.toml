@@ -43,7 +43,7 @@ model_routing_config = "ডিফল্ট মডেল সেটিংস, দ�
 notion = "Notion-এর সাথে ইন্টারেক্ট করুন: ডেটাবেস কোয়েরি করুন, পেজ পড়ুন/তৈরি করুন/আপডেট করুন এবং ওয়ার্কস্পেস অনুসন্ধান করুন।"
 pdf_read = "ওয়ার্কস্পেসে একটি PDF ফাইল থেকে সাধারণ টেক্সট বের করুন। সমস্ত পাঠযোগ্য টেক্সট ফেরত দেয়। শুধুমাত্র-ইমেজ বা এনক্রিপ্টেড PDF খালি ফলাফল ফেরত দেয়। 'rag-pdf' বিল্ড ফিচার প্রয়োজন।"
 project_intel = "প্রকল্প বিতরণ বুদ্ধিমত্তা: স্থিতি প্রতিবেদন তৈরি করুন, ঝুঁকি শনাক্ত করুন, ক্লায়েন্ট আপডেট খসড়া করুন, স্প্রিন্ট সারসংক্ষেপ করুন এবং প্রচেষ্টা অনুমান করুন। শুধুমাত্র পঠন বিশ্লেষণ টুল।"
-proxy_config = "ZeroClaw proxy সেটিংস পরিচালনা করুন (স্কোপ: environment | zeroclaw | services), runtime এবং প্রসেস env প্রয়োগ সহ"
+proxy_config = "CclawCore proxy সেটিংস পরিচালনা করুন (স্কোপ: environment | cclawcore | services), runtime এবং প্রসেস env প্রয়োগ সহ"
 pushover = "আপনার ডিভাইসে একটি Pushover বিজ্ঞপ্তি পাঠান। .env ফাইলে PUSHOVER_TOKEN এবং PUSHOVER_USER_KEY প্রয়োজন।"
 schedule = """নির্ধারিত শুধুমাত্র-shell কাজ পরিচালনা করুন। অ্যাকশন: create/add/once/list/get/cancel/remove/pause/resume। সতর্কতা: এই টুলটি shell জব তৈরি করে যার আউটপুট শুধুমাত্র লগ করা হয়, কোনো চ্যানেলে বিতরণ করা হয় না। Discord/Telegram/Slack/Matrix-এ নির্ধারিত বার্তা পাঠাতে, cron_add টুল ব্যবহার করুন job_type='agent' এবং delivery কনফিগ যেমন {"mode":"announce","channel":"discord","to":"<channel_id>"} সহ।"""
 screenshot = "বর্তমান স্ক্রিনের স্ক্রিনশট ক্যাপচার করুন। ফাইল পাথ এবং base64-এনকোডেড PNG ডেটা ফেরত দেয়।"

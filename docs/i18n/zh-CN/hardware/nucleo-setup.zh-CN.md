@@ -1,12 +1,12 @@
-# Nucleo-F401RE 上的 ZeroClaw — 分步指南
+# Nucleo-F401RE 上的 CclawCore — 分步指南
 
-在 Mac 或 Linux 主机上运行 ZeroClaw。通过 USB 连接 Nucleo-F401RE。通过 Telegram 或 CLI 控制 GPIO（LED、引脚）。
+在 Mac 或 Linux 主机上运行 CclawCore。通过 USB 连接 Nucleo-F401RE。通过 Telegram 或 CLI 控制 GPIO（LED、引脚）。
 
 ---
 
 ## 通过 Telegram 获取开发板信息（无需固件）
 
-ZeroClaw 可以通过 USB 从 Nucleo 读取芯片信息，**无需烧录任何固件**。向你的 Telegram 机器人发送消息：
+CclawCore 可以通过 USB 从 Nucleo 读取芯片信息，**无需烧录任何固件**。向你的 Telegram 机器人发送消息：
 
 - *"我有什么开发板信息？"*
 - *"开发板信息"*
@@ -29,21 +29,21 @@ baud = 115200
 
 ```bash
 cargo build --features hardware,probe
-zeroclaw hardware info
-zeroclaw hardware discover
+cclawcore hardware info
+cclawcore hardware discover
 ```
 
 ---
 
 ## 已包含的内容（无需修改代码）
 
-ZeroClaw 包含 Nucleo-F401RE 所需的一切：
+CclawCore 包含 Nucleo-F401RE 所需的一切：
 
 | 组件 | 位置 | 目的 |
 |-----------|----------|---------|
 | 固件 | `firmware/nucleo/` | Embassy Rust — USART2（115200）、gpio_read、gpio_write |
 | 串门外设 | `src/peripherals/serial.rs` | 基于串口的 JSON 协议（与 Arduino/ESP32 相同） |
-| 烧录命令 | `zeroclaw peripheral flash-nucleo` | 构建固件，通过 probe-rs 烧录 |
+| 烧录命令 | `cclawcore peripheral flash-nucleo` | 构建固件，通过 probe-rs 烧录 |
 
 协议：换行符分隔的 JSON。请求：`{"id":"1","cmd":"gpio_write","args":{"pin":13,"value":1}}`。响应：`{"id":"1","ok":true,"result":"done"}`。
 
@@ -64,12 +64,12 @@ ZeroClaw 包含 Nucleo-F401RE 所需的一切：
 1. 通过 USB 将 Nucleo 连接到 Mac/Linux。
 2. 开发板会显示为 USB 设备（ST-Link）。现代系统不需要单独的驱动。
 
-### 1.2 通过 ZeroClaw 烧录
+### 1.2 通过 CclawCore 烧录
 
-在 zeroclaw 仓库根目录执行：
+在 cclawcore 仓库根目录执行：
 
 ```bash
-zeroclaw peripheral flash-nucleo
+cclawcore peripheral flash-nucleo
 ```
 
 这会构建 `firmware/nucleo` 并运行 `probe-rs run --chip STM32F401RETx`。固件烧录后立即运行。
@@ -93,9 +93,9 @@ USART2（PA2/PA3）桥接到 ST-Link 的虚拟 COM 端口，因此主机看到�
 
 ---
 
-## 阶段 3：配置 ZeroClaw
+## 阶段 3：配置 CclawCore
 
-添加到 `~/.zeroclaw/config.toml`：
+添加到 `~/.cclawcore/config.toml`：
 
 ```toml
 [peripherals]
@@ -113,13 +113,13 @@ baud = 115200
 ## 阶段 4：运行和测试
 
 ```bash
-zeroclaw daemon --host 127.0.0.1 --port 42617
+cclawcore daemon --host 127.0.0.1 --port 42617
 ```
 
 或直接使用代理：
 
 ```bash
-zeroclaw agent --message "Turn on the LED on pin 13"
+cclawcore agent --message "Turn on the LED on pin 13"
 ```
 
 引脚 13 = PA5 = Nucleo-F401RE 上的用户 LED（LD2）。
@@ -132,9 +132,9 @@ zeroclaw agent --message "Turn on the LED on pin 13"
 |------|---------|
 | 1 | 通过 USB 连接 Nucleo |
 | 2 | `cargo install probe-rs-tools --locked` |
-| 3 | `zeroclaw peripheral flash-nucleo` |
+| 3 | `cclawcore peripheral flash-nucleo` |
 | 4 | 将 Nucleo 添加到 config.toml（path = 你的串口） |
-| 5 | `zeroclaw daemon` 或 `zeroclaw agent -m "Turn on LED"` |
+| 5 | `cclawcore daemon` 或 `cclawcore agent -m "Turn on LED"` |
 
 ---
 
@@ -144,4 +144,4 @@ zeroclaw agent --message "Turn on the LED on pin 13"
 - **找不到 probe-rs** — `cargo install probe-rs-tools --locked`（`probe-rs` crate 是库；CLI 在 `probe-rs-tools` 中）
 - **未检测到探针** — 确保 Nucleo 已连接。尝试其他 USB 线/端口。
 - **找不到串口** — 在 Linux 上，将用户添加到 `dialout` 组：`sudo usermod -a -G dialout $USER`，然后注销/登录。
-- **GPIO 命令被忽略** — 检查配置中的 `path` 与你的串口匹配。运行 `zeroclaw peripheral list` 验证。
+- **GPIO 命令被忽略** — 检查配置中的 `path` 与你的串口匹配。运行 `cclawcore peripheral list` 验证。

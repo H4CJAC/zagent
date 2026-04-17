@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/zeroclaw-labs/zeroclaw/master/docs/assets/zeroclaw-banner.png" alt="ZeroClaw" width="600" />
+  <img src="https://raw.githubusercontent.com/cclawcore-labs/cclawcore/master/docs/assets/cclawcore-banner.png" alt="CclawCore" width="600" />
 </p>
 
-<h1 align="center">🦀 ZeroClaw — ผู้ช่วย AI ส่วนตัว</h1>
+<h1 align="center">🦀 CclawCore — ผู้ช่วย AI ส่วนตัว</h1>
 
 <p align="center">
   <strong>ไม่มีโอเวอร์เฮด ไม่มีการประนีประนอม 100% Rust 100% ไม่ผูกมัด</strong><br>
@@ -10,15 +10,15 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/zeroclaw-labs/zeroclaw/actions/workflows/ci-run.yml"><img src="https://img.shields.io/github/actions/workflow/status/zeroclaw-labs/zeroclaw/ci-run.yml?branch=master&label=build" alt="Build Status" /></a>
+  <a href="https://github.com/cclawcore-labs/cclawcore/actions/workflows/ci-run.yml"><img src="https://img.shields.io/github/actions/workflow/status/cclawcore-labs/cclawcore/ci-run.yml?branch=master&label=build" alt="Build Status" /></a>
   <a href="LICENSE-APACHE"><img src="https://img.shields.io/badge/license-MIT%20OR%20Apache%202.0-blue.svg" alt="License: MIT OR Apache-2.0" /></a>
   <a href="https://www.rust-lang.org"><img src="https://img.shields.io/badge/rust-edition%202024-orange?logo=rust" alt="Rust Edition 2024" /></a>
-  <a href="https://github.com/zeroclaw-labs/zeroclaw/releases/latest"><img src="https://img.shields.io/badge/version-v0.6.9-blue" alt="Version v0.6.9" /></a>
-  <a href="https://github.com/zeroclaw-labs/zeroclaw/graphs/contributors"><img src="https://img.shields.io/github/contributors/zeroclaw-labs/zeroclaw?color=green" alt="Contributors" /></a>
+  <a href="https://github.com/cclawcore-labs/cclawcore/releases/latest"><img src="https://img.shields.io/badge/version-v0.6.9-blue" alt="Version v0.6.9" /></a>
+  <a href="https://github.com/cclawcore-labs/cclawcore/graphs/contributors"><img src="https://img.shields.io/github/contributors/cclawcore-labs/cclawcore?color=green" alt="Contributors" /></a>
   <a href="https://buymeacoffee.com/argenistherose"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Donate-yellow.svg?style=flat&logo=buy-me-a-coffee" alt="Buy Me a Coffee" /></a>
-  <a href="https://x.com/zeroclawlabs?s=21"><img src="https://img.shields.io/badge/X-%40zeroclawlabs-000000?style=flat&logo=x&logoColor=white" alt="X: @zeroclawlabs" /></a>
+  <a href="https://x.com/cclawcorelabs?s=21"><img src="https://img.shields.io/badge/X-%40cclawcorelabs-000000?style=flat&logo=x&logoColor=white" alt="X: @cclawcorelabs" /></a>
   <a href="https://discord.com/invite/wDshRVqRjx"><img src="https://img.shields.io/badge/Discord-Join-5865F2?style=flat&logo=discord&logoColor=white" alt="Discord" /></a>
-  <a href="https://www.reddit.com/r/zeroclawlabs/"><img src="https://img.shields.io/badge/Reddit-r%2Fzeroclawlabs-FF4500?style=flat&logo=reddit&logoColor=white" alt="Reddit: r/zeroclawlabs" /></a>
+  <a href="https://www.reddit.com/r/cclawcorelabs/"><img src="https://img.shields.io/badge/Reddit-r%2Fcclawcorelabs-FF4500?style=flat&logo=reddit&logoColor=white" alt="Reddit: r/cclawcorelabs" /></a>
 </p>
 
 <p align="center">
@@ -60,12 +60,12 @@
   <a href="../nb/README.md">🇳🇴 Norsk</a>
 </p>
 
-ZeroClaw คือผู้ช่วย AI ส่วนตัวที่คุณรันบนอุปกรณ์ของคุณเอง มันตอบคุณผ่านช่องทางที่คุณใช้อยู่แล้ว (WhatsApp, Telegram, Slack, Discord, Signal, iMessage, Matrix, IRC, Email, Bluesky, Nostr, Mattermost, Nextcloud Talk, DingTalk, Lark, QQ, Reddit, LinkedIn, Twitter, MQTT, WeChat Work และอื่นๆ) มีแดชบอร์ดเว็บสำหรับการควบคุมแบบเรียลไทม์และสามารถเชื่อมต่อกับอุปกรณ์ต่อพ่วง (ESP32, STM32, Arduino, Raspberry Pi) Gateway เป็นเพียง control plane — ผลิตภัณฑ์คือผู้ช่วย
+CclawCore คือผู้ช่วย AI ส่วนตัวที่คุณรันบนอุปกรณ์ของคุณเอง มันตอบคุณผ่านช่องทางที่คุณใช้อยู่แล้ว (WhatsApp, Telegram, Slack, Discord, Signal, iMessage, Matrix, IRC, Email, Bluesky, Nostr, Mattermost, Nextcloud Talk, DingTalk, Lark, QQ, Reddit, LinkedIn, Twitter, MQTT, WeChat Work และอื่นๆ) มีแดชบอร์ดเว็บสำหรับการควบคุมแบบเรียลไทม์และสามารถเชื่อมต่อกับอุปกรณ์ต่อพ่วง (ESP32, STM32, Arduino, Raspberry Pi) Gateway เป็นเพียง control plane — ผลิตภัณฑ์คือผู้ช่วย
 
 หากคุณต้องการผู้ช่วยส่วนตัว ผู้ใช้คนเดียว ที่รู้สึกเหมือนอยู่ในเครื่อง เร็ว และพร้อมใช้งานตลอดเวลา นี่คือมัน
 
 <p align="center">
-  <a href="https://zeroclawlabs.ai">เว็บไซต์</a> ·
+  <a href="https://cclawcorelabs.ai">เว็บไซต์</a> ·
   <a href="docs/README.md">เอกสาร</a> ·
   <a href="docs/architecture.md">สถาปัตยกรรม</a> ·
   <a href="#เริ่มต้นอย่างรวดเร็ว">เริ่มต้นใช้งาน</a> ·
@@ -74,7 +74,7 @@ ZeroClaw คือผู้ช่วย AI ส่วนตัวที่คุ�
   <a href="https://discord.com/invite/wDshRVqRjx">Discord</a>
 </p>
 
-> **การตั้งค่าที่แนะนำ:** รัน `zeroclaw onboard` ในเทอร์มินัลของคุณ ZeroClaw Onboard จะแนะนำคุณทีละขั้นตอนในการตั้งค่า gateway, workspace, ช่องทาง และ provider เป็นเส้นทางการตั้งค่าที่แนะนำและใช้งานได้บน macOS, Linux และ Windows (ผ่าน WSL2) ติดตั้งใหม่? เริ่มที่นี่: [เริ่มต้นใช้งาน](#เริ่มต้นอย่างรวดเร็ว)
+> **การตั้งค่าที่แนะนำ:** รัน `cclawcore onboard` ในเทอร์มินัลของคุณ CclawCore Onboard จะแนะนำคุณทีละขั้นตอนในการตั้งค่า gateway, workspace, ช่องทาง และ provider เป็นเส้นทางการตั้งค่าที่แนะนำและใช้งานได้บน macOS, Linux และ Windows (ผ่าน WSL2) ติดตั้งใหม่? เริ่มที่นี่: [เริ่มต้นใช้งาน](#เริ่มต้นอย่างรวดเร็ว)
 
 ### การยืนยันตัวตนแบบสมัครสมาชิก (OAuth)
 
@@ -94,18 +94,18 @@ Runtime: Rust stable toolchain ไบนารีเดียว ไม่มี
 ### Homebrew (macOS/Linuxbrew)
 
 ```bash
-brew install zeroclaw
+brew install cclawcore
 ```
 
 ### Bootstrap คลิกเดียว
 
 ```bash
-git clone https://github.com/zeroclaw-labs/zeroclaw.git
-cd zeroclaw
+git clone https://github.com/cclawcore-labs/cclawcore.git
+cd cclawcore
 ./install.sh
 ```
 
-`zeroclaw onboard` จะรันโดยอัตโนมัติหลังติดตั้งเพื่อกำหนดค่า workspace และ provider ของคุณ
+`cclawcore onboard` จะรันโดยอัตโนมัติหลังติดตั้งเพื่อกำหนดค่า workspace และ provider ของคุณ
 
 ## เริ่มต้นอย่างรวดเร็ว (TL;DR)
 
@@ -116,67 +116,67 @@ cd zeroclaw
 ./install.sh --api-key "sk-..." --provider openrouter
 
 # เริ่ม gateway (เซิร์ฟเวอร์ webhook + แดชบอร์ดเว็บ)
-zeroclaw gateway                # ค่าเริ่มต้น: 127.0.0.1:42617
-zeroclaw gateway --port 0       # พอร์ตสุ่ม (ความปลอดภัยเพิ่มขึ้น)
+cclawcore gateway                # ค่าเริ่มต้น: 127.0.0.1:42617
+cclawcore gateway --port 0       # พอร์ตสุ่ม (ความปลอดภัยเพิ่มขึ้น)
 
 # พูดคุยกับผู้ช่วย
-zeroclaw agent -m "Hello, ZeroClaw!"
+cclawcore agent -m "Hello, CclawCore!"
 
 # โหมดโต้ตอบ
-zeroclaw agent
+cclawcore agent
 
 # เริ่ม runtime อัตโนมัติเต็มรูปแบบ (gateway + ช่องทาง + cron + hands)
-zeroclaw daemon
+cclawcore daemon
 
 # ตรวจสอบสถานะ
-zeroclaw status
+cclawcore status
 
 # รันการวินิจฉัย
-zeroclaw doctor
+cclawcore doctor
 ```
 
-กำลังอัปเกรด? รัน `zeroclaw doctor` หลังจากอัปเดต
+กำลังอัปเกรด? รัน `cclawcore doctor` หลังจากอัปเดต
 
 ### จากซอร์ส (สำหรับนักพัฒนา)
 
 ```bash
-git clone https://github.com/zeroclaw-labs/zeroclaw.git
-cd zeroclaw
+git clone https://github.com/cclawcore-labs/cclawcore.git
+cd cclawcore
 
 cargo build --release --locked
 cargo install --path . --force --locked
 
-zeroclaw onboard
+cclawcore onboard
 ```
 
 > **ทางเลือกสำหรับนักพัฒนา (ไม่ต้องติดตั้งแบบ global):** นำหน้าคำสั่งด้วย `cargo run --release --` (ตัวอย่าง: `cargo run --release -- status`)
 
 ## การย้ายจาก OpenClaw
 
-ZeroClaw สามารถนำเข้า workspace, หน่วยความจำ และการกำหนดค่าจาก OpenClaw ของคุณ:
+CclawCore สามารถนำเข้า workspace, หน่วยความจำ และการกำหนดค่าจาก OpenClaw ของคุณ:
 
 ```bash
 # ดูตัวอย่างสิ่งที่จะถูกย้าย (ปลอดภัย, อ่านอย่างเดียว)
-zeroclaw migrate openclaw --dry-run
+cclawcore migrate openclaw --dry-run
 
 # รันการย้าย
-zeroclaw migrate openclaw
+cclawcore migrate openclaw
 ```
 
-สิ่งนี้จะย้ายรายการหน่วยความจำ ไฟล์ workspace และการกำหนดค่าจาก `~/.openclaw/` ไปยัง `~/.zeroclaw/` การกำหนดค่าจะถูกแปลงจาก JSON เป็น TOML โดยอัตโนมัติ
+สิ่งนี้จะย้ายรายการหน่วยความจำ ไฟล์ workspace และการกำหนดค่าจาก `~/.openclaw/` ไปยัง `~/.cclawcore/` การกำหนดค่าจะถูกแปลงจาก JSON เป็น TOML โดยอัตโนมัติ
 
 ## ค่าเริ่มต้นด้านความปลอดภัย (การเข้าถึง DM)
 
-ZeroClaw เชื่อมต่อกับพื้นผิวการส่งข้อความจริง ถือว่า DM ขาเข้าเป็นข้อมูลที่ไม่น่าเชื่อถือ
+CclawCore เชื่อมต่อกับพื้นผิวการส่งข้อความจริง ถือว่า DM ขาเข้าเป็นข้อมูลที่ไม่น่าเชื่อถือ
 
 คู่มือความปลอดภัยฉบับเต็ม: [SECURITY.md](SECURITY.md)
 
 พฤติกรรมเริ่มต้นบนทุกช่องทาง:
 
 - **DM pairing** (ค่าเริ่มต้น): ผู้ส่งที่ไม่รู้จักจะได้รับรหัส pairing สั้นๆ และบอทจะไม่ประมวลผลข้อความของพวกเขา
-- อนุมัติด้วย: `zeroclaw pairing approve <channel> <code>` (จากนั้นผู้ส่งจะถูกเพิ่มในรายการอนุญาตในเครื่อง)
+- อนุมัติด้วย: `cclawcore pairing approve <channel> <code>` (จากนั้นผู้ส่งจะถูกเพิ่มในรายการอนุญาตในเครื่อง)
 - DM ขาเข้าสาธารณะต้องมีการเลือกเข้าร่วมอย่างชัดเจนใน `config.toml`
-- รัน `zeroclaw doctor` เพื่อค้นหานโยบาย DM ที่เสี่ยงหรือกำหนดค่าผิด
+- รัน `cclawcore doctor` เพื่อค้นหานโยบาย DM ที่เสี่ยงหรือกำหนดค่าผิด
 
 **ระดับความเป็นอัตโนมัติ:**
 
@@ -197,7 +197,7 @@ ZeroClaw เชื่อมต่อกับพื้นผิวการส�
 
 | วันที่ (UTC) | ระดับ       | ประกาศ                                                                                                                                                                                                                                                                                                                                                 | การดำเนินการ                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-02-19 | _วิกฤต_  | เรา**ไม่มีส่วนเกี่ยวข้อง**กับ `openagen/zeroclaw`, `zeroclaw.org` หรือ `zeroclaw.net` โดเมน `zeroclaw.org` และ `zeroclaw.net` ปัจจุบันชี้ไปที่ fork `openagen/zeroclaw` และโดเมน/repository เหล่านั้นกำลังปลอมตัวเป็นเว็บไซต์/โปรเจกต์อย่างเป็นทางการของเรา                                                                                       | อย่าเชื่อถือข้อมูล ไบนารี การระดมทุน หรือประกาศจากแหล่งเหล่านั้น ใช้เฉพาะ[repository นี้](https://github.com/zeroclaw-labs/zeroclaw)และบัญชีโซเชียลที่ได้รับการยืนยันของเรา                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| 2026-02-19 | _วิกฤต_  | เรา**ไม่มีส่วนเกี่ยวข้อง**กับ `openagen/cclawcore`, `cclawcore.org` หรือ `cclawcore.net` โดเมน `cclawcore.org` และ `cclawcore.net` ปัจจุบันชี้ไปที่ fork `openagen/cclawcore` และโดเมน/repository เหล่านั้นกำลังปลอมตัวเป็นเว็บไซต์/โปรเจกต์อย่างเป็นทางการของเรา                                                                                       | อย่าเชื่อถือข้อมูล ไบนารี การระดมทุน หรือประกาศจากแหล่งเหล่านั้น ใช้เฉพาะ[repository นี้](https://github.com/cclawcore-labs/cclawcore)และบัญชีโซเชียลที่ได้รับการยืนยันของเรา                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | 2026-02-19 | _สำคัญ_ | Anthropic อัปเดตข้อกำหนดการยืนยันตัวตนและการใช้ข้อมูลรับรองเมื่อ 2026-02-19 โทเค็น OAuth ของ Claude Code (Free, Pro, Max) มีไว้สำหรับ Claude Code และ Claude.ai โดยเฉพาะ การใช้โทเค็น OAuth จาก Claude Free/Pro/Max ในผลิตภัณฑ์ เครื่องมือ หรือบริการอื่น (รวมถึง Agent SDK) ไม่ได้รับอนุญาตและอาจละเมิดข้อกำหนดบริการสำหรับผู้บริโภค | โปรดหลีกเลี่ยงการรวม OAuth ของ Claude Code ชั่วคราวเพื่อป้องกันการสูญเสียที่อาจเกิดขึ้น ข้อความต้นฉบับ: [Authentication and Credential Use](https://code.claude.com/docs/en/legal-and-compliance#authentication-and-credential-use)                                                                                                                                                                                                                                                                                                                                                                                    |
 
 ## จุดเด่น
@@ -217,18 +217,18 @@ ZeroClaw เชื่อมต่อกับพื้นผิวการส�
 - **แพลตฟอร์ม skill** — skill ที่รวมมา, ชุมชน และ workspace พร้อมการตรวจสอบความปลอดภัย
 - **รองรับ tunnel** — Cloudflare, Tailscale, ngrok, OpenVPN และ tunnel แบบกำหนดเองสำหรับการเข้าถึงระยะไกล
 
-### ทำไมทีมถึงเลือก ZeroClaw
+### ทำไมทีมถึงเลือก CclawCore
 
 - **เบาเป็นค่าเริ่มต้น:** ไบนารี Rust ขนาดเล็ก เริ่มต้นเร็ว footprint หน่วยความจำต่ำ
 - **ปลอดภัยตามการออกแบบ:** pairing, sandboxing ที่เข้มงวด, รายการอนุญาตที่ชัดเจน, การกำหนดขอบเขต workspace
 - **สลับได้ทั้งหมด:** ระบบหลักเป็น traits (providers, ช่องทาง, เครื่องมือ, หน่วยความจำ, tunnels)
 - **ไม่มี lock-in:** รองรับ provider ที่เข้ากันได้กับ OpenAI + endpoint แบบกำหนดเองที่เสียบได้
 
-## สรุป Benchmark (ZeroClaw vs OpenClaw, ทำซ้ำได้)
+## สรุป Benchmark (CclawCore vs OpenClaw, ทำซ้ำได้)
 
 Benchmark เร็วบนเครื่องท้องถิ่น (macOS arm64, ก.พ. 2026) ปรับมาตรฐานสำหรับฮาร์ดแวร์ edge 0.8GHz
 
-|                           | OpenClaw      | NanoBot        | PicoClaw        | ZeroClaw 🦀          |
+|                           | OpenClaw      | NanoBot        | PicoClaw        | CclawCore 🦀          |
 | ------------------------- | ------------- | -------------- | --------------- | -------------------- |
 | **ภาษา**                  | TypeScript    | Python         | Go              | **Rust**             |
 | **RAM**                   | > 1GB         | > 100MB        | < 10MB          | **< 5MB**            |
@@ -236,20 +236,20 @@ Benchmark เร็วบนเครื่องท้องถิ่น (macOS
 | **ขนาดไบนารี**            | ~28MB (dist)  | N/A (Scripts)  | ~8MB            | **~8.8 MB**          |
 | **ค่าใช้จ่าย**             | Mac Mini $599 | Linux SBC ~$50 | Linux Board $10 | **ฮาร์ดแวร์ใดก็ได้ $10** |
 
-> หมายเหตุ: ผลลัพธ์ ZeroClaw วัดจาก release builds โดยใช้ `/usr/bin/time -l` OpenClaw ต้องการ runtime Node.js (โดยทั่วไป ~390MB overhead หน่วยความจำเพิ่มเติม) ในขณะที่ NanoBot ต้องการ runtime Python PicoClaw และ ZeroClaw เป็นไบนารีแบบ static ตัวเลข RAM ด้านบนเป็นหน่วยความจำ runtime ความต้องการการคอมไพล์ตอน build สูงกว่า
+> หมายเหตุ: ผลลัพธ์ CclawCore วัดจาก release builds โดยใช้ `/usr/bin/time -l` OpenClaw ต้องการ runtime Node.js (โดยทั่วไป ~390MB overhead หน่วยความจำเพิ่มเติม) ในขณะที่ NanoBot ต้องการ runtime Python PicoClaw และ CclawCore เป็นไบนารีแบบ static ตัวเลข RAM ด้านบนเป็นหน่วยความจำ runtime ความต้องการการคอมไพล์ตอน build สูงกว่า
 
 <p align="center">
-  <img src="docs/assets/zeroclaw-comparison.jpeg" alt="ZeroClaw vs OpenClaw Comparison" width="800" />
+  <img src="docs/assets/cclawcore-comparison.jpeg" alt="CclawCore vs OpenClaw Comparison" width="800" />
 </p>
 
 ### การวัดในเครื่องที่ทำซ้ำได้
 
 ```bash
 cargo build --release
-ls -lh target/release/zeroclaw
+ls -lh target/release/cclawcore
 
-/usr/bin/time -l target/release/zeroclaw --help
-/usr/bin/time -l target/release/zeroclaw status
+/usr/bin/time -l target/release/cclawcore --help
+/usr/bin/time -l target/release/cclawcore status
 ```
 
 ## ทุกสิ่งที่เราสร้างมาจนถึงตอนนี้
@@ -325,7 +325,7 @@ Feature-gated: Matrix (`channel-matrix`), Lark (`channel-lark`), Nostr (`channel
 
 ## การกำหนดค่า
 
-ขั้นต่ำ `~/.zeroclaw/config.toml`:
+ขั้นต่ำ `~/.cclawcore/config.toml`:
 
 ```toml
 default_provider = "anthropic"
@@ -393,35 +393,35 @@ kind = "cloudflare"  # หรือ "tailscale", "ngrok", "openvpn", "custom", "
 
 ## การยืนยันตัวตนแบบสมัครสมาชิก (OpenAI Codex / Claude Code / Gemini)
 
-ZeroClaw รองรับโปรไฟล์การยืนยันตัวตนแบบ subscription-native (หลายบัญชี, เข้ารหัสเมื่อเก็บ)
+CclawCore รองรับโปรไฟล์การยืนยันตัวตนแบบ subscription-native (หลายบัญชี, เข้ารหัสเมื่อเก็บ)
 
-- ไฟล์จัดเก็บ: `~/.zeroclaw/auth-profiles.json`
-- คีย์เข้ารหัส: `~/.zeroclaw/.secret_key`
+- ไฟล์จัดเก็บ: `~/.cclawcore/auth-profiles.json`
+- คีย์เข้ารหัส: `~/.cclawcore/.secret_key`
 - รูปแบบ id โปรไฟล์: `<provider>:<profile_name>` (ตัวอย่าง: `openai-codex:work`)
 
 ```bash
 # OpenAI Codex OAuth (สมัครสมาชิก ChatGPT)
-zeroclaw auth login --provider openai-codex --device-code
+cclawcore auth login --provider openai-codex --device-code
 
 # Gemini OAuth
-zeroclaw auth login --provider gemini --profile default
+cclawcore auth login --provider gemini --profile default
 
 # Anthropic setup-token
-zeroclaw auth paste-token --provider anthropic --profile default --auth-kind authorization
+cclawcore auth paste-token --provider anthropic --profile default --auth-kind authorization
 
 # ตรวจสอบ / refresh / สลับโปรไฟล์
-zeroclaw auth status
-zeroclaw auth refresh --provider openai-codex --profile default
-zeroclaw auth use --provider openai-codex --profile work
+cclawcore auth status
+cclawcore auth refresh --provider openai-codex --profile default
+cclawcore auth use --provider openai-codex --profile work
 
 # รันเอเจนต์ด้วย auth แบบสมัครสมาชิก
-zeroclaw agent --provider openai-codex -m "hello"
-zeroclaw agent --provider anthropic -m "hello"
+cclawcore agent --provider openai-codex -m "hello"
+cclawcore agent --provider anthropic -m "hello"
 ```
 
 ## Workspace เอเจนต์ + skill
 
-Root workspace: `~/.zeroclaw/workspace/` (กำหนดค่าได้ผ่าน config)
+Root workspace: `~/.cclawcore/workspace/` (กำหนดค่าได้ผ่าน config)
 
 ไฟล์ prompt ที่ inject:
 - `IDENTITY.md` — บุคลิกภาพและบทบาทของเอเจนต์
@@ -430,74 +430,74 @@ Root workspace: `~/.zeroclaw/workspace/` (กำหนดค่าได้ผ�
 - `AGENTS.md` — ข้อตกลง session และกฎการเริ่มต้น
 - `SOUL.md` — อัตลักษณ์หลักและหลักการดำเนินงาน
 
-Skills: `~/.zeroclaw/workspace/skills/<skill>/SKILL.md` หรือ `SKILL.toml`
+Skills: `~/.cclawcore/workspace/skills/<skill>/SKILL.md` หรือ `SKILL.toml`
 
 ```bash
 # แสดงรายการ skill ที่ติดตั้ง
-zeroclaw skills list
+cclawcore skills list
 
 # ติดตั้งจาก git
-zeroclaw skills install https://github.com/user/my-skill.git
+cclawcore skills install https://github.com/user/my-skill.git
 
 # ตรวจสอบความปลอดภัยก่อนติดตั้ง
-zeroclaw skills audit https://github.com/user/my-skill.git
+cclawcore skills audit https://github.com/user/my-skill.git
 
 # ลบ skill
-zeroclaw skills remove my-skill
+cclawcore skills remove my-skill
 ```
 
 ## คำสั่ง CLI
 
 ```bash
 # การจัดการ workspace
-zeroclaw onboard              # วิซาร์ดการตั้งค่าแบบแนะนำ
-zeroclaw status               # แสดงสถานะ daemon/เอเจนต์
-zeroclaw doctor               # รันการวินิจฉัยระบบ
+cclawcore onboard              # วิซาร์ดการตั้งค่าแบบแนะนำ
+cclawcore status               # แสดงสถานะ daemon/เอเจนต์
+cclawcore doctor               # รันการวินิจฉัยระบบ
 
 # Gateway + daemon
-zeroclaw gateway              # เริ่มเซิร์ฟเวอร์ gateway (127.0.0.1:42617)
-zeroclaw daemon               # เริ่ม runtime อัตโนมัติเต็มรูปแบบ
+cclawcore gateway              # เริ่มเซิร์ฟเวอร์ gateway (127.0.0.1:42617)
+cclawcore daemon               # เริ่ม runtime อัตโนมัติเต็มรูปแบบ
 
 # เอเจนต์
-zeroclaw agent                # โหมดแชทโต้ตอบ
-zeroclaw agent -m "message"   # โหมดข้อความเดียว
+cclawcore agent                # โหมดแชทโต้ตอบ
+cclawcore agent -m "message"   # โหมดข้อความเดียว
 
 # การจัดการบริการ
-zeroclaw service install      # ติดตั้งเป็นบริการ OS (launchd/systemd)
-zeroclaw service start|stop|restart|status
+cclawcore service install      # ติดตั้งเป็นบริการ OS (launchd/systemd)
+cclawcore service start|stop|restart|status
 
 # ช่องทาง
-zeroclaw channel list         # แสดงรายการช่องทางที่กำหนดค่า
-zeroclaw channel doctor       # ตรวจสอบสุขภาพช่องทาง
-zeroclaw channel bind-telegram 123456789
+cclawcore channel list         # แสดงรายการช่องทางที่กำหนดค่า
+cclawcore channel doctor       # ตรวจสอบสุขภาพช่องทาง
+cclawcore channel bind-telegram 123456789
 
 # Cron + การกำหนดเวลา
-zeroclaw cron list            # แสดงรายการงานที่กำหนดเวลา
-zeroclaw cron add "*/5 * * * *" --prompt "Check system health"
-zeroclaw cron remove <id>
+cclawcore cron list            # แสดงรายการงานที่กำหนดเวลา
+cclawcore cron add "*/5 * * * *" --prompt "Check system health"
+cclawcore cron remove <id>
 
 # หน่วยความจำ
-zeroclaw memory list          # แสดงรายการหน่วยความจำ
-zeroclaw memory get <key>     # ดึงหน่วยความจำ
-zeroclaw memory stats         # สถิติหน่วยความจำ
+cclawcore memory list          # แสดงรายการหน่วยความจำ
+cclawcore memory get <key>     # ดึงหน่วยความจำ
+cclawcore memory stats         # สถิติหน่วยความจำ
 
 # โปรไฟล์การยืนยันตัวตน
-zeroclaw auth login --provider <name>
-zeroclaw auth status
-zeroclaw auth use --provider <name> --profile <profile>
+cclawcore auth login --provider <name>
+cclawcore auth status
+cclawcore auth use --provider <name> --profile <profile>
 
 # อุปกรณ์ต่อพ่วง
-zeroclaw hardware discover    # สแกนอุปกรณ์ที่เชื่อมต่อ
-zeroclaw peripheral list      # แสดงรายการอุปกรณ์ต่อพ่วงที่เชื่อมต่อ
-zeroclaw peripheral flash     # แฟลช firmware ไปยังอุปกรณ์
+cclawcore hardware discover    # สแกนอุปกรณ์ที่เชื่อมต่อ
+cclawcore peripheral list      # แสดงรายการอุปกรณ์ต่อพ่วงที่เชื่อมต่อ
+cclawcore peripheral flash     # แฟลช firmware ไปยังอุปกรณ์
 
 # การย้าย
-zeroclaw migrate openclaw --dry-run
-zeroclaw migrate openclaw
+cclawcore migrate openclaw --dry-run
+cclawcore migrate openclaw
 
 # การเติมเต็ม shell
-source <(zeroclaw completions bash)
-zeroclaw completions zsh > ~/.zfunc/_zeroclaw
+source <(cclawcore completions bash)
+cclawcore completions zsh > ~/.zfunc/_cclawcore
 ```
 
 อ้างอิงคำสั่งฉบับเต็ม: [docs/reference/cli/commands-reference.md](docs/reference/cli/commands-reference.md)
@@ -565,10 +565,10 @@ zeroclaw completions zsh > ~/.zfunc/_zeroclaw
 
 #### ตัวติดตั้งบรรทัดเดียว
 
-หรือข้ามขั้นตอนด้านบนและติดตั้งทุกอย่าง (dependencies ระบบ, Rust, ZeroClaw) ในคำสั่งเดียว:
+หรือข้ามขั้นตอนด้านบนและติดตั้งทุกอย่าง (dependencies ระบบ, Rust, CclawCore) ในคำสั่งเดียว:
 
 ```bash
-curl -LsSf https://raw.githubusercontent.com/zeroclaw-labs/zeroclaw/master/install.sh | bash
+curl -LsSf https://raw.githubusercontent.com/cclawcore-labs/cclawcore/master/install.sh | bash
 ```
 
 #### ข้อกำหนดทรัพยากรการคอมไพล์
@@ -611,7 +611,7 @@ Release assets เผยแพร่สำหรับ:
 - Windows: `x86_64`
 
 ดาวน์โหลด assets ล่าสุดจาก:
-<https://github.com/zeroclaw-labs/zeroclaw/releases/latest>
+<https://github.com/cclawcore-labs/cclawcore/releases/latest>
 
 ## เอกสาร
 
@@ -621,7 +621,7 @@ Release assets เผยแพร่สำหรับ:
 - อ่าน[ภาพรวมสถาปัตยกรรม](docs/architecture.md)สำหรับโมเดลระบบทั้งหมด
 - ใช้[อ้างอิงการกำหนดค่า](docs/reference/api/config-reference.md)เมื่อคุณต้องการทุก key และตัวอย่าง
 - รัน Gateway ตามหนังสือด้วย[runbook การดำเนินงาน](docs/ops/operations-runbook.md)
-- ทำตาม [ZeroClaw Onboard](#เริ่มต้นอย่างรวดเร็ว) สำหรับการตั้งค่าแบบแนะนำ
+- ทำตาม [CclawCore Onboard](#เริ่มต้นอย่างรวดเร็ว) สำหรับการตั้งค่าแบบแนะนำ
 - แก้ไขปัญหาที่พบบ่อยด้วย[คู่มือแก้ไขปัญหา](docs/ops/troubleshooting.md)
 - ตรวจสอบ[แนวทางความปลอดภัย](docs/security/README.md)ก่อนเปิดเผยสิ่งใด
 
@@ -653,14 +653,14 @@ Release assets เผยแพร่สำหรับ:
 
 ## Icy Crab 🦀
 
-ZeroClaw ถูกสร้างสำหรับ smooth crab 🦀 ผู้ช่วย AI ที่เร็วและมีประสิทธิภาพ สร้างโดย Argenis De La Rosa และชุมชน
+CclawCore ถูกสร้างสำหรับ smooth crab 🦀 ผู้ช่วย AI ที่เร็วและมีประสิทธิภาพ สร้างโดย Argenis De La Rosa และชุมชน
 
-- [zeroclawlabs.ai](https://zeroclawlabs.ai)
-- [@zeroclawlabs](https://x.com/zeroclawlabs)
+- [cclawcorelabs.ai](https://cclawcorelabs.ai)
+- [@cclawcorelabs](https://x.com/cclawcorelabs)
 
-## สนับสนุน ZeroClaw
+## สนับสนุน CclawCore
 
-หาก ZeroClaw ช่วยงานของคุณและคุณต้องการสนับสนุนการพัฒนาต่อเนื่อง คุณสามารถบริจาคที่นี่:
+หาก CclawCore ช่วยงานของคุณและคุณต้องการสนับสนุนการพัฒนาต่อเนื่อง คุณสามารถบริจาคที่นี่:
 
 <a href="https://buymeacoffee.com/argenistherose"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Donate-yellow.svg?style=for-the-badge&logo=buy-me-a-coffee" alt="Buy Me a Coffee" /></a>
 
@@ -677,7 +677,7 @@ ZeroClaw ถูกสร้างสำหรับ smooth crab 🦀 ผู้�
 
 ## การมีส่วนร่วม
 
-ใหม่กับ ZeroClaw? มองหา issues ที่มีป้ายกำกับ [`good first issue`](https://github.com/zeroclaw-labs/zeroclaw/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) — ดู[คู่มือการมีส่วนร่วม](CONTRIBUTING.md#first-time-contributors)สำหรับวิธีเริ่มต้น ยินดีรับ PR ที่สร้างด้วย AI/vibe-coded! 🤖
+ใหม่กับ CclawCore? มองหา issues ที่มีป้ายกำกับ [`good first issue`](https://github.com/cclawcore-labs/cclawcore/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) — ดู[คู่มือการมีส่วนร่วม](CONTRIBUTING.md#first-time-contributors)สำหรับวิธีเริ่มต้น ยินดีรับ PR ที่สร้างด้วย AI/vibe-coded! 🤖
 
 ดู [CONTRIBUTING.md](CONTRIBUTING.md) และ [CLA.md](docs/contributing/cla.md) ใช้งาน trait แล้วส่ง PR:
 
@@ -689,26 +689,26 @@ ZeroClaw ถูกสร้างสำหรับ smooth crab 🦀 ผู้�
 - `Memory` ใหม่ → `src/memory/`
 - `Tunnel` ใหม่ → `src/tunnel/`
 - `Peripheral` ใหม่ → `src/peripherals/`
-- `Skill` ใหม่ → `~/.zeroclaw/workspace/skills/<name>/`
+- `Skill` ใหม่ → `~/.cclawcore/workspace/skills/<name>/`
 
 <!-- BEGIN:RECENT_CONTRIBUTORS -->
 <!-- END:RECENT_CONTRIBUTORS -->
 
 ## ⚠️ Repository อย่างเป็นทางการ & คำเตือนการแอบอ้าง
 
-**นี่คือ repository อย่างเป็นทางการเพียงแห่งเดียวของ ZeroClaw:**
+**นี่คือ repository อย่างเป็นทางการเพียงแห่งเดียวของ CclawCore:**
 
-> https://github.com/zeroclaw-labs/zeroclaw
+> https://github.com/cclawcore-labs/cclawcore
 
-repository, องค์กร, โดเมน หรือแพ็กเกจอื่นใดที่อ้างว่าเป็น "ZeroClaw" หรือบ่งบอกถึงการเกี่ยวข้องกับ ZeroClaw Labs นั้น**ไม่ได้รับอนุญาตและไม่มีส่วนเกี่ยวข้องกับโปรเจกต์นี้** Fork ที่ไม่ได้รับอนุญาตที่ทราบจะถูกระบุไว้ใน [TRADEMARK.md](docs/maintainers/trademark.md)
+repository, องค์กร, โดเมน หรือแพ็กเกจอื่นใดที่อ้างว่าเป็น "CclawCore" หรือบ่งบอกถึงการเกี่ยวข้องกับ CclawCore Labs นั้น**ไม่ได้รับอนุญาตและไม่มีส่วนเกี่ยวข้องกับโปรเจกต์นี้** Fork ที่ไม่ได้รับอนุญาตที่ทราบจะถูกระบุไว้ใน [TRADEMARK.md](docs/maintainers/trademark.md)
 
-หากคุณพบการแอบอ้างหรือการใช้เครื่องหมายการค้าในทางที่ผิด โปรด[เปิด issue](https://github.com/zeroclaw-labs/zeroclaw/issues)
+หากคุณพบการแอบอ้างหรือการใช้เครื่องหมายการค้าในทางที่ผิด โปรด[เปิด issue](https://github.com/cclawcore-labs/cclawcore/issues)
 
 ---
 
 ## สัญญาอนุญาต
 
-ZeroClaw มี dual-license เพื่อความเปิดกว้างสูงสุดและการปกป้องผู้มีส่วนร่วม:
+CclawCore มี dual-license เพื่อความเปิดกว้างสูงสุดและการปกป้องผู้มีส่วนร่วม:
 
 | สัญญาอนุญาต | กรณีการใช้งาน |
 |---|---|
@@ -719,7 +719,7 @@ ZeroClaw มี dual-license เพื่อความเปิดกว้า
 
 ### เครื่องหมายการค้า
 
-ชื่อและโลโก้ **ZeroClaw** เป็นเครื่องหมายการค้าของ ZeroClaw Labs สัญญาอนุญาตนี้ไม่ให้สิทธิ์ในการใช้เพื่อบ่งบอกถึงการรับรองหรือการเกี่ยวข้อง ดู [TRADEMARK.md](docs/maintainers/trademark.md) สำหรับการใช้งานที่อนุญาตและห้าม
+ชื่อและโลโก้ **CclawCore** เป็นเครื่องหมายการค้าของ CclawCore Labs สัญญาอนุญาตนี้ไม่ให้สิทธิ์ในการใช้เพื่อบ่งบอกถึงการรับรองหรือการเกี่ยวข้อง ดู [TRADEMARK.md](docs/maintainers/trademark.md) สำหรับการใช้งานที่อนุญาตและห้าม
 
 ### การปกป้องผู้มีส่วนร่วม
 
@@ -730,12 +730,12 @@ ZeroClaw มี dual-license เพื่อความเปิดกว้า
 
 ---
 
-**ZeroClaw** — ไม่มีโอเวอร์เฮด ไม่มีการประนีประนอม Deploy ที่ไหนก็ได้ สลับอะไรก็ได้ 🦀
+**CclawCore** — ไม่มีโอเวอร์เฮด ไม่มีการประนีประนอม Deploy ที่ไหนก็ได้ สลับอะไรก็ได้ 🦀
 
 ## ผู้มีส่วนร่วม
 
-<a href="https://github.com/zeroclaw-labs/zeroclaw/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=zeroclaw-labs/zeroclaw" alt="ZeroClaw contributors" />
+<a href="https://github.com/cclawcore-labs/cclawcore/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=cclawcore-labs/cclawcore" alt="CclawCore contributors" />
 </a>
 
 รายการนี้สร้างจากกราฟผู้มีส่วนร่วม GitHub และอัปเดตโดยอัตโนมัติ
@@ -743,11 +743,11 @@ ZeroClaw มี dual-license เพื่อความเปิดกว้า
 ## ประวัติดาว
 
 <p align="center">
-  <a href="https://www.star-history.com/#zeroclaw-labs/zeroclaw&type=date&legend=top-left">
+  <a href="https://www.star-history.com/#cclawcore-labs/cclawcore&type=date&legend=top-left">
     <picture>
-     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=zeroclaw-labs/zeroclaw&type=date&theme=dark&legend=top-left" />
-     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=zeroclaw-labs/zeroclaw&type=date&legend=top-left" />
-     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=zeroclaw-labs/zeroclaw&type=date&legend=top-left" />
+     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=cclawcore-labs/cclawcore&type=date&theme=dark&legend=top-left" />
+     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=cclawcore-labs/cclawcore&type=date&legend=top-left" />
+     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=cclawcore-labs/cclawcore&type=date&legend=top-left" />
     </picture>
   </a>
 </p>

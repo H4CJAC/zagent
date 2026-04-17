@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/zeroclaw-labs/zeroclaw/master/docs/assets/zeroclaw-banner.png" alt="ZeroClaw" width="600" />
+  <img src="https://raw.githubusercontent.com/cclawcore-labs/cclawcore/master/docs/assets/cclawcore-banner.png" alt="CclawCore" width="600" />
 </p>
 
-<h1 align="center">🦀 ZeroClaw — Asisten AI Pribadi</h1>
+<h1 align="center">🦀 CclawCore — Asisten AI Pribadi</h1>
 
 <p align="center">
   <strong>Nol overhead. Nol kompromi. 100% Rust. 100% Agnostik.</strong><br>
@@ -10,15 +10,15 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/zeroclaw-labs/zeroclaw/actions/workflows/ci-run.yml"><img src="https://img.shields.io/github/actions/workflow/status/zeroclaw-labs/zeroclaw/ci-run.yml?branch=master&label=build" alt="Build Status" /></a>
+  <a href="https://github.com/cclawcore-labs/cclawcore/actions/workflows/ci-run.yml"><img src="https://img.shields.io/github/actions/workflow/status/cclawcore-labs/cclawcore/ci-run.yml?branch=master&label=build" alt="Build Status" /></a>
   <a href="LICENSE-APACHE"><img src="https://img.shields.io/badge/license-MIT%20OR%20Apache%202.0-blue.svg" alt="License: MIT OR Apache-2.0" /></a>
   <a href="https://www.rust-lang.org"><img src="https://img.shields.io/badge/rust-edition%202024-orange?logo=rust" alt="Rust Edition 2024" /></a>
-  <a href="https://github.com/zeroclaw-labs/zeroclaw/releases/latest"><img src="https://img.shields.io/badge/version-v0.6.9-blue" alt="Version v0.6.9" /></a>
-  <a href="https://github.com/zeroclaw-labs/zeroclaw/graphs/contributors"><img src="https://img.shields.io/github/contributors/zeroclaw-labs/zeroclaw?color=green" alt="Contributors" /></a>
+  <a href="https://github.com/cclawcore-labs/cclawcore/releases/latest"><img src="https://img.shields.io/badge/version-v0.6.9-blue" alt="Version v0.6.9" /></a>
+  <a href="https://github.com/cclawcore-labs/cclawcore/graphs/contributors"><img src="https://img.shields.io/github/contributors/cclawcore-labs/cclawcore?color=green" alt="Contributors" /></a>
   <a href="https://buymeacoffee.com/argenistherose"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Donate-yellow.svg?style=flat&logo=buy-me-a-coffee" alt="Buy Me a Coffee" /></a>
-  <a href="https://x.com/zeroclawlabs?s=21"><img src="https://img.shields.io/badge/X-%40zeroclawlabs-000000?style=flat&logo=x&logoColor=white" alt="X: @zeroclawlabs" /></a>
+  <a href="https://x.com/cclawcorelabs?s=21"><img src="https://img.shields.io/badge/X-%40cclawcorelabs-000000?style=flat&logo=x&logoColor=white" alt="X: @cclawcorelabs" /></a>
   <a href="https://discord.com/invite/wDshRVqRjx"><img src="https://img.shields.io/badge/Discord-Join-5865F2?style=flat&logo=discord&logoColor=white" alt="Discord" /></a>
-  <a href="https://www.reddit.com/r/zeroclawlabs/"><img src="https://img.shields.io/badge/Reddit-r%2Fzeroclawlabs-FF4500?style=flat&logo=reddit&logoColor=white" alt="Reddit: r/zeroclawlabs" /></a>
+  <a href="https://www.reddit.com/r/cclawcorelabs/"><img src="https://img.shields.io/badge/Reddit-r%2Fcclawcorelabs-FF4500?style=flat&logo=reddit&logoColor=white" alt="Reddit: r/cclawcorelabs" /></a>
 </p>
 
 <p align="center">
@@ -60,12 +60,12 @@ Dibangun oleh mahasiswa dan anggota komunitas Harvard, MIT, dan Sundai.Club.
   <a href="../nb/README.md">🇳🇴 Norsk</a>
 </p>
 
-ZeroClaw adalah asisten AI pribadi yang Anda jalankan di perangkat sendiri. Ia menjawab Anda melalui saluran yang sudah Anda gunakan (WhatsApp, Telegram, Slack, Discord, Signal, iMessage, Matrix, IRC, Email, Bluesky, Nostr, Mattermost, Nextcloud Talk, DingTalk, Lark, QQ, Reddit, LinkedIn, Twitter, MQTT, WeChat Work, dan lainnya). Ia memiliki dasbor web untuk kontrol real-time dan dapat terhubung ke periferal perangkat keras (ESP32, STM32, Arduino, Raspberry Pi). Gateway hanyalah bidang kendali — produknya adalah asisten.
+CclawCore adalah asisten AI pribadi yang Anda jalankan di perangkat sendiri. Ia menjawab Anda melalui saluran yang sudah Anda gunakan (WhatsApp, Telegram, Slack, Discord, Signal, iMessage, Matrix, IRC, Email, Bluesky, Nostr, Mattermost, Nextcloud Talk, DingTalk, Lark, QQ, Reddit, LinkedIn, Twitter, MQTT, WeChat Work, dan lainnya). Ia memiliki dasbor web untuk kontrol real-time dan dapat terhubung ke periferal perangkat keras (ESP32, STM32, Arduino, Raspberry Pi). Gateway hanyalah bidang kendali — produknya adalah asisten.
 
 Jika Anda menginginkan asisten pribadi, pengguna tunggal, yang terasa lokal, cepat, dan selalu aktif, inilah solusinya.
 
 <p align="center">
-  <a href="https://zeroclawlabs.ai">Situs Web</a> ·
+  <a href="https://cclawcorelabs.ai">Situs Web</a> ·
   <a href="docs/README.md">Dokumentasi</a> ·
   <a href="docs/architecture.md">Arsitektur</a> ·
   <a href="#mulai-cepat">Memulai</a> ·
@@ -74,7 +74,7 @@ Jika Anda menginginkan asisten pribadi, pengguna tunggal, yang terasa lokal, cep
   <a href="https://discord.com/invite/wDshRVqRjx">Discord</a>
 </p>
 
-> **Pengaturan yang disarankan:** jalankan `zeroclaw onboard` di terminal Anda. ZeroClaw Onboard memandu Anda langkah demi langkah dalam menyiapkan gateway, workspace, saluran, dan provider. Ini adalah jalur pengaturan yang disarankan dan berfungsi di macOS, Linux, dan Windows (melalui WSL2). Instalasi baru? Mulai di sini: [Memulai](#mulai-cepat)
+> **Pengaturan yang disarankan:** jalankan `cclawcore onboard` di terminal Anda. CclawCore Onboard memandu Anda langkah demi langkah dalam menyiapkan gateway, workspace, saluran, dan provider. Ini adalah jalur pengaturan yang disarankan dan berfungsi di macOS, Linux, dan Windows (melalui WSL2). Instalasi baru? Mulai di sini: [Memulai](#mulai-cepat)
 
 ### Autentikasi Berlangganan (OAuth)
 
@@ -94,18 +94,18 @@ Runtime: Rust stable toolchain. Biner tunggal, tanpa dependensi runtime.
 ### Homebrew (macOS/Linuxbrew)
 
 ```bash
-brew install zeroclaw
+brew install cclawcore
 ```
 
 ### Bootstrap sekali klik
 
 ```bash
-git clone https://github.com/zeroclaw-labs/zeroclaw.git
-cd zeroclaw
+git clone https://github.com/cclawcore-labs/cclawcore.git
+cd cclawcore
 ./install.sh
 ```
 
-`zeroclaw onboard` berjalan otomatis setelah instalasi untuk mengonfigurasi workspace dan provider Anda.
+`cclawcore onboard` berjalan otomatis setelah instalasi untuk mengonfigurasi workspace dan provider Anda.
 
 ## Mulai cepat (TL;DR)
 
@@ -116,67 +116,67 @@ Panduan lengkap pemula (autentikasi, pairing, saluran): [Memulai](docs/setup-gui
 ./install.sh --api-key "sk-..." --provider openrouter
 
 # Mulai gateway (server webhook + dasbor web)
-zeroclaw gateway                # default: 127.0.0.1:42617
-zeroclaw gateway --port 0       # port acak (keamanan ditingkatkan)
+cclawcore gateway                # default: 127.0.0.1:42617
+cclawcore gateway --port 0       # port acak (keamanan ditingkatkan)
 
 # Bicara ke asisten
-zeroclaw agent -m "Hello, ZeroClaw!"
+cclawcore agent -m "Hello, CclawCore!"
 
 # Mode interaktif
-zeroclaw agent
+cclawcore agent
 
 # Mulai runtime otonom penuh (gateway + saluran + cron + hands)
-zeroclaw daemon
+cclawcore daemon
 
 # Periksa status
-zeroclaw status
+cclawcore status
 
 # Jalankan diagnostik
-zeroclaw doctor
+cclawcore doctor
 ```
 
-Memperbarui? Jalankan `zeroclaw doctor` setelah pembaruan.
+Memperbarui? Jalankan `cclawcore doctor` setelah pembaruan.
 
 ### Dari sumber (pengembangan)
 
 ```bash
-git clone https://github.com/zeroclaw-labs/zeroclaw.git
-cd zeroclaw
+git clone https://github.com/cclawcore-labs/cclawcore.git
+cd cclawcore
 
 cargo build --release --locked
 cargo install --path . --force --locked
 
-zeroclaw onboard
+cclawcore onboard
 ```
 
 > **Alternatif dev (tanpa instalasi global):** awali perintah dengan `cargo run --release --` (contoh: `cargo run --release -- status`).
 
 ## Migrasi dari OpenClaw
 
-ZeroClaw dapat mengimpor workspace, memori, dan konfigurasi OpenClaw Anda:
+CclawCore dapat mengimpor workspace, memori, dan konfigurasi OpenClaw Anda:
 
 ```bash
 # Pratinjau apa yang akan dimigrasikan (aman, hanya-baca)
-zeroclaw migrate openclaw --dry-run
+cclawcore migrate openclaw --dry-run
 
 # Jalankan migrasi
-zeroclaw migrate openclaw
+cclawcore migrate openclaw
 ```
 
-Ini memigrasikan entri memori, file workspace, dan konfigurasi Anda dari `~/.openclaw/` ke `~/.zeroclaw/`. Konfigurasi dikonversi dari JSON ke TOML secara otomatis.
+Ini memigrasikan entri memori, file workspace, dan konfigurasi Anda dari `~/.openclaw/` ke `~/.cclawcore/`. Konfigurasi dikonversi dari JSON ke TOML secara otomatis.
 
 ## Default keamanan (akses DM)
 
-ZeroClaw terhubung ke permukaan pesan nyata. Perlakukan DM masuk sebagai input tidak tepercaya.
+CclawCore terhubung ke permukaan pesan nyata. Perlakukan DM masuk sebagai input tidak tepercaya.
 
 Panduan keamanan lengkap: [SECURITY.md](SECURITY.md)
 
 Perilaku default di semua saluran:
 
 - **Pairing DM** (default): pengirim yang tidak dikenal menerima kode pairing singkat dan bot tidak memproses pesan mereka.
-- Setujui dengan: `zeroclaw pairing approve <channel> <code>` (kemudian pengirim ditambahkan ke daftar izin lokal).
+- Setujui dengan: `cclawcore pairing approve <channel> <code>` (kemudian pengirim ditambahkan ke daftar izin lokal).
 - DM masuk publik memerlukan opt-in eksplisit di `config.toml`.
-- Jalankan `zeroclaw doctor` untuk menemukan kebijakan DM yang berisiko atau salah konfigurasi.
+- Jalankan `cclawcore doctor` untuk menemukan kebijakan DM yang berisiko atau salah konfigurasi.
 
 **Level otonomi:**
 
@@ -197,7 +197,7 @@ Gunakan papan ini untuk pemberitahuan penting (perubahan yang merusak, saran kea
 
 | Tanggal (UTC) | Level       | Pemberitahuan                                                                                                                                                                                                                                                                                                                                                 | Tindakan                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-02-19 | _Kritis_  | Kami **tidak berafiliasi** dengan `openagen/zeroclaw`, `zeroclaw.org` atau `zeroclaw.net`. Domain `zeroclaw.org` dan `zeroclaw.net` saat ini mengarah ke fork `openagen/zeroclaw`, dan domain/repositori tersebut menyamar sebagai situs web/proyek resmi kami.                                                                                       | Jangan percaya informasi, biner, penggalangan dana, atau pengumuman dari sumber tersebut. Gunakan hanya [repositori ini](https://github.com/zeroclaw-labs/zeroclaw) dan akun sosial terverifikasi kami.                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| 2026-02-19 | _Kritis_  | Kami **tidak berafiliasi** dengan `openagen/cclawcore`, `cclawcore.org` atau `cclawcore.net`. Domain `cclawcore.org` dan `cclawcore.net` saat ini mengarah ke fork `openagen/cclawcore`, dan domain/repositori tersebut menyamar sebagai situs web/proyek resmi kami.                                                                                       | Jangan percaya informasi, biner, penggalangan dana, atau pengumuman dari sumber tersebut. Gunakan hanya [repositori ini](https://github.com/cclawcore-labs/cclawcore) dan akun sosial terverifikasi kami.                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | 2026-02-19 | _Penting_ | Anthropic memperbarui ketentuan Autentikasi dan Penggunaan Kredensial pada 2026-02-19. Token OAuth Claude Code (Free, Pro, Max) ditujukan secara eksklusif untuk Claude Code dan Claude.ai; menggunakan token OAuth dari Claude Free/Pro/Max di produk, alat, atau layanan lain (termasuk Agent SDK) tidak diizinkan dan dapat melanggar Ketentuan Layanan Konsumen. | Harap sementara hindari integrasi OAuth Claude Code untuk mencegah potensi kerugian. Klausul asli: [Authentication and Credential Use](https://code.claude.com/docs/en/legal-and-compliance#authentication-and-credential-use).                                                                                                                                                                                                                                                                                                                                                                                    |
 
 ## Sorotan
@@ -217,18 +217,18 @@ Gunakan papan ini untuk pemberitahuan penting (perubahan yang merusak, saran kea
 - **Platform skill** — skill bawaan, komunitas, dan workspace dengan audit keamanan.
 - **Dukungan tunnel** — Cloudflare, Tailscale, ngrok, OpenVPN, dan tunnel kustom untuk akses jarak jauh.
 
-### Mengapa tim memilih ZeroClaw
+### Mengapa tim memilih CclawCore
 
 - **Ringan secara default:** biner Rust kecil, startup cepat, jejak memori rendah.
 - **Aman secara desain:** pairing, sandboxing ketat, daftar izin eksplisit, pelingkupan workspace.
 - **Sepenuhnya dapat ditukar:** sistem inti adalah trait (provider, saluran, alat, memori, tunnel).
 - **Tanpa lock-in:** dukungan provider kompatibel OpenAI + endpoint kustom pluggable.
 
-## Cuplikan Benchmark (ZeroClaw vs OpenClaw, Dapat Direproduksi)
+## Cuplikan Benchmark (CclawCore vs OpenClaw, Dapat Direproduksi)
 
 Benchmark cepat mesin lokal (macOS arm64, Feb 2026) dinormalisasi untuk perangkat keras edge 0.8GHz.
 
-|                           | OpenClaw      | NanoBot        | PicoClaw        | ZeroClaw 🦀          |
+|                           | OpenClaw      | NanoBot        | PicoClaw        | CclawCore 🦀          |
 | ------------------------- | ------------- | -------------- | --------------- | -------------------- |
 | **Bahasa**                | TypeScript    | Python         | Go              | **Rust**             |
 | **RAM**                   | > 1GB         | > 100MB        | < 10MB          | **< 5MB**            |
@@ -236,20 +236,20 @@ Benchmark cepat mesin lokal (macOS arm64, Feb 2026) dinormalisasi untuk perangka
 | **Ukuran Biner**          | ~28MB (dist)  | N/A (Scripts)  | ~8MB            | **~8.8 MB**          |
 | **Biaya**                 | Mac Mini $599 | Linux SBC ~$50 | Linux Board $10 | **Perangkat keras apa pun $10** |
 
-> Catatan: Hasil ZeroClaw diukur pada build rilis menggunakan `/usr/bin/time -l`. OpenClaw memerlukan runtime Node.js (biasanya ~390MB overhead memori tambahan), sedangkan NanoBot memerlukan runtime Python. PicoClaw dan ZeroClaw adalah biner statis. Angka RAM di atas adalah memori runtime; kebutuhan kompilasi saat build lebih tinggi.
+> Catatan: Hasil CclawCore diukur pada build rilis menggunakan `/usr/bin/time -l`. OpenClaw memerlukan runtime Node.js (biasanya ~390MB overhead memori tambahan), sedangkan NanoBot memerlukan runtime Python. PicoClaw dan CclawCore adalah biner statis. Angka RAM di atas adalah memori runtime; kebutuhan kompilasi saat build lebih tinggi.
 
 <p align="center">
-  <img src="docs/assets/zeroclaw-comparison.jpeg" alt="ZeroClaw vs OpenClaw Comparison" width="800" />
+  <img src="docs/assets/cclawcore-comparison.jpeg" alt="CclawCore vs OpenClaw Comparison" width="800" />
 </p>
 
 ### Pengukuran lokal yang dapat direproduksi
 
 ```bash
 cargo build --release
-ls -lh target/release/zeroclaw
+ls -lh target/release/cclawcore
 
-/usr/bin/time -l target/release/zeroclaw --help
-/usr/bin/time -l target/release/zeroclaw status
+/usr/bin/time -l target/release/cclawcore --help
+/usr/bin/time -l target/release/cclawcore status
 ```
 
 ## Semua yang telah kami bangun sejauh ini
@@ -325,7 +325,7 @@ Dasbor web React 19 + Vite 6 + Tailwind CSS 4 yang disajikan langsung dari Gatew
 
 ## Konfigurasi
 
-Minimal `~/.zeroclaw/config.toml`:
+Minimal `~/.cclawcore/config.toml`:
 
 ```toml
 default_provider = "anthropic"
@@ -393,35 +393,35 @@ Atur `runtime.kind = "docker"` untuk sandboxing ketat atau isolasi jaringan.
 
 ## Autentikasi Berlangganan (OpenAI Codex / Claude Code / Gemini)
 
-ZeroClaw mendukung profil autentikasi native berlangganan (multi-akun, terenkripsi saat istirahat).
+CclawCore mendukung profil autentikasi native berlangganan (multi-akun, terenkripsi saat istirahat).
 
-- File penyimpanan: `~/.zeroclaw/auth-profiles.json`
-- Kunci enkripsi: `~/.zeroclaw/.secret_key`
+- File penyimpanan: `~/.cclawcore/auth-profiles.json`
+- Kunci enkripsi: `~/.cclawcore/.secret_key`
 - Format id profil: `<provider>:<profile_name>` (contoh: `openai-codex:work`)
 
 ```bash
 # OpenAI Codex OAuth (langganan ChatGPT)
-zeroclaw auth login --provider openai-codex --device-code
+cclawcore auth login --provider openai-codex --device-code
 
 # Gemini OAuth
-zeroclaw auth login --provider gemini --profile default
+cclawcore auth login --provider gemini --profile default
 
 # Anthropic setup-token
-zeroclaw auth paste-token --provider anthropic --profile default --auth-kind authorization
+cclawcore auth paste-token --provider anthropic --profile default --auth-kind authorization
 
 # Periksa / refresh / ganti profil
-zeroclaw auth status
-zeroclaw auth refresh --provider openai-codex --profile default
-zeroclaw auth use --provider openai-codex --profile work
+cclawcore auth status
+cclawcore auth refresh --provider openai-codex --profile default
+cclawcore auth use --provider openai-codex --profile work
 
 # Jalankan agen dengan auth berlangganan
-zeroclaw agent --provider openai-codex -m "hello"
-zeroclaw agent --provider anthropic -m "hello"
+cclawcore agent --provider openai-codex -m "hello"
+cclawcore agent --provider anthropic -m "hello"
 ```
 
 ## Workspace agen + skill
 
-Root workspace: `~/.zeroclaw/workspace/` (dapat dikonfigurasi melalui config).
+Root workspace: `~/.cclawcore/workspace/` (dapat dikonfigurasi melalui config).
 
 File prompt yang diinjeksi:
 - `IDENTITY.md` — kepribadian dan peran agen
@@ -430,74 +430,74 @@ File prompt yang diinjeksi:
 - `AGENTS.md` — konvensi sesi dan aturan inisialisasi
 - `SOUL.md` — identitas inti dan prinsip operasi
 
-Skill: `~/.zeroclaw/workspace/skills/<skill>/SKILL.md` atau `SKILL.toml`.
+Skill: `~/.cclawcore/workspace/skills/<skill>/SKILL.md` atau `SKILL.toml`.
 
 ```bash
 # Daftar skill yang terinstal
-zeroclaw skills list
+cclawcore skills list
 
 # Instal dari git
-zeroclaw skills install https://github.com/user/my-skill.git
+cclawcore skills install https://github.com/user/my-skill.git
 
 # Audit keamanan sebelum instalasi
-zeroclaw skills audit https://github.com/user/my-skill.git
+cclawcore skills audit https://github.com/user/my-skill.git
 
 # Hapus skill
-zeroclaw skills remove my-skill
+cclawcore skills remove my-skill
 ```
 
 ## Perintah CLI
 
 ```bash
 # Manajemen workspace
-zeroclaw onboard              # Wizard pengaturan terpandu
-zeroclaw status               # Tampilkan status daemon/agen
-zeroclaw doctor               # Jalankan diagnostik sistem
+cclawcore onboard              # Wizard pengaturan terpandu
+cclawcore status               # Tampilkan status daemon/agen
+cclawcore doctor               # Jalankan diagnostik sistem
 
 # Gateway + daemon
-zeroclaw gateway              # Mulai server gateway (127.0.0.1:42617)
-zeroclaw daemon               # Mulai runtime otonom penuh
+cclawcore gateway              # Mulai server gateway (127.0.0.1:42617)
+cclawcore daemon               # Mulai runtime otonom penuh
 
 # Agen
-zeroclaw agent                # Mode obrolan interaktif
-zeroclaw agent -m "message"   # Mode pesan tunggal
+cclawcore agent                # Mode obrolan interaktif
+cclawcore agent -m "message"   # Mode pesan tunggal
 
 # Manajemen layanan
-zeroclaw service install      # Instal sebagai layanan OS (launchd/systemd)
-zeroclaw service start|stop|restart|status
+cclawcore service install      # Instal sebagai layanan OS (launchd/systemd)
+cclawcore service start|stop|restart|status
 
 # Saluran
-zeroclaw channel list         # Daftar saluran yang dikonfigurasi
-zeroclaw channel doctor       # Periksa kesehatan saluran
-zeroclaw channel bind-telegram 123456789
+cclawcore channel list         # Daftar saluran yang dikonfigurasi
+cclawcore channel doctor       # Periksa kesehatan saluran
+cclawcore channel bind-telegram 123456789
 
 # Cron + penjadwalan
-zeroclaw cron list            # Daftar tugas terjadwal
-zeroclaw cron add "*/5 * * * *" --prompt "Check system health"
-zeroclaw cron remove <id>
+cclawcore cron list            # Daftar tugas terjadwal
+cclawcore cron add "*/5 * * * *" --prompt "Check system health"
+cclawcore cron remove <id>
 
 # Memori
-zeroclaw memory list          # Daftar entri memori
-zeroclaw memory get <key>     # Ambil memori
-zeroclaw memory stats         # Statistik memori
+cclawcore memory list          # Daftar entri memori
+cclawcore memory get <key>     # Ambil memori
+cclawcore memory stats         # Statistik memori
 
 # Profil autentikasi
-zeroclaw auth login --provider <name>
-zeroclaw auth status
-zeroclaw auth use --provider <name> --profile <profile>
+cclawcore auth login --provider <name>
+cclawcore auth status
+cclawcore auth use --provider <name> --profile <profile>
 
 # Periferal perangkat keras
-zeroclaw hardware discover    # Pindai perangkat yang terhubung
-zeroclaw peripheral list      # Daftar periferal yang terhubung
-zeroclaw peripheral flash     # Flash firmware ke perangkat
+cclawcore hardware discover    # Pindai perangkat yang terhubung
+cclawcore peripheral list      # Daftar periferal yang terhubung
+cclawcore peripheral flash     # Flash firmware ke perangkat
 
 # Migrasi
-zeroclaw migrate openclaw --dry-run
-zeroclaw migrate openclaw
+cclawcore migrate openclaw --dry-run
+cclawcore migrate openclaw
 
 # Pelengkapan shell
-source <(zeroclaw completions bash)
-zeroclaw completions zsh > ~/.zfunc/_zeroclaw
+source <(cclawcore completions bash)
+cclawcore completions zsh > ~/.zfunc/_cclawcore
 ```
 
 Referensi perintah lengkap: [docs/reference/cli/commands-reference.md](docs/reference/cli/commands-reference.md)
@@ -565,10 +565,10 @@ Referensi perintah lengkap: [docs/reference/cli/commands-reference.md](docs/refe
 
 #### Installer Satu Baris
 
-Atau lewati langkah di atas dan instal semuanya (dependensi sistem, Rust, ZeroClaw) dalam satu perintah:
+Atau lewati langkah di atas dan instal semuanya (dependensi sistem, Rust, CclawCore) dalam satu perintah:
 
 ```bash
-curl -LsSf https://raw.githubusercontent.com/zeroclaw-labs/zeroclaw/master/install.sh | bash
+curl -LsSf https://raw.githubusercontent.com/cclawcore-labs/cclawcore/master/install.sh | bash
 ```
 
 #### Kebutuhan sumber daya kompilasi
@@ -611,7 +611,7 @@ Aset rilis dipublikasikan untuk:
 - Windows: `x86_64`
 
 Unduh aset terbaru dari:
-<https://github.com/zeroclaw-labs/zeroclaw/releases/latest>
+<https://github.com/cclawcore-labs/cclawcore/releases/latest>
 
 ## Dokumentasi
 
@@ -621,7 +621,7 @@ Gunakan ini ketika Anda sudah melewati alur onboarding dan menginginkan referens
 - Baca [ikhtisar arsitektur](docs/architecture.md) untuk model sistem lengkap.
 - Gunakan [referensi konfigurasi](docs/reference/api/config-reference.md) ketika Anda memerlukan setiap kunci dan contoh.
 - Jalankan Gateway sesuai buku dengan [runbook operasional](docs/ops/operations-runbook.md).
-- Ikuti [ZeroClaw Onboard](#mulai-cepat) untuk pengaturan terpandu.
+- Ikuti [CclawCore Onboard](#mulai-cepat) untuk pengaturan terpandu.
 - Debug kegagalan umum dengan [panduan pemecahan masalah](docs/ops/troubleshooting.md).
 - Tinjau [panduan keamanan](docs/security/README.md) sebelum mengekspos apa pun.
 
@@ -653,14 +653,14 @@ Gunakan ini ketika Anda sudah melewati alur onboarding dan menginginkan referens
 
 ## Icy Crab 🦀
 
-ZeroClaw dibangun untuk smooth crab 🦀, asisten AI yang cepat dan efisien. Dibangun oleh Argenis De La Rosa dan komunitas.
+CclawCore dibangun untuk smooth crab 🦀, asisten AI yang cepat dan efisien. Dibangun oleh Argenis De La Rosa dan komunitas.
 
-- [zeroclawlabs.ai](https://zeroclawlabs.ai)
-- [@zeroclawlabs](https://x.com/zeroclawlabs)
+- [cclawcorelabs.ai](https://cclawcorelabs.ai)
+- [@cclawcorelabs](https://x.com/cclawcorelabs)
 
-## Dukung ZeroClaw
+## Dukung CclawCore
 
-Jika ZeroClaw membantu pekerjaan Anda dan Anda ingin mendukung pengembangan berkelanjutan, Anda dapat berdonasi di sini:
+Jika CclawCore membantu pekerjaan Anda dan Anda ingin mendukung pengembangan berkelanjutan, Anda dapat berdonasi di sini:
 
 <a href="https://buymeacoffee.com/argenistherose"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Donate-yellow.svg?style=for-the-badge&logo=buy-me-a-coffee" alt="Buy Me a Coffee" /></a>
 
@@ -677,7 +677,7 @@ Kami membangun secara terbuka karena ide terbaik datang dari mana saja. Jika And
 
 ## Berkontribusi
 
-Baru di ZeroClaw? Cari isu berlabel [`good first issue`](https://github.com/zeroclaw-labs/zeroclaw/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) — lihat [Panduan Kontribusi](CONTRIBUTING.md#first-time-contributors) untuk cara memulai. PR yang dibuat dengan AI/vibe-coded dipersilakan! 🤖
+Baru di CclawCore? Cari isu berlabel [`good first issue`](https://github.com/cclawcore-labs/cclawcore/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) — lihat [Panduan Kontribusi](CONTRIBUTING.md#first-time-contributors) untuk cara memulai. PR yang dibuat dengan AI/vibe-coded dipersilakan! 🤖
 
 Lihat [CONTRIBUTING.md](CONTRIBUTING.md) dan [CLA.md](docs/contributing/cla.md). Implementasikan trait, kirimkan PR:
 
@@ -689,26 +689,26 @@ Lihat [CONTRIBUTING.md](CONTRIBUTING.md) dan [CLA.md](docs/contributing/cla.md).
 - `Memory` baru → `src/memory/`
 - `Tunnel` baru → `src/tunnel/`
 - `Peripheral` baru → `src/peripherals/`
-- `Skill` baru → `~/.zeroclaw/workspace/skills/<name>/`
+- `Skill` baru → `~/.cclawcore/workspace/skills/<name>/`
 
 <!-- BEGIN:RECENT_CONTRIBUTORS -->
 <!-- END:RECENT_CONTRIBUTORS -->
 
 ## ⚠️ Repositori Resmi & Peringatan Peniruan
 
-**Ini adalah satu-satunya repositori resmi ZeroClaw:**
+**Ini adalah satu-satunya repositori resmi CclawCore:**
 
-> https://github.com/zeroclaw-labs/zeroclaw
+> https://github.com/cclawcore-labs/cclawcore
 
-Repositori, organisasi, domain, atau paket lain yang mengklaim sebagai "ZeroClaw" atau menyiratkan afiliasi dengan ZeroClaw Labs adalah **tidak sah dan tidak berafiliasi dengan proyek ini**. Fork tidak sah yang diketahui akan terdaftar di [TRADEMARK.md](docs/maintainers/trademark.md).
+Repositori, organisasi, domain, atau paket lain yang mengklaim sebagai "CclawCore" atau menyiratkan afiliasi dengan CclawCore Labs adalah **tidak sah dan tidak berafiliasi dengan proyek ini**. Fork tidak sah yang diketahui akan terdaftar di [TRADEMARK.md](docs/maintainers/trademark.md).
 
-Jika Anda menemukan peniruan atau penyalahgunaan merek dagang, silakan [buka isu](https://github.com/zeroclaw-labs/zeroclaw/issues).
+Jika Anda menemukan peniruan atau penyalahgunaan merek dagang, silakan [buka isu](https://github.com/cclawcore-labs/cclawcore/issues).
 
 ---
 
 ## Lisensi
 
-ZeroClaw memiliki dual-license untuk keterbukaan maksimum dan perlindungan kontributor:
+CclawCore memiliki dual-license untuk keterbukaan maksimum dan perlindungan kontributor:
 
 | Lisensi | Kasus penggunaan |
 |---|---|
@@ -719,7 +719,7 @@ Anda dapat memilih salah satu lisensi. **Kontributor secara otomatis memberikan 
 
 ### Merek Dagang
 
-Nama dan logo **ZeroClaw** adalah merek dagang dari ZeroClaw Labs. Lisensi ini tidak memberikan izin untuk menggunakannya untuk menyiratkan dukungan atau afiliasi. Lihat [TRADEMARK.md](docs/maintainers/trademark.md) untuk penggunaan yang diizinkan dan dilarang.
+Nama dan logo **CclawCore** adalah merek dagang dari CclawCore Labs. Lisensi ini tidak memberikan izin untuk menggunakannya untuk menyiratkan dukungan atau afiliasi. Lihat [TRADEMARK.md](docs/maintainers/trademark.md) untuk penggunaan yang diizinkan dan dilarang.
 
 ### Perlindungan Kontributor
 
@@ -730,12 +730,12 @@ Nama dan logo **ZeroClaw** adalah merek dagang dari ZeroClaw Labs. Lisensi ini t
 
 ---
 
-**ZeroClaw** — Nol overhead. Nol kompromi. Deploy di mana saja. Tukar apa saja. 🦀
+**CclawCore** — Nol overhead. Nol kompromi. Deploy di mana saja. Tukar apa saja. 🦀
 
 ## Kontributor
 
-<a href="https://github.com/zeroclaw-labs/zeroclaw/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=zeroclaw-labs/zeroclaw" alt="ZeroClaw contributors" />
+<a href="https://github.com/cclawcore-labs/cclawcore/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=cclawcore-labs/cclawcore" alt="CclawCore contributors" />
 </a>
 
 Daftar ini dihasilkan dari grafik kontributor GitHub dan diperbarui secara otomatis.
@@ -743,11 +743,11 @@ Daftar ini dihasilkan dari grafik kontributor GitHub dan diperbarui secara otoma
 ## Riwayat Bintang
 
 <p align="center">
-  <a href="https://www.star-history.com/#zeroclaw-labs/zeroclaw&type=date&legend=top-left">
+  <a href="https://www.star-history.com/#cclawcore-labs/cclawcore&type=date&legend=top-left">
     <picture>
-     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=zeroclaw-labs/zeroclaw&type=date&theme=dark&legend=top-left" />
-     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=zeroclaw-labs/zeroclaw&type=date&legend=top-left" />
-     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=zeroclaw-labs/zeroclaw&type=date&legend=top-left" />
+     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=cclawcore-labs/cclawcore&type=date&theme=dark&legend=top-left" />
+     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=cclawcore-labs/cclawcore&type=date&legend=top-left" />
+     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=cclawcore-labs/cclawcore&type=date&legend=top-left" />
     </picture>
   </a>
 </p>

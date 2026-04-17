@@ -10,11 +10,11 @@ use std::fmt;
 use std::sync::Arc;
 
 use anyhow::{Result, bail};
+use cclawcore_macros::Configurable;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use tokio::sync::{Mutex, mpsc};
 use tracing::{debug, info, warn};
-use zeroclaw_macros::Configurable;
 
 use super::traits::{Channel, ChannelMessage, SendMessage};
 

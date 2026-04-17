@@ -16,7 +16,7 @@
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use zeroclaw_macros::Configurable;
+use cclawcore_macros::Configurable;
 
 /// How deeply the model should reason for a given message.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema)]

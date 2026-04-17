@@ -1,6 +1,6 @@
+use cclawcore::channels::media_pipeline::MediaAttachment;
+use cclawcore::channels::traits::SendMessage;
 use mail_parser::{MessageParser, MimeHeaders};
-use zeroclaw::channels::media_pipeline::MediaAttachment;
-use zeroclaw::channels::traits::SendMessage;
 
 /// Test that extract_attachments correctly parses binary attachments from multipart MIME
 #[test]

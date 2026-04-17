@@ -53,8 +53,16 @@ fn base64url_encode_bytes(data: &[u8]) -> String {
     let mut i = 0;
     while i < data.len() {
         let b0 = data[i] as u32;
-        let b1 = if i + 1 < data.len() { data[i + 1] as u32 } else { 0 };
-        let b2 = if i + 2 < data.len() { data[i + 2] as u32 } else { 0 };
+        let b1 = if i + 1 < data.len() {
+            data[i + 1] as u32
+        } else {
+            0
+        };
+        let b2 = if i + 2 < data.len() {
+            data[i + 2] as u32
+        } else {
+            0
+        };
         let triple = (b0 << 16) | (b1 << 8) | b2;
 
         result.push(CHARS[((triple >> 18) & 0x3F) as usize] as char);
@@ -97,13 +105,11 @@ impl GlmProvider {
         if self.api_key_id.is_empty() || self.api_key_secret.is_empty() {
             anyhow::bail!(
                 "GLM API key not set or invalid format. Expected 'id.secret'. \
-                 Run `zeroclaw onboard` or set GLM_API_KEY env var."
+                 Run `cclawcore onboard` or set GLM_API_KEY env var."
             );
         }
 
-        let now_ms = SystemTime::now()
-            .duration_since(UNIX_EPOCH)?
-            .as_millis() as u64;
+        let now_ms = SystemTime::now().duration_since(UNIX_EPOCH)?.as_millis() as u64;
 
         // Check cache (valid for 3 minutes, token expires at 3.5 min)
         if let Ok(cache) = self.token_cache.lock() {
@@ -325,9 +331,7 @@ mod tests {
     #[tokio::test]
     async fn chat_fails_without_key() {
         let p = GlmProvider::new(None);
-        let result = p
-            .chat_with_system(None, "hello", "glm-4.7", 0.7)
-            .await;
+        let result = p.chat_with_system(None, "hello", "glm-4.7", 0.7).await;
         assert!(result.is_err());
     }
 

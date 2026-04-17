@@ -1,7 +1,7 @@
 use crate::providers::traits::ChatMessage;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use zeroclaw_macros::Configurable;
+use cclawcore_macros::Configurable;
 
 // ---------------------------------------------------------------------------
 // Config

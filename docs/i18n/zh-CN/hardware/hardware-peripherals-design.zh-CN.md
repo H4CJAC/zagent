@@ -1,17 +1,17 @@
-# 硬件外设设计 — ZeroClaw
+# 硬件外设设计 — CclawCore
 
-ZeroClaw 让微控制器（MCU，Microcontroller Unit）和单板计算机（SBC，Single Board Computer）能够**动态解释自然语言命令**，生成硬件特定代码，并实时执行外设交互。
+CclawCore 让微控制器（MCU，Microcontroller Unit）和单板计算机（SBC，Single Board Computer）能够**动态解释自然语言命令**，生成硬件特定代码，并实时执行外设交互。
 
 ## 1. 愿景
 
-**目标：** ZeroClaw 作为具备硬件感知能力的 AI 代理，能够：
+**目标：** CclawCore 作为具备硬件感知能力的 AI 代理，能够：
 - 通过渠道（WhatsApp、Telegram）接收自然语言触发（例如"移动 X 机械臂"、"打开 LED"）
 - 获取准确的硬件文档（数据手册、寄存器映射）
 - 使用 LLM（大语言模型，如 Gemini、本地开源模型）合成 Rust 代码/逻辑
 - 执行逻辑操作外设（GPIO、I2C、SPI）
 - 持久化优化后的代码供未来复用
 
-**思维模型：** ZeroClaw = 理解硬件的大脑。外设 = 它控制的手臂和腿。
+**思维模型：** CclawCore = 理解硬件的大脑。外设 = 它控制的手臂和腿。
 
 ## 2. 两种运行模式
 
@@ -19,11 +19,11 @@ ZeroClaw 让微控制器（MCU，Microcontroller Unit）和单板计算机（SBC
 
 **目标：** 支持 Wi-Fi 的开发板（ESP32、树莓派）。
 
-ZeroClaw **直接运行在设备上**。开发板启动 gRPC/nanoRPC 服务器，与本地外设通信。
+CclawCore **直接运行在设备上**。开发板启动 gRPC/nanoRPC 服务器，与本地外设通信。
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│  ZeroClaw on ESP32 / Raspberry Pi (Edge-Native)                             │
+│  CclawCore on ESP32 / Raspberry Pi (Edge-Native)                             │
 │                                                                             │
 │  ┌─────────────┐    ┌──────────────┐    ┌─────────────────────────────────┐ │
 │  │ Channels    │───►│ Agent Loop   │───►│ RAG: datasheets, register maps  │ │
@@ -41,7 +41,7 @@ ZeroClaw **直接运行在设备上**。开发板启动 gRPC/nanoRPC 服务器�
 
 **工作流：**
 1. 用户发送 WhatsApp 消息：*"打开引脚 13 上的 LED"*
-2. ZeroClaw 获取开发板特定文档（例如 ESP32 GPIO 映射）
+2. CclawCore 获取开发板特定文档（例如 ESP32 GPIO 映射）
 3. LLM 合成 Rust 代码
 4. 代码在沙箱中运行（Wasm 或动态链接）
 5. GPIO 被切换；结果返回给用户
@@ -53,11 +53,11 @@ ZeroClaw **直接运行在设备上**。开发板启动 gRPC/nanoRPC 服务器�
 
 **目标：** 通过 USB / J-Link / Aardvark 连接到主机（macOS、Linux）的硬件。
 
-ZeroClaw 运行在**主机**上，并维护到目标的硬件感知链接。用于开发、内省和烧录。
+CclawCore 运行在**主机**上，并维护到目标的硬件感知链接。用于开发、内省和烧录。
 
 ```
 ┌─────────────────────┐                    ┌──────────────────────────────────┐
-│  ZeroClaw on Mac    │   USB / J-Link /   │  STM32 Nucleo-F401RE              │
+│  CclawCore on Mac    │   USB / J-Link /   │  STM32 Nucleo-F401RE              │
 │                     │   Aardvark         │  (or other MCU)                    │
 │  - Channels         │ ◄────────────────► │  - Memory map                     │
 │  - LLM              │                    │  - Peripherals (GPIO, ADC, I2C)    │
@@ -68,17 +68,17 @@ ZeroClaw 运行在**主机**上，并维护到目标的硬件感知链接。用�
 
 **工作流：**
 1. 用户发送 Telegram 消息：*"这个 USB 设备上的可读内存地址是什么？"*
-2. ZeroClaw 识别连接的硬件（VID/PID、架构）
+2. CclawCore 识别连接的硬件（VID/PID、架构）
 3. 执行内存映射；建议可用的地址空间
 4. 将结果返回给用户
 
 **或：**
 1. 用户：*"将这个固件烧录到 Nucleo"*
-2. ZeroClaw 通过 OpenOCD 或 probe-rs 写入/烧录
+2. CclawCore 通过 OpenOCD 或 probe-rs 写入/烧录
 3. 确认成功
 
 **或：**
-1. ZeroClaw 自动发现：*"STM32 Nucleo 位于 /dev/ttyACM0，ARM Cortex-M4"*
+1. CclawCore 自动发现：*"STM32 Nucleo 位于 /dev/ttyACM0，ARM Cortex-M4"*
 2. 建议：*"我可以读取/写入 GPIO、ADC、闪存。你想做什么？"*
 
 ---
@@ -87,7 +87,7 @@ ZeroClaw 运行在**主机**上，并维护到目标的硬件感知链接。用�
 
 | 方面           | 边缘原生                    | 主机介导                    |
 |------------------|--------------------------------|----------------------------------|
-| ZeroClaw 运行位置 | 设备（ESP32、树莓派）           | 主机（Mac、Linux）                |
+| CclawCore 运行位置 | 设备（ESP32、树莓派）           | 主机（Mac、Linux）                |
 | 硬件链接    | 本地（GPIO、I2C、SPI）        | USB、J-Link、Aardvark            |
 | LLM              | 设备端或云端（Gemini）   | 主机（云端或本地）            |
 | 使用场景         | 生产环境、独立运行         | 开发、调试、内省       |
@@ -99,11 +99,11 @@ ZeroClaw 运行在**主机**上，并维护到目标的硬件感知链接。用�
 
 ### 模式 A：主机 + 远程外设（通过串口的 STM32）
 
-主机运行 ZeroClaw；外设运行最小化固件。通过串口传输简单 JSON。
+主机运行 CclawCore；外设运行最小化固件。通过串口传输简单 JSON。
 
 ### 模式 B：树莓派作为主机（原生 GPIO）
 
-ZeroClaw 运行在树莓派上；通过 rppal 或 sysfs 访问 GPIO。不需要单独的固件。
+CclawCore 运行在树莓派上；通过 rppal 或 sysfs 访问 GPIO。不需要单独的固件。
 
 ## 4. 技术要求
 
@@ -139,15 +139,15 @@ ZeroClaw 运行在树莓派上；通过 rppal 或 sysfs 访问 GPIO。不需要�
 
 ```bash
 # 边缘原生：在设备上运行（ESP32、树莓派）
-zeroclaw agent --mode edge
+cclawcore agent --mode edge
 
 # 主机介导：连接到 USB/J-Link 目标
-zeroclaw agent --peripheral nucleo-f401re:/dev/ttyACM0
-zeroclaw agent --probe jlink
+cclawcore agent --peripheral nucleo-f401re:/dev/ttyACM0
+cclawcore agent --probe jlink
 
 # 硬件内省
-zeroclaw hardware discover
-zeroclaw hardware introspect /dev/ttyACM0
+cclawcore hardware discover
+cclawcore hardware introspect /dev/ttyACM0
 ```
 
 ### 配置（config.toml）
@@ -171,7 +171,7 @@ transport = "native"
 [[peripherals.boards]]
 board = "esp32"
 transport = "wifi"
-# 边缘原生：ZeroClaw 运行在 ESP32 上
+# 边缘原生：CclawCore 运行在 ESP32 上
 ```
 
 ## 6. 架构：外设作为扩展点
@@ -194,7 +194,7 @@ pub trait Peripheral: Send + Sync {
 
 ### 流程
 
-1. **启动：** ZeroClaw 加载配置，读取 `peripherals.boards`。
+1. **启动：** CclawCore 加载配置，读取 `peripherals.boards`。
 2. **连接：** 为每个开发板创建 `Peripheral` 实现，调用 `connect()`。
 3. **工具：** 收集所有连接外设的工具；与默认工具合并。
 4. **代理循环：** 代理可以调用 `gpio_write`、`sensor_read` 等 —— 这些调用委托给外设。
@@ -212,7 +212,7 @@ pub trait Peripheral: Send + Sync {
 
 ### gRPC / nanoRPC（边缘原生、主机介导）
 
-用于 ZeroClaw 和外设之间的低延迟、类型化 RPC：
+用于 CclawCore 和外设之间的低延迟、类型化 RPC：
 
 - **nanoRPC** 或 **tonic**（gRPC）：Protobuf 定义的服务。
 - 方法：`GpioWrite`、`GpioRead`、`I2cTransfer`、`SpiTransfer`、`MemoryRead`、`FlashWrite` 等。
@@ -234,25 +234,25 @@ pub trait Peripheral: Send + Sync {
 
 ## 8. 固件（独立仓库或 crate）
 
-- **zeroclaw-firmware** 或 **zeroclaw-peripheral** —— 独立的 crate/工作区。
+- **cclawcore-firmware** 或 **cclawcore-peripheral** —— 独立的 crate/工作区。
 - 目标：`thumbv7em-none-eabihf`（STM32）、`armv7-unknown-linux-gnueabihf`（树莓派）等。
 - STM32 使用 `embassy` 或 Zephyr。
 - 实现上述协议。
-- 用户将其烧录到开发板；ZeroClaw 连接并发现能力。
+- 用户将其烧录到开发板；CclawCore 连接并发现能力。
 
 ## 9. 实现阶段
 
 ### 阶段 1：骨架 ✅（已完成）
 
-- [x] 添加 `Peripheral` 特征、配置 schema、CLI（`zeroclaw peripheral list/add`）
+- [x] 添加 `Peripheral` 特征、配置 schema、CLI（`cclawcore peripheral list/add`）
 - [x] 为代理添加 `--peripheral` 标志
 - [x] 在 AGENTS.md 中记录
 
 ### 阶段 2：主机介导 — 硬件发现 ✅（已完成）
 
-- [x] `zeroclaw hardware discover`：枚举 USB 设备（VID/PID）
+- [x] `cclawcore hardware discover`：枚举 USB 设备（VID/PID）
 - [x] 开发板注册表：映射 VID/PID → 架构、名称（例如 Nucleo-F401RE）
-- [x] `zeroclaw hardware introspect <path>`：内存映射、外设列表
+- [x] `cclawcore hardware introspect <path>`：内存映射、外设列表
 
 ### 阶段 3：主机介导 — 串口 / J-Link
 
@@ -270,7 +270,7 @@ pub trait Peripheral: Send + Sync {
 
 ### 阶段 5：边缘原生 — 树莓派 ✅（已完成）
 
-- [x] 树莓派上的 ZeroClaw（通过 rppal 实现原生 GPIO）
+- [x] 树莓派上的 CclawCore（通过 rppal 实现原生 GPIO）
 - [ ] 用于本地外设访问的 gRPC/nanoRPC 服务器
 - [ ] 代码持久化（存储合成的片段）
 
@@ -279,7 +279,7 @@ pub trait Peripheral: Send + Sync {
 - [x] 主机介导的 ESP32（串口传输）—— 与 STM32 相同的 JSON 协议
 - [x] `esp32` 固件 crate（`firmware/esp32`）—— 通过 UART 实现 GPIO
 - [x] 硬件注册表中的 ESP32（CH340 VID/PID）
-- [ ] ESP32 上运行 ZeroClaw（Wi-Fi + LLM，边缘原生）—— 未来
+- [ ] ESP32 上运行 CclawCore（Wi-Fi + LLM，边缘原生）—— 未来
 - [ ] 基于 Wasm 或模板的 LLM 生成逻辑执行
 
 **用法：** 将 `firmware/esp32` 烧录到 ESP32，在配置中添加 `board = "esp32"`、`transport = "serial"`、`path = "/dev/ttyUSB0"`。
@@ -298,7 +298,7 @@ pub trait Peripheral: Send + Sync {
 
 ## 11. 非目标（目前）
 
-- 在裸 STM32 上运行完整 ZeroClaw（无 Wi-Fi、RAM 有限）—— 改用主机介导模式
+- 在裸 STM32 上运行完整 CclawCore（无 Wi-Fi、RAM 有限）—— 改用主机介导模式
 - 实时保证 —— 外设是尽力而为的
 - LLM 生成的任意原生代码执行 —— 优先使用 Wasm 或模板
 
@@ -319,6 +319,6 @@ pub trait Peripheral: Send + Sync {
 
 ## 14. 原始提示词摘要
 
-> *"像 ESP、树莓派或带 Wi-Fi 的开发板可以连接到 LLM（Gemini 或开源模型）。ZeroClaw 运行在设备上，创建自己的 gRPC 服务，启动服务并与外设通信。用户通过 WhatsApp 询问：'移动 X 机械臂'或'打开 LED'。ZeroClaw 获取准确的文档，编写代码，执行它，优化存储，运行并打开 LED —— 所有操作都在开发板上完成。*
+> *"像 ESP、树莓派或带 Wi-Fi 的开发板可以连接到 LLM（Gemini 或开源模型）。CclawCore 运行在设备上，创建自己的 gRPC 服务，启动服务并与外设通信。用户通过 WhatsApp 询问：'移动 X 机械臂'或'打开 LED'。CclawCore 获取准确的文档，编写代码，执行它，优化存储，运行并打开 LED —— 所有操作都在开发板上完成。*
 >
-> *对于通过 USB/J-Link/Aardvark 连接到我 Mac 的 STM Nucleo：我 Mac 上的 ZeroClaw 访问硬件，在设备上安装或写入想要的内容，并返回结果。示例：'嘿 ZeroClaw，这个 USB 设备上的可用/可读地址是什么？'它能找出连接的内容和位置并给出建议。"*
+> *对于通过 USB/J-Link/Aardvark 连接到我 Mac 的 STM Nucleo：我 Mac 上的 CclawCore 访问硬件，在设备上安装或写入想要的内容，并返回结果。示例：'嘿 CclawCore，这个 USB 设备上的可用/可读地址是什么？'它能找出连接的内容和位置并给出建议。"*

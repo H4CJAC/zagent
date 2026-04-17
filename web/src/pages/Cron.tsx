@@ -191,7 +191,7 @@ export default function Cron() {
   };
 
   const fetchSettings = () => {
-    getCronSettings().then(setSettings).catch(() => {});
+    getCronSettings().then(setSettings).catch(() => { });
   };
 
   const toggleCatchUp = async () => {
@@ -264,11 +264,11 @@ export default function Cron() {
     if (!status) return null;
     switch (status.toLowerCase()) {
       case 'ok':
-        case 'success':
-          return <CheckCircle className="h-4 w-4" style={{ color: 'var(--color-status-success)' }} />;
+      case 'success':
+        return <CheckCircle className="h-4 w-4" style={{ color: 'var(--color-status-success)' }} />;
       case 'error':
-        case 'failed':
-          return <XCircle className="h-4 w-4" style={{ color: 'var(--color-status-error)' }} />;
+      case 'failed':
+        return <XCircle className="h-4 w-4" style={{ color: 'var(--color-status-error)' }} />;
       default:
         return <AlertCircle className="h-4 w-4" style={{ color: 'var(--color-status-warning)' }} />;
     }
@@ -318,24 +318,22 @@ export default function Cron() {
               Catch up missed jobs on startup
             </span>
             <p className="text-xs mt-0.5" style={{ color: 'var(--pc-text-muted)' }}>
-              Run all overdue jobs when ZeroClaw starts after downtime
+              Run all overdue jobs when CclawCore starts after downtime
             </p>
           </div>
           <button
             onClick={toggleCatchUp}
             disabled={togglingCatchUp}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 focus:outline-none ${
-              settings.catch_up_on_startup
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 focus:outline-none ${settings.catch_up_on_startup
                 ? 'bg-[#0080ff]'
                 : 'bg-[#1a1a3e]'
-            }`}
+              }`}
           >
             <span
-              className={`inline-block h-4 w-4 rounded-full bg-white transition-transform duration-300 ${
-                settings.catch_up_on_startup
+              className={`inline-block h-4 w-4 rounded-full bg-white transition-transform duration-300 ${settings.catch_up_on_startup
                   ? 'translate-x-6'
                   : 'translate-x-1'
-              }`}
+                }`}
             />
           </button>
         </div>
@@ -438,7 +436,7 @@ export default function Cron() {
                           setExpandedJob((prev) =>
                             prev === job.id ? null : job.id,
                           )
-                      }
+                        }
                         className="flex items-center gap-1 btn-icon"
                         title="Toggle run history"
                       >

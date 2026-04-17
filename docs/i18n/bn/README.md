@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/zeroclaw-labs/zeroclaw/master/docs/assets/zeroclaw-banner.png" alt="ZeroClaw" width="600" />
+  <img src="https://raw.githubusercontent.com/cclawcore-labs/cclawcore/master/docs/assets/cclawcore-banner.png" alt="CclawCore" width="600" />
 </p>
 
-<h1 align="center">🦀 ZeroClaw — ব্যক্তিগত AI সহকারী</h1>
+<h1 align="center">🦀 CclawCore — ব্যক্তিগত AI সহকারী</h1>
 
 <p align="center">
   <strong>শূন্য ওভারহেড। শূন্য আপস। 100% Rust। 100% অজ্ঞেয়বাদী।</strong><br>
@@ -10,15 +10,15 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/zeroclaw-labs/zeroclaw/actions/workflows/ci-run.yml"><img src="https://img.shields.io/github/actions/workflow/status/zeroclaw-labs/zeroclaw/ci-run.yml?branch=master&label=build" alt="Build Status" /></a>
+  <a href="https://github.com/cclawcore-labs/cclawcore/actions/workflows/ci-run.yml"><img src="https://img.shields.io/github/actions/workflow/status/cclawcore-labs/cclawcore/ci-run.yml?branch=master&label=build" alt="Build Status" /></a>
   <a href="LICENSE-APACHE"><img src="https://img.shields.io/badge/license-MIT%20OR%20Apache%202.0-blue.svg" alt="License: MIT OR Apache-2.0" /></a>
   <a href="https://www.rust-lang.org"><img src="https://img.shields.io/badge/rust-edition%202024-orange?logo=rust" alt="Rust Edition 2024" /></a>
-  <a href="https://github.com/zeroclaw-labs/zeroclaw/releases/latest"><img src="https://img.shields.io/badge/version-v0.6.9-blue" alt="Version v0.6.9" /></a>
-  <a href="https://github.com/zeroclaw-labs/zeroclaw/graphs/contributors"><img src="https://img.shields.io/github/contributors/zeroclaw-labs/zeroclaw?color=green" alt="Contributors" /></a>
+  <a href="https://github.com/cclawcore-labs/cclawcore/releases/latest"><img src="https://img.shields.io/badge/version-v0.6.9-blue" alt="Version v0.6.9" /></a>
+  <a href="https://github.com/cclawcore-labs/cclawcore/graphs/contributors"><img src="https://img.shields.io/github/contributors/cclawcore-labs/cclawcore?color=green" alt="Contributors" /></a>
   <a href="https://buymeacoffee.com/argenistherose"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Donate-yellow.svg?style=flat&logo=buy-me-a-coffee" alt="Buy Me a Coffee" /></a>
-  <a href="https://x.com/zeroclawlabs?s=21"><img src="https://img.shields.io/badge/X-%40zeroclawlabs-000000?style=flat&logo=x&logoColor=white" alt="X: @zeroclawlabs" /></a>
+  <a href="https://x.com/cclawcorelabs?s=21"><img src="https://img.shields.io/badge/X-%40cclawcorelabs-000000?style=flat&logo=x&logoColor=white" alt="X: @cclawcorelabs" /></a>
   <a href="https://discord.com/invite/wDshRVqRjx"><img src="https://img.shields.io/badge/Discord-Join-5865F2?style=flat&logo=discord&logoColor=white" alt="Discord" /></a>
-  <a href="https://www.reddit.com/r/zeroclawlabs/"><img src="https://img.shields.io/badge/Reddit-r%2Fzeroclawlabs-FF4500?style=flat&logo=reddit&logoColor=white" alt="Reddit: r/zeroclawlabs" /></a>
+  <a href="https://www.reddit.com/r/cclawcorelabs/"><img src="https://img.shields.io/badge/Reddit-r%2Fcclawcorelabs-FF4500?style=flat&logo=reddit&logoColor=white" alt="Reddit: r/cclawcorelabs" /></a>
 </p>
 
 <p align="center">
@@ -60,12 +60,12 @@ Harvard, MIT, এবং Sundai.Club সম্প্রদায়ের ছা�
   <a href="../nb/README.md">🇳🇴 Norsk</a>
 </p>
 
-ZeroClaw একটি ব্যক্তিগত AI সহকারী যা আপনি আপনার নিজের ডিভাইসে চালান। এটি আপনাকে সেই চ্যানেলগুলোতে উত্তর দেয় যা আপনি ইতিমধ্যে ব্যবহার করেন (WhatsApp, Telegram, Slack, Discord, Signal, iMessage, Matrix, IRC, Email, Bluesky, Nostr, Mattermost, Nextcloud Talk, DingTalk, Lark, QQ, Reddit, LinkedIn, Twitter, MQTT, WeChat Work, এবং আরও)। এতে রিয়েল-টাইম নিয়ন্ত্রণের জন্য একটি ওয়েব ড্যাশবোর্ড আছে এবং এটি হার্ডওয়্যার পেরিফেরালের (ESP32, STM32, Arduino, Raspberry Pi) সাথে সংযোগ করতে পারে। Gateway শুধুমাত্র কন্ট্রোল প্লেন — পণ্যটি হল সহকারী।
+CclawCore একটি ব্যক্তিগত AI সহকারী যা আপনি আপনার নিজের ডিভাইসে চালান। এটি আপনাকে সেই চ্যানেলগুলোতে উত্তর দেয় যা আপনি ইতিমধ্যে ব্যবহার করেন (WhatsApp, Telegram, Slack, Discord, Signal, iMessage, Matrix, IRC, Email, Bluesky, Nostr, Mattermost, Nextcloud Talk, DingTalk, Lark, QQ, Reddit, LinkedIn, Twitter, MQTT, WeChat Work, এবং আরও)। এতে রিয়েল-টাইম নিয়ন্ত্রণের জন্য একটি ওয়েব ড্যাশবোর্ড আছে এবং এটি হার্ডওয়্যার পেরিফেরালের (ESP32, STM32, Arduino, Raspberry Pi) সাথে সংযোগ করতে পারে। Gateway শুধুমাত্র কন্ট্রোল প্লেন — পণ্যটি হল সহকারী।
 
 আপনি যদি একটি ব্যক্তিগত, একক-ব্যবহারকারী সহকারী চান যা স্থানীয়, দ্রুত এবং সর্বদা চালু মনে হয়, এটাই সেটি।
 
 <p align="center">
-  <a href="https://zeroclawlabs.ai">ওয়েবসাইট</a> ·
+  <a href="https://cclawcorelabs.ai">ওয়েবসাইট</a> ·
   <a href="docs/README.md">ডকুমেন্টেশন</a> ·
   <a href="docs/architecture.md">আর্কিটেকচার</a> ·
   <a href="#দ্রুত-শুরু">শুরু করুন</a> ·
@@ -74,7 +74,7 @@ ZeroClaw একটি ব্যক্তিগত AI সহকারী যা �
   <a href="https://discord.com/invite/wDshRVqRjx">Discord</a>
 </p>
 
-> **পছন্দের সেটআপ:** আপনার টার্মিনালে `zeroclaw onboard` চালান। ZeroClaw Onboard আপনাকে gateway, workspace, channels, এবং provider সেট আপ করতে ধাপে ধাপে গাইড করে। এটি প্রস্তাবিত সেটআপ পথ এবং macOS, Linux, এবং Windows (WSL2 এর মাধ্যমে) এ কাজ করে। নতুন ইনস্টল? এখানে শুরু করুন: [শুরু করুন](#দ্রুত-শুরু)
+> **পছন্দের সেটআপ:** আপনার টার্মিনালে `cclawcore onboard` চালান। CclawCore Onboard আপনাকে gateway, workspace, channels, এবং provider সেট আপ করতে ধাপে ধাপে গাইড করে। এটি প্রস্তাবিত সেটআপ পথ এবং macOS, Linux, এবং Windows (WSL2 এর মাধ্যমে) এ কাজ করে। নতুন ইনস্টল? এখানে শুরু করুন: [শুরু করুন](#দ্রুত-শুরু)
 
 ### সাবস্ক্রিপশন অথ (OAuth)
 
@@ -94,18 +94,18 @@ ZeroClaw একটি ব্যক্তিগত AI সহকারী যা �
 ### Homebrew (macOS/Linuxbrew)
 
 ```bash
-brew install zeroclaw
+brew install cclawcore
 ```
 
 ### এক-ক্লিক বুটস্ট্র্যাপ
 
 ```bash
-git clone https://github.com/zeroclaw-labs/zeroclaw.git
-cd zeroclaw
+git clone https://github.com/cclawcore-labs/cclawcore.git
+cd cclawcore
 ./install.sh
 ```
 
-`zeroclaw onboard` ইনস্টলের পরে স্বয়ংক্রিয়ভাবে চলে আপনার workspace এবং provider কনফিগার করতে।
+`cclawcore onboard` ইনস্টলের পরে স্বয়ংক্রিয়ভাবে চলে আপনার workspace এবং provider কনফিগার করতে।
 
 ## দ্রুত শুরু (TL;DR)
 
@@ -116,67 +116,67 @@ cd zeroclaw
 ./install.sh --api-key "sk-..." --provider openrouter
 
 # Start the gateway (webhook server + web dashboard)
-zeroclaw gateway                # default: 127.0.0.1:42617
-zeroclaw gateway --port 0       # random port (security hardened)
+cclawcore gateway                # default: 127.0.0.1:42617
+cclawcore gateway --port 0       # random port (security hardened)
 
 # Talk to the assistant
-zeroclaw agent -m "Hello, ZeroClaw!"
+cclawcore agent -m "Hello, CclawCore!"
 
 # Interactive mode
-zeroclaw agent
+cclawcore agent
 
 # Start full autonomous runtime (gateway + channels + cron + hands)
-zeroclaw daemon
+cclawcore daemon
 
 # Check status
-zeroclaw status
+cclawcore status
 
 # Run diagnostics
-zeroclaw doctor
+cclawcore doctor
 ```
 
-আপগ্রেড করছেন? আপডেটের পরে `zeroclaw doctor` চালান।
+আপগ্রেড করছেন? আপডেটের পরে `cclawcore doctor` চালান।
 
 ### সোর্স থেকে (ডেভেলপমেন্ট)
 
 ```bash
-git clone https://github.com/zeroclaw-labs/zeroclaw.git
-cd zeroclaw
+git clone https://github.com/cclawcore-labs/cclawcore.git
+cd cclawcore
 
 cargo build --release --locked
 cargo install --path . --force --locked
 
-zeroclaw onboard
+cclawcore onboard
 ```
 
 > **ডেভ ফলব্যাক (কোনো গ্লোবাল ইনস্টল নেই):** কমান্ডের আগে `cargo run --release --` যোগ করুন (উদাহরণ: `cargo run --release -- status`)।
 
 ## OpenClaw থেকে মাইগ্রেশন
 
-ZeroClaw আপনার OpenClaw workspace, মেমোরি, এবং কনফিগারেশন আমদানি করতে পারে:
+CclawCore আপনার OpenClaw workspace, মেমোরি, এবং কনফিগারেশন আমদানি করতে পারে:
 
 ```bash
 # Preview what will be migrated (safe, read-only)
-zeroclaw migrate openclaw --dry-run
+cclawcore migrate openclaw --dry-run
 
 # Run the migration
-zeroclaw migrate openclaw
+cclawcore migrate openclaw
 ```
 
-এটি আপনার মেমোরি এন্ট্রি, workspace ফাইল, এবং কনফিগারেশন `~/.openclaw/` থেকে `~/.zeroclaw/` তে মাইগ্রেট করে। কনফিগ স্বয়ংক্রিয়ভাবে JSON থেকে TOML এ রূপান্তরিত হয়।
+এটি আপনার মেমোরি এন্ট্রি, workspace ফাইল, এবং কনফিগারেশন `~/.openclaw/` থেকে `~/.cclawcore/` তে মাইগ্রেট করে। কনফিগ স্বয়ংক্রিয়ভাবে JSON থেকে TOML এ রূপান্তরিত হয়।
 
 ## নিরাপত্তা ডিফল্ট (DM অ্যাক্সেস)
 
-ZeroClaw প্রকৃত মেসেজিং সারফেসের সাথে সংযোগ করে। ইনবাউন্ড DM গুলোকে অবিশ্বস্ত ইনপুট হিসেবে বিবেচনা করুন।
+CclawCore প্রকৃত মেসেজিং সারফেসের সাথে সংযোগ করে। ইনবাউন্ড DM গুলোকে অবিশ্বস্ত ইনপুট হিসেবে বিবেচনা করুন।
 
 সম্পূর্ণ নিরাপত্তা গাইড: [SECURITY.md](SECURITY.md)
 
 সকল চ্যানেলে ডিফল্ট আচরণ:
 
 - **DM পেয়ারিং** (ডিফল্ট): অজানা প্রেরকরা একটি সংক্ষিপ্ত পেয়ারিং কোড পায় এবং বট তাদের বার্তা প্রক্রিয়া করে না।
-- এর মাধ্যমে অনুমোদন করুন: `zeroclaw pairing approve <channel> <code>` (তারপর প্রেরক স্থানীয় অনুমতি তালিকায় যুক্ত হয়)।
+- এর মাধ্যমে অনুমোদন করুন: `cclawcore pairing approve <channel> <code>` (তারপর প্রেরক স্থানীয় অনুমতি তালিকায় যুক্ত হয়)।
 - পাবলিক ইনবাউন্ড DM এর জন্য `config.toml` এ স্পষ্ট অপ্ট-ইন প্রয়োজন।
-- ঝুঁকিপূর্ণ বা ভুল কনফিগার করা DM নীতি প্রকাশ করতে `zeroclaw doctor` চালান।
+- ঝুঁকিপূর্ণ বা ভুল কনফিগার করা DM নীতি প্রকাশ করতে `cclawcore doctor` চালান।
 
 **স্বায়ত্তশাসন স্তর:**
 
@@ -197,7 +197,7 @@ ZeroClaw প্রকৃত মেসেজিং সারফেসের স�
 
 | তারিখ (UTC) | স্তর | নোটিশ | পদক্ষেপ |
 | ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-02-19 | _জটিল_ | আমরা `openagen/zeroclaw`, `zeroclaw.org` বা `zeroclaw.net` এর সাথে **সম্পর্কিত নই**। `zeroclaw.org` এবং `zeroclaw.net` ডোমেইনগুলো বর্তমানে `openagen/zeroclaw` ফর্কের দিকে নির্দেশ করে, এবং সেই ডোমেইন/রিপোজিটরি আমাদের অফিসিয়াল ওয়েবসাইট/প্রকল্পের ছদ্মবেশ ধারণ করছে। | সেই উৎসগুলো থেকে তথ্য, বাইনারি, তহবিল সংগ্রহ, বা ঘোষণায় বিশ্বাস করবেন না। শুধুমাত্র [এই রিপোজিটরি](https://github.com/zeroclaw-labs/zeroclaw) এবং আমাদের যাচাইকৃত সোশ্যাল অ্যাকাউন্ট ব্যবহার করুন। |
+| 2026-02-19 | _জটিল_ | আমরা `openagen/cclawcore`, `cclawcore.org` বা `cclawcore.net` এর সাথে **সম্পর্কিত নই**। `cclawcore.org` এবং `cclawcore.net` ডোমেইনগুলো বর্তমানে `openagen/cclawcore` ফর্কের দিকে নির্দেশ করে, এবং সেই ডোমেইন/রিপোজিটরি আমাদের অফিসিয়াল ওয়েবসাইট/প্রকল্পের ছদ্মবেশ ধারণ করছে। | সেই উৎসগুলো থেকে তথ্য, বাইনারি, তহবিল সংগ্রহ, বা ঘোষণায় বিশ্বাস করবেন না। শুধুমাত্র [এই রিপোজিটরি](https://github.com/cclawcore-labs/cclawcore) এবং আমাদের যাচাইকৃত সোশ্যাল অ্যাকাউন্ট ব্যবহার করুন। |
 | 2026-02-19 | _গুরুত্বপূর্ণ_ | Anthropic 2026-02-19 তে Authentication and Credential Use শর্তাবলী আপডেট করেছে। Claude Code OAuth টোকেন (Free, Pro, Max) একচেটিয়াভাবে Claude Code এবং Claude.ai এর জন্য; Claude Free/Pro/Max থেকে OAuth টোকেন অন্য কোনো পণ্য, টুল, বা সেবায় (Agent SDK সহ) ব্যবহার অনুমোদিত নয় এবং Consumer Terms of Service লঙ্ঘন করতে পারে। | সম্ভাব্য ক্ষতি রোধ করতে অনুগ্রহ করে Claude Code OAuth ইন্টিগ্রেশন সাময়িকভাবে এড়িয়ে চলুন। মূল ধারা: [Authentication and Credential Use](https://code.claude.com/docs/en/legal-and-compliance#authentication-and-credential-use)। |
 
 ## প্রধান বৈশিষ্ট্য
@@ -217,18 +217,18 @@ ZeroClaw প্রকৃত মেসেজিং সারফেসের স�
 - **স্কিল প্ল্যাটফর্ম** — নিরাপত্তা অডিটিং সহ বান্ডেল, সম্প্রদায়, এবং workspace স্কিল।
 - **টানেল সাপোর্ট** — রিমোট অ্যাক্সেসের জন্য Cloudflare, Tailscale, ngrok, OpenVPN, এবং কাস্টম টানেল।
 
-### দলগুলো কেন ZeroClaw বেছে নেয়
+### দলগুলো কেন CclawCore বেছে নেয়
 
 - **ডিফল্টভাবে হালকা:** ছোট Rust বাইনারি, দ্রুত স্টার্টআপ, কম মেমোরি ফুটপ্রিন্ট।
 - **ডিজাইনে নিরাপদ:** পেয়ারিং, কঠোর স্যান্ডবক্সিং, স্পষ্ট অনুমতি তালিকা, workspace স্কোপিং।
 - **সম্পূর্ণ বিনিময়যোগ্য:** মূল সিস্টেমগুলো traits (providers, channels, tools, memory, tunnels)।
 - **কোনো লক-ইন নেই:** OpenAI-সামঞ্জস্যপূর্ণ প্রদানকারী সমর্থন + প্লাগেবল কাস্টম এন্ডপয়েন্ট।
 
-## বেঞ্চমার্ক স্ন্যাপশট (ZeroClaw বনাম OpenClaw, পুনরুৎপাদনযোগ্য)
+## বেঞ্চমার্ক স্ন্যাপশট (CclawCore বনাম OpenClaw, পুনরুৎপাদনযোগ্য)
 
 স্থানীয় মেশিন দ্রুত বেঞ্চমার্ক (macOS arm64, ফেব্রুয়ারি 2026) 0.8GHz এজ হার্ডওয়্যারের জন্য স্বাভাবিকীকৃত।
 
-|                           | OpenClaw      | NanoBot        | PicoClaw        | ZeroClaw 🦀          |
+|                           | OpenClaw      | NanoBot        | PicoClaw        | CclawCore 🦀          |
 | ------------------------- | ------------- | -------------- | --------------- | -------------------- |
 | **ভাষা**              | TypeScript    | Python         | Go              | **Rust**             |
 | **RAM**                   | > 1GB         | > 100MB        | < 10MB          | **< 5MB**            |
@@ -236,20 +236,20 @@ ZeroClaw প্রকৃত মেসেজিং সারফেসের স�
 | **বাইনারি আকার**           | ~28MB (dist)  | N/A (Scripts)  | ~8MB            | **~8.8 MB**          |
 | **খরচ**                  | Mac Mini $599 | Linux SBC ~$50 | Linux Board $10 | **যেকোনো হার্ডওয়্যার $10** |
 
-> নোট: ZeroClaw ফলাফল `/usr/bin/time -l` ব্যবহার করে রিলিজ বিল্ডে পরিমাপ করা হয়েছে। OpenClaw এর Node.js রানটাইম প্রয়োজন (সাধারণত ~390MB অতিরিক্ত মেমোরি ওভারহেড), যেখানে NanoBot এর Python রানটাইম প্রয়োজন। PicoClaw এবং ZeroClaw স্ট্যাটিক বাইনারি। উপরের RAM পরিসংখ্যান রানটাইম মেমোরি; বিল্ড-টাইম কম্পাইলেশন প্রয়োজনীয়তা বেশি।
+> নোট: CclawCore ফলাফল `/usr/bin/time -l` ব্যবহার করে রিলিজ বিল্ডে পরিমাপ করা হয়েছে। OpenClaw এর Node.js রানটাইম প্রয়োজন (সাধারণত ~390MB অতিরিক্ত মেমোরি ওভারহেড), যেখানে NanoBot এর Python রানটাইম প্রয়োজন। PicoClaw এবং CclawCore স্ট্যাটিক বাইনারি। উপরের RAM পরিসংখ্যান রানটাইম মেমোরি; বিল্ড-টাইম কম্পাইলেশন প্রয়োজনীয়তা বেশি।
 
 <p align="center">
-  <img src="docs/assets/zeroclaw-comparison.jpeg" alt="ZeroClaw vs OpenClaw Comparison" width="800" />
+  <img src="docs/assets/cclawcore-comparison.jpeg" alt="CclawCore vs OpenClaw Comparison" width="800" />
 </p>
 
 ### পুনরুৎপাদনযোগ্য স্থানীয় পরিমাপ
 
 ```bash
 cargo build --release
-ls -lh target/release/zeroclaw
+ls -lh target/release/cclawcore
 
-/usr/bin/time -l target/release/zeroclaw --help
-/usr/bin/time -l target/release/zeroclaw status
+/usr/bin/time -l target/release/cclawcore --help
+/usr/bin/time -l target/release/cclawcore status
 ```
 
 ## এখন পর্যন্ত আমরা যা তৈরি করেছি
@@ -325,7 +325,7 @@ React 19 + Vite 6 + Tailwind CSS 4 ওয়েব ড্যাশবোর্�
 
 ## কনফিগারেশন
 
-ন্যূনতম `~/.zeroclaw/config.toml`:
+ন্যূনতম `~/.cclawcore/config.toml`:
 
 ```toml
 default_provider = "anthropic"
@@ -393,35 +393,35 @@ kind = "cloudflare"  # or "tailscale", "ngrok", "openvpn", "custom", "none"
 
 ## সাবস্ক্রিপশন অথ (OpenAI Codex / Claude Code / Gemini)
 
-ZeroClaw সাবস্ক্রিপশন-নেটিভ অথ প্রোফাইল সমর্থন করে (মাল্টি-অ্যাকাউন্ট, বিশ্রামে এনক্রিপ্টেড)।
+CclawCore সাবস্ক্রিপশন-নেটিভ অথ প্রোফাইল সমর্থন করে (মাল্টি-অ্যাকাউন্ট, বিশ্রামে এনক্রিপ্টেড)।
 
-- স্টোর ফাইল: `~/.zeroclaw/auth-profiles.json`
-- এনক্রিপশন কী: `~/.zeroclaw/.secret_key`
+- স্টোর ফাইল: `~/.cclawcore/auth-profiles.json`
+- এনক্রিপশন কী: `~/.cclawcore/.secret_key`
 - প্রোফাইল id ফরম্যাট: `<provider>:<profile_name>` (উদাহরণ: `openai-codex:work`)
 
 ```bash
 # OpenAI Codex OAuth (ChatGPT subscription)
-zeroclaw auth login --provider openai-codex --device-code
+cclawcore auth login --provider openai-codex --device-code
 
 # Gemini OAuth
-zeroclaw auth login --provider gemini --profile default
+cclawcore auth login --provider gemini --profile default
 
 # Anthropic setup-token
-zeroclaw auth paste-token --provider anthropic --profile default --auth-kind authorization
+cclawcore auth paste-token --provider anthropic --profile default --auth-kind authorization
 
 # Check / refresh / switch profile
-zeroclaw auth status
-zeroclaw auth refresh --provider openai-codex --profile default
-zeroclaw auth use --provider openai-codex --profile work
+cclawcore auth status
+cclawcore auth refresh --provider openai-codex --profile default
+cclawcore auth use --provider openai-codex --profile work
 
 # Run the agent with subscription auth
-zeroclaw agent --provider openai-codex -m "hello"
-zeroclaw agent --provider anthropic -m "hello"
+cclawcore agent --provider openai-codex -m "hello"
+cclawcore agent --provider anthropic -m "hello"
 ```
 
 ## এজেন্ট workspace + স্কিল
 
-Workspace রুট: `~/.zeroclaw/workspace/` (কনফিগের মাধ্যমে কনফিগারযোগ্য)।
+Workspace রুট: `~/.cclawcore/workspace/` (কনফিগের মাধ্যমে কনফিগারযোগ্য)।
 
 ইনজেক্ট করা প্রম্পট ফাইল:
 - `IDENTITY.md` — এজেন্টের ব্যক্তিত্ব এবং ভূমিকা
@@ -430,74 +430,74 @@ Workspace রুট: `~/.zeroclaw/workspace/` (কনফিগের মাধ�
 - `AGENTS.md` — সেশন কনভেনশন এবং ইনিশিয়ালাইজেশন নিয়ম
 - `SOUL.md` — মূল পরিচয় এবং পরিচালন নীতি
 
-স্কিল: `~/.zeroclaw/workspace/skills/<skill>/SKILL.md` বা `SKILL.toml`।
+স্কিল: `~/.cclawcore/workspace/skills/<skill>/SKILL.md` বা `SKILL.toml`।
 
 ```bash
 # List installed skills
-zeroclaw skills list
+cclawcore skills list
 
 # Install from git
-zeroclaw skills install https://github.com/user/my-skill.git
+cclawcore skills install https://github.com/user/my-skill.git
 
 # Security audit before install
-zeroclaw skills audit https://github.com/user/my-skill.git
+cclawcore skills audit https://github.com/user/my-skill.git
 
 # Remove a skill
-zeroclaw skills remove my-skill
+cclawcore skills remove my-skill
 ```
 
 ## CLI কমান্ড
 
 ```bash
 # Workspace management
-zeroclaw onboard              # Guided setup wizard
-zeroclaw status               # Show daemon/agent status
-zeroclaw doctor               # Run system diagnostics
+cclawcore onboard              # Guided setup wizard
+cclawcore status               # Show daemon/agent status
+cclawcore doctor               # Run system diagnostics
 
 # Gateway + daemon
-zeroclaw gateway              # Start gateway server (127.0.0.1:42617)
-zeroclaw daemon               # Start full autonomous runtime
+cclawcore gateway              # Start gateway server (127.0.0.1:42617)
+cclawcore daemon               # Start full autonomous runtime
 
 # Agent
-zeroclaw agent                # Interactive chat mode
-zeroclaw agent -m "message"   # Single message mode
+cclawcore agent                # Interactive chat mode
+cclawcore agent -m "message"   # Single message mode
 
 # Service management
-zeroclaw service install      # Install as OS service (launchd/systemd)
-zeroclaw service start|stop|restart|status
+cclawcore service install      # Install as OS service (launchd/systemd)
+cclawcore service start|stop|restart|status
 
 # Channels
-zeroclaw channel list         # List configured channels
-zeroclaw channel doctor       # Check channel health
-zeroclaw channel bind-telegram 123456789
+cclawcore channel list         # List configured channels
+cclawcore channel doctor       # Check channel health
+cclawcore channel bind-telegram 123456789
 
 # Cron + scheduling
-zeroclaw cron list            # List scheduled jobs
-zeroclaw cron add "*/5 * * * *" --prompt "Check system health"
-zeroclaw cron remove <id>
+cclawcore cron list            # List scheduled jobs
+cclawcore cron add "*/5 * * * *" --prompt "Check system health"
+cclawcore cron remove <id>
 
 # Memory
-zeroclaw memory list          # List memory entries
-zeroclaw memory get <key>     # Retrieve a memory
-zeroclaw memory stats         # Memory statistics
+cclawcore memory list          # List memory entries
+cclawcore memory get <key>     # Retrieve a memory
+cclawcore memory stats         # Memory statistics
 
 # Auth profiles
-zeroclaw auth login --provider <name>
-zeroclaw auth status
-zeroclaw auth use --provider <name> --profile <profile>
+cclawcore auth login --provider <name>
+cclawcore auth status
+cclawcore auth use --provider <name> --profile <profile>
 
 # Hardware peripherals
-zeroclaw hardware discover    # Scan for connected devices
-zeroclaw peripheral list      # List connected peripherals
-zeroclaw peripheral flash     # Flash firmware to device
+cclawcore hardware discover    # Scan for connected devices
+cclawcore peripheral list      # List connected peripherals
+cclawcore peripheral flash     # Flash firmware to device
 
 # Migration
-zeroclaw migrate openclaw --dry-run
-zeroclaw migrate openclaw
+cclawcore migrate openclaw --dry-run
+cclawcore migrate openclaw
 
 # Shell completions
-source <(zeroclaw completions bash)
-zeroclaw completions zsh > ~/.zfunc/_zeroclaw
+source <(cclawcore completions bash)
+cclawcore completions zsh > ~/.zfunc/_cclawcore
 ```
 
 সম্পূর্ণ কমান্ড রেফারেন্স: [docs/reference/cli/commands-reference.md](docs/reference/cli/commands-reference.md)
@@ -565,10 +565,10 @@ zeroclaw completions zsh > ~/.zfunc/_zeroclaw
 
 #### এক-লাইন ইনস্টলার
 
-অথবা উপরের ধাপগুলো এড়িয়ে একটি কমান্ডে সবকিছু (সিস্টেম deps, Rust, ZeroClaw) ইনস্টল করুন:
+অথবা উপরের ধাপগুলো এড়িয়ে একটি কমান্ডে সবকিছু (সিস্টেম deps, Rust, CclawCore) ইনস্টল করুন:
 
 ```bash
-curl -LsSf https://raw.githubusercontent.com/zeroclaw-labs/zeroclaw/master/install.sh | bash
+curl -LsSf https://raw.githubusercontent.com/cclawcore-labs/cclawcore/master/install.sh | bash
 ```
 
 #### কম্পাইলেশন রিসোর্স প্রয়োজনীয়তা
@@ -611,7 +611,7 @@ curl -LsSf https://raw.githubusercontent.com/zeroclaw-labs/zeroclaw/master/insta
 - Windows: `x86_64`
 
 সর্বশেষ অ্যাসেট ডাউনলোড করুন:
-<https://github.com/zeroclaw-labs/zeroclaw/releases/latest>
+<https://github.com/cclawcore-labs/cclawcore/releases/latest>
 
 ## ডকুমেন্টেশন
 
@@ -621,7 +621,7 @@ curl -LsSf https://raw.githubusercontent.com/zeroclaw-labs/zeroclaw/master/insta
 - সম্পূর্ণ সিস্টেম মডেলের জন্য [আর্কিটেকচার ওভারভিউ](docs/architecture.md) পড়ুন।
 - প্রতিটি কী এবং উদাহরণ প্রয়োজন হলে [কনফিগারেশন রেফারেন্স](docs/reference/api/config-reference.md) ব্যবহার করুন।
 - [অপারেশনাল রানবুক](docs/ops/operations-runbook.md) অনুযায়ী Gateway চালান।
-- গাইডেড সেটআপের জন্য [ZeroClaw Onboard](#দ্রুত-শুরু) অনুসরণ করুন।
+- গাইডেড সেটআপের জন্য [CclawCore Onboard](#দ্রুত-শুরু) অনুসরণ করুন।
 - [সমস্যা সমাধান গাইড](docs/ops/troubleshooting.md) দিয়ে সাধারণ ব্যর্থতা ডিবাগ করুন।
 - কিছু এক্সপোজ করার আগে [নিরাপত্তা নির্দেশনা](docs/security/README.md) পর্যালোচনা করুন।
 
@@ -653,14 +653,14 @@ curl -LsSf https://raw.githubusercontent.com/zeroclaw-labs/zeroclaw/master/insta
 
 ## Icy Crab 🦀
 
-ZeroClaw smooth crab 🦀 এর জন্য তৈরি হয়েছিল, একটি দ্রুত এবং দক্ষ AI সহকারী। Argenis De La Rosa এবং সম্প্রদায় দ্বারা নির্মিত।
+CclawCore smooth crab 🦀 এর জন্য তৈরি হয়েছিল, একটি দ্রুত এবং দক্ষ AI সহকারী। Argenis De La Rosa এবং সম্প্রদায় দ্বারা নির্মিত।
 
-- [zeroclawlabs.ai](https://zeroclawlabs.ai)
-- [@zeroclawlabs](https://x.com/zeroclawlabs)
+- [cclawcorelabs.ai](https://cclawcorelabs.ai)
+- [@cclawcorelabs](https://x.com/cclawcorelabs)
 
-## ZeroClaw সমর্থন করুন
+## CclawCore সমর্থন করুন
 
-ZeroClaw আপনার কাজে সাহায্য করলে এবং আপনি চলমান উন্নয়ন সমর্থন করতে চাইলে, এখানে দান করতে পারেন:
+CclawCore আপনার কাজে সাহায্য করলে এবং আপনি চলমান উন্নয়ন সমর্থন করতে চাইলে, এখানে দান করতে পারেন:
 
 <a href="https://buymeacoffee.com/argenistherose"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Donate-yellow.svg?style=for-the-badge&logo=buy-me-a-coffee" alt="Buy Me a Coffee" /></a>
 
@@ -677,7 +677,7 @@ ZeroClaw আপনার কাজে সাহায্য করলে এব�
 
 ## অবদান
 
-ZeroClaw এ নতুন? [`good first issue`](https://github.com/zeroclaw-labs/zeroclaw/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) লেবেলযুক্ত ইস্যু খুঁজুন — কিভাবে শুরু করতে হয় তা জানতে আমাদের [অবদান গাইড](CONTRIBUTING.md#first-time-contributors) দেখুন। AI/vibe-coded PR স্বাগত! 🤖
+CclawCore এ নতুন? [`good first issue`](https://github.com/cclawcore-labs/cclawcore/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) লেবেলযুক্ত ইস্যু খুঁজুন — কিভাবে শুরু করতে হয় তা জানতে আমাদের [অবদান গাইড](CONTRIBUTING.md#first-time-contributors) দেখুন। AI/vibe-coded PR স্বাগত! 🤖
 
 [CONTRIBUTING.md](CONTRIBUTING.md) এবং [CLA.md](docs/contributing/cla.md) দেখুন। একটি trait বাস্তবায়ন করুন, PR জমা দিন:
 
@@ -689,26 +689,26 @@ ZeroClaw এ নতুন? [`good first issue`](https://github.com/zeroclaw-labs
 - নতুন `Memory` → `src/memory/`
 - নতুন `Tunnel` → `src/tunnel/`
 - নতুন `Peripheral` → `src/peripherals/`
-- নতুন `Skill` → `~/.zeroclaw/workspace/skills/<name>/`
+- নতুন `Skill` → `~/.cclawcore/workspace/skills/<name>/`
 
 <!-- BEGIN:RECENT_CONTRIBUTORS -->
 <!-- END:RECENT_CONTRIBUTORS -->
 
 ## ⚠️ অফিসিয়াল রিপোজিটরি এবং ছদ্মবেশ সতর্কতা
 
-**এটিই একমাত্র অফিসিয়াল ZeroClaw রিপোজিটরি:**
+**এটিই একমাত্র অফিসিয়াল CclawCore রিপোজিটরি:**
 
-> https://github.com/zeroclaw-labs/zeroclaw
+> https://github.com/cclawcore-labs/cclawcore
 
-অন্য কোনো রিপোজিটরি, সংগঠন, ডোমেইন, বা প্যাকেজ যা "ZeroClaw" বলে দাবি করে বা ZeroClaw Labs এর সাথে সংযুক্তি ইঙ্গিত করে তা **অননুমোদিত এবং এই প্রকল্পের সাথে সম্পর্কিত নয়**। পরিচিত অননুমোদিত ফর্ক [TRADEMARK.md](docs/maintainers/trademark.md) তে তালিকাভুক্ত করা হবে।
+অন্য কোনো রিপোজিটরি, সংগঠন, ডোমেইন, বা প্যাকেজ যা "CclawCore" বলে দাবি করে বা CclawCore Labs এর সাথে সংযুক্তি ইঙ্গিত করে তা **অননুমোদিত এবং এই প্রকল্পের সাথে সম্পর্কিত নয়**। পরিচিত অননুমোদিত ফর্ক [TRADEMARK.md](docs/maintainers/trademark.md) তে তালিকাভুক্ত করা হবে।
 
-আপনি ছদ্মবেশ বা ট্রেডমার্ক অপব্যবহারের সম্মুখীন হলে, অনুগ্রহ করে [একটি ইস্যু খুলুন](https://github.com/zeroclaw-labs/zeroclaw/issues)।
+আপনি ছদ্মবেশ বা ট্রেডমার্ক অপব্যবহারের সম্মুখীন হলে, অনুগ্রহ করে [একটি ইস্যু খুলুন](https://github.com/cclawcore-labs/cclawcore/issues)।
 
 ---
 
 ## লাইসেন্স
 
-ZeroClaw সর্বোচ্চ উন্মুক্ততা এবং অবদানকারী সুরক্ষার জন্য দ্বৈত-লাইসেন্সপ্রাপ্ত:
+CclawCore সর্বোচ্চ উন্মুক্ততা এবং অবদানকারী সুরক্ষার জন্য দ্বৈত-লাইসেন্সপ্রাপ্ত:
 
 | লাইসেন্স | ব্যবহারের ক্ষেত্র |
 |---|---|
@@ -719,7 +719,7 @@ ZeroClaw সর্বোচ্চ উন্মুক্ততা এবং অ�
 
 ### ট্রেডমার্ক
 
-**ZeroClaw** নাম এবং লোগো ZeroClaw Labs এর ট্রেডমার্ক। এই লাইসেন্স সমর্থন বা সংযুক্তি ইঙ্গিত করতে এগুলো ব্যবহারের অনুমতি দেয় না। অনুমোদিত এবং নিষিদ্ধ ব্যবহারের জন্য [TRADEMARK.md](docs/maintainers/trademark.md) দেখুন।
+**CclawCore** নাম এবং লোগো CclawCore Labs এর ট্রেডমার্ক। এই লাইসেন্স সমর্থন বা সংযুক্তি ইঙ্গিত করতে এগুলো ব্যবহারের অনুমতি দেয় না। অনুমোদিত এবং নিষিদ্ধ ব্যবহারের জন্য [TRADEMARK.md](docs/maintainers/trademark.md) দেখুন।
 
 ### অবদানকারী সুরক্ষা
 
@@ -730,12 +730,12 @@ ZeroClaw সর্বোচ্চ উন্মুক্ততা এবং অ�
 
 ---
 
-**ZeroClaw** — শূন্য ওভারহেড। শূন্য আপস। যেকোনো জায়গায় ডিপ্লয় করুন। যেকিছু বিনিময় করুন। 🦀
+**CclawCore** — শূন্য ওভারহেড। শূন্য আপস। যেকোনো জায়গায় ডিপ্লয় করুন। যেকিছু বিনিময় করুন। 🦀
 
 ## অবদানকারীরা
 
-<a href="https://github.com/zeroclaw-labs/zeroclaw/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=zeroclaw-labs/zeroclaw" alt="ZeroClaw contributors" />
+<a href="https://github.com/cclawcore-labs/cclawcore/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=cclawcore-labs/cclawcore" alt="CclawCore contributors" />
 </a>
 
 এই তালিকা GitHub অবদানকারী গ্রাফ থেকে তৈরি হয় এবং স্বয়ংক্রিয়ভাবে আপডেট হয়।
@@ -743,11 +743,11 @@ ZeroClaw সর্বোচ্চ উন্মুক্ততা এবং অ�
 ## স্টার ইতিহাস
 
 <p align="center">
-  <a href="https://www.star-history.com/#zeroclaw-labs/zeroclaw&type=date&legend=top-left">
+  <a href="https://www.star-history.com/#cclawcore-labs/cclawcore&type=date&legend=top-left">
     <picture>
-     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=zeroclaw-labs/zeroclaw&type=date&theme=dark&legend=top-left" />
-     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=zeroclaw-labs/zeroclaw&type=date&legend=top-left" />
-     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=zeroclaw-labs/zeroclaw&type=date&legend=top-left" />
+     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=cclawcore-labs/cclawcore&type=date&theme=dark&legend=top-left" />
+     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=cclawcore-labs/cclawcore&type=date&legend=top-left" />
+     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=cclawcore-labs/cclawcore&type=date&legend=top-left" />
     </picture>
   </a>
 </p>

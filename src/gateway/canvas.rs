@@ -197,7 +197,7 @@ pub async fn handle_ws_canvas(
 
     // Echo Sec-WebSocket-Protocol if the client requests our sub-protocol
     // (browsers reject the upgrade if a requested protocol isn't echoed back).
-    const WS_CANVAS_PROTOCOL: &str = "zeroclaw.v1";
+    const WS_CANVAS_PROTOCOL: &str = "cclawcore.v1";
     let ws = if headers
         .get("sec-websocket-protocol")
         .and_then(|v| v.to_str().ok())

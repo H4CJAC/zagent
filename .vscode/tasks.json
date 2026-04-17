@@ -14,47 +14,77 @@
       "label": "Build: Debug",
       "type": "shell",
       "command": "cargo",
-      "args": ["build"],
+      "args": [
+        "build"
+      ],
       "group": {
         "kind": "build",
         "isDefault": true
       },
-      "problemMatcher": ["$rustc"]
+      "problemMatcher": [
+        "$rustc"
+      ]
     },
     {
       "label": "Build: Release",
       "type": "shell",
       "command": "cargo",
-      "args": ["build", "--release"],
-      "problemMatcher": ["$rustc"]
+      "args": [
+        "build",
+        "--release"
+      ],
+      "problemMatcher": [
+        "$rustc"
+      ]
     },
     {
       "label": "Build: Check (fast)",
       "type": "shell",
       "command": "cargo",
-      "args": ["check", "--all-targets"],
-      "problemMatcher": ["$rustc"]
+      "args": [
+        "check",
+        "--all-targets"
+      ],
+      "problemMatcher": [
+        "$rustc"
+      ]
     },
     // ── Lint ───────────────────────────────────────────────
     {
       "label": "Lint: Clippy",
       "type": "shell",
       "command": "cargo",
-      "args": ["clippy", "--all-targets", "--", "-D", "warnings"],
-      "problemMatcher": ["$rustc"]
+      "args": [
+        "clippy",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "problemMatcher": [
+        "$rustc"
+      ]
     },
     {
       "label": "Lint: Format Check",
       "type": "shell",
       "command": "cargo",
-      "args": ["fmt", "--all", "--", "--check"],
+      "args": [
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
       "problemMatcher": []
     },
     {
       "label": "Lint: Format Fix",
       "type": "shell",
       "command": "cargo",
-      "args": ["fmt", "--all"],
+      "args": [
+        "fmt",
+        "--all"
+      ],
       "problemMatcher": []
     },
     // ── Test ──────────────────────────────────────────────
@@ -66,13 +96,17 @@
         "kind": "test",
         "isDefault": true
       },
-      "problemMatcher": ["$rustc"]
+      "problemMatcher": [
+        "$rustc"
+      ]
     },
     {
       "label": "Test: Filtered",
       "type": "shell",
       "command": "cargo nextest --version >/dev/null 2>&1 || cargo install cargo-nextest && cargo nextest run -E 'test(${input:testFilter})'",
-      "problemMatcher": ["$rustc"]
+      "problemMatcher": [
+        "$rustc"
+      ]
     },
     {
       "label": "Test: Coverage Report",
@@ -84,7 +118,9 @@
       "label": "Test: Benchmarks",
       "type": "shell",
       "command": "cargo",
-      "args": ["bench"],
+      "args": [
+        "bench"
+      ],
       "problemMatcher": []
     },
     // ── Security ──────────────────────────────────────────
@@ -105,28 +141,36 @@
       "label": "CI: All (Docker)",
       "type": "shell",
       "command": "./dev/ci.sh",
-      "args": ["all"],
+      "args": [
+        "all"
+      ],
       "problemMatcher": []
     },
     {
       "label": "CI: Lint (Docker)",
       "type": "shell",
       "command": "./dev/ci.sh",
-      "args": ["lint"],
+      "args": [
+        "lint"
+      ],
       "problemMatcher": []
     },
     {
       "label": "CI: Test (Docker)",
       "type": "shell",
       "command": "./dev/ci.sh",
-      "args": ["test"],
+      "args": [
+        "test"
+      ],
       "problemMatcher": []
     },
     {
       "label": "CI: Security (Docker)",
       "type": "shell",
       "command": "./dev/ci.sh",
-      "args": ["security"],
+      "args": [
+        "security"
+      ],
       "problemMatcher": []
     },
     // ── Dev (hot-reload) ─────────────────────────────────
@@ -134,56 +178,94 @@
       "label": "Dev: Kill Stale Port",
       "type": "shell",
       "command": "python3",
-      "args": ["${workspaceFolder}/dev/kill-port.py"],
-      "presentation": { "reveal": "silent", "panel": "shared", "group": "dev" },
+      "args": [
+        "${workspaceFolder}/dev/kill-port.py"
+      ],
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared",
+        "group": "dev"
+      },
       "problemMatcher": []
     },
     {
       "label": "Dev: Vite (web dashboard)",
       "type": "shell",
       "command": "npm",
-      "args": ["run", "dev"],
+      "args": [
+        "run",
+        "dev"
+      ],
       "options": {
         "cwd": "${workspaceFolder}/web",
-        "env": { "PATH": "/opt/homebrew/bin:${env:PATH}" }
+        "env": {
+          "PATH": "/opt/homebrew/bin:${env:PATH}"
+        }
       },
       "isBackground": true,
       "problemMatcher": {
         "owner": "vite",
-        "pattern": { "regexp": "^$" },
+        "pattern": {
+          "regexp": "^$"
+        },
         "background": {
           "activeOnStart": true,
           "beginsPattern": "VITE",
           "endsPattern": "ready in \\d+"
         }
       },
-      "presentation": { "reveal": "silent", "panel": "dedicated", "group": "dev" }
+      "presentation": {
+        "reveal": "silent",
+        "panel": "dedicated",
+        "group": "dev"
+      }
     },
     {
       "label": "Dev: Gateway (cargo-watch)",
       "type": "shell",
       "command": "cargo",
-      "args": ["watch", "-x", "run -- gateway", "-i", "web/"],
+      "args": [
+        "watch",
+        "-x",
+        "run -- gateway",
+        "-i",
+        "web/"
+      ],
       "options": {
-        "env": { "ZEROCLAW_REQUIRE_PAIRING": "false" }
+        "env": {
+          "CCLAWCORE_REQUIRE_PAIRING": "false"
+        }
       },
-      "dependsOn": ["Dev: Kill Stale Port"],
+      "dependsOn": [
+        "Dev: Kill Stale Port"
+      ],
       "dependsOrder": "sequence",
       "isBackground": true,
       "problemMatcher": {
         "owner": "cargo-watch",
-        "pattern": { "regexp": "^(error\\[.*\\]): (.*)$", "line": 1, "message": 2 },
+        "pattern": {
+          "regexp": "^(error\\[.*\\]): (.*)$",
+          "line": 1,
+          "message": 2
+        },
         "background": {
           "activeOnStart": true,
           "beginsPattern": "\\[Running",
           "endsPattern": "Gateway listening|\\[Finished"
         }
       },
-      "presentation": { "reveal": "silent", "panel": "dedicated", "group": "dev" }
+      "presentation": {
+        "reveal": "silent",
+        "panel": "dedicated",
+        "group": "dev"
+      }
     },
     {
       "label": "Dev: Full Stack (tasks)",
-      "dependsOn": ["Dev: Vite (web dashboard)", "Dev: Gateway (cargo-watch)"],
+      "dependsOn": [
+        "Dev: Vite (web dashboard)",
+        "Dev: Gateway (cargo-watch)"
+      ],
       "dependsOrder": "parallel",
       "problemMatcher": []
     }

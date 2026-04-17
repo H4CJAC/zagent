@@ -14,8 +14,10 @@
       "type": "lldb",
       "request": "launch",
       "name": "Debug: Agent",
-      "program": "${workspaceFolder}/target/debug/zeroclaw",
-      "args": ["agent"],
+      "program": "${workspaceFolder}/target/debug/cclawcore",
+      "args": [
+        "agent"
+      ],
       "cwd": "${workspaceFolder}",
       "preLaunchTask": "Build: Debug"
     },
@@ -23,18 +25,24 @@
       "type": "lldb",
       "request": "launch",
       "name": "Debug: Gateway",
-      "program": "${workspaceFolder}/target/debug/zeroclaw",
-      "args": ["gateway"],
+      "program": "${workspaceFolder}/target/debug/cclawcore",
+      "args": [
+        "gateway"
+      ],
       "cwd": "${workspaceFolder}",
-      "env": { "ZEROCLAW_REQUIRE_PAIRING": "false" },
+      "env": {
+        "CCLAWCORE_REQUIRE_PAIRING": "false"
+      },
       "preLaunchTask": "Build: Debug"
     },
     {
       "type": "lldb",
       "request": "launch",
       "name": "Debug: Daemon",
-      "program": "${workspaceFolder}/target/debug/zeroclaw",
-      "args": ["daemon"],
+      "program": "${workspaceFolder}/target/debug/cclawcore",
+      "args": [
+        "daemon"
+      ],
       "cwd": "${workspaceFolder}",
       "preLaunchTask": "Build: Debug"
     },
@@ -42,8 +50,10 @@
       "type": "lldb",
       "request": "launch",
       "name": "Debug: Status",
-      "program": "${workspaceFolder}/target/debug/zeroclaw",
-      "args": ["status"],
+      "program": "${workspaceFolder}/target/debug/cclawcore",
+      "args": [
+        "status"
+      ],
       "cwd": "${workspaceFolder}",
       "preLaunchTask": "Build: Debug"
     },
@@ -51,8 +61,10 @@
       "type": "lldb",
       "request": "launch",
       "name": "Debug: Onboard",
-      "program": "${workspaceFolder}/target/debug/zeroclaw",
-      "args": ["onboard"],
+      "program": "${workspaceFolder}/target/debug/cclawcore",
+      "args": [
+        "onboard"
+      ],
       "cwd": "${workspaceFolder}",
       "preLaunchTask": "Build: Debug"
     },
@@ -70,19 +82,30 @@
       "request": "launch",
       "name": "Debug: Test (by name)",
       "cargo": {
-        "args": ["test", "--no-run", "--lib", "--"],
+        "args": [
+          "test",
+          "--no-run",
+          "--lib",
+          "--"
+        ],
         "filter": {
           "kind": "lib"
         }
       },
-      "args": ["--exact", "${input:testName}", "--nocapture"],
+      "args": [
+        "--exact",
+        "${input:testName}",
+        "--nocapture"
+      ],
       "cwd": "${workspaceFolder}"
     }
   ],
   "compounds": [
     {
       "name": "Dev: Full Stack",
-      "configurations": ["Dev: Browser"],
+      "configurations": [
+        "Dev: Browser"
+      ],
       "preLaunchTask": "Dev: Full Stack (tasks)",
       "stopAll": true,
       "presentation": {

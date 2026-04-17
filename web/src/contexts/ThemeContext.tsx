@@ -49,13 +49,13 @@ export const ThemeContext = createContext<ThemeContextValue>({
   uiFontSize: 15,
   monoFontSize: 14,
   resolvedTheme: 'dark',
-  setTheme: () => {},
-  setAccent: () => {},
-  setColorTheme: () => {},
-  setUiFont: () => {},
-  setMonoFont: () => {},
-  setUiFontSize: () => {},
-  setMonoFontSize: () => {},
+  setTheme: () => { },
+  setAccent: () => { },
+  setColorTheme: () => { },
+  setUiFont: () => { },
+  setMonoFont: () => { },
+  setUiFontSize: () => { },
+  setMonoFontSize: () => { },
 });
 
 // ── Font loader (was fontLoader.ts) ──────────────────────────────────────────
@@ -87,7 +87,7 @@ function loadMonoFont(font: string) {
 
 // ── Locale storage (was localeStorage.ts) ────────────────────────────────────
 
-export const LOCALE_STORAGE_KEY = 'zeroclaw-locale';
+export const LOCALE_STORAGE_KEY = 'cclawcore-locale';
 
 export function loadLocale(): string {
   return localStorage.getItem(LOCALE_STORAGE_KEY) ?? 'en';
@@ -99,7 +99,7 @@ export function saveLocale(locale: string) {
 
 // ── Theme storage (was themeStorage.ts) ──────────────────────────────────────
 
-const STORAGE_KEY = 'zeroclaw-theme';
+const STORAGE_KEY = 'cclawcore-theme';
 
 interface StoredTheme {
   theme: ThemeMode;

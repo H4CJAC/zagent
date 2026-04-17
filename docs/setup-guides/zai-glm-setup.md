@@ -1,11 +1,11 @@
 # Z.AI GLM Setup
 
-ZeroClaw supports Z.AI's GLM models through OpenAI-compatible endpoints.
-This guide covers practical setup options that match current ZeroClaw provider behavior.
+CclawCore supports Z.AI's GLM models through OpenAI-compatible endpoints.
+This guide covers practical setup options that match current CclawCore provider behavior.
 
 ## Overview
 
-ZeroClaw supports these Z.AI aliases and endpoints out of the box:
+CclawCore supports these Z.AI aliases and endpoints out of the box:
 
 | Alias | Endpoint | Notes |
 |-------|----------|-------|
@@ -19,14 +19,14 @@ If you need a custom base URL, see [`../contributing/custom-providers.md`](../co
 ### Quick Start
 
 ```bash
-zeroclaw onboard \
+cclawcore onboard \
   --provider "zai" \
   --api-key "YOUR_ZAI_API_KEY"
 ```
 
 ### Manual Configuration
 
-Edit `~/.zeroclaw/config.toml`:
+Edit `~/.cclawcore/config.toml`:
 
 ```toml
 api_key = "YOUR_ZAI_API_KEY"
@@ -73,14 +73,14 @@ Expected response:
 }
 ```
 
-### Test with ZeroClaw CLI
+### Test with CclawCore CLI
 
 ```bash
 # Test agent directly
-echo "Hello" | zeroclaw agent
+echo "Hello" | cclawcore agent
 
 # Check status
-zeroclaw status
+cclawcore status
 ```
 
 ## Environment Variables
@@ -137,6 +137,6 @@ curl -s "https://api.z.ai/api/coding/paas/v4/models" \
 
 ## Related Documentation
 
-- [ZeroClaw README](../README.md)
+- [CclawCore README](../README.md)
 - [Custom Provider Endpoints](../contributing/custom-providers.md)
 - [Contributing Guide](../../CONTRIBUTING.md)

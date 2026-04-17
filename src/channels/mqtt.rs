@@ -128,7 +128,7 @@ mod tests {
         let config = MqttConfig {
             enabled: true,
             broker_url: "mqtt://localhost:1883".into(),
-            client_id: "zeroclaw".into(),
+            client_id: "cclawcore".into(),
             topics: vec!["test".into()],
             qos: 3,
             username: None,
@@ -145,7 +145,7 @@ mod tests {
         let config = MqttConfig {
             enabled: true,
             broker_url: "http://localhost:1883".into(),
-            client_id: "zeroclaw".into(),
+            client_id: "cclawcore".into(),
             topics: vec!["test".into()],
             qos: 1,
             username: None,
@@ -162,7 +162,7 @@ mod tests {
         let config = MqttConfig {
             enabled: true,
             broker_url: "mqtt://localhost:1883".into(),
-            client_id: "zeroclaw".into(),
+            client_id: "cclawcore".into(),
             topics: vec![],
             qos: 1,
             username: None,
@@ -196,7 +196,7 @@ mod tests {
         let config = MqttConfig {
             enabled: true,
             broker_url: "mqtt://localhost:1883".into(),
-            client_id: "zeroclaw".into(),
+            client_id: "cclawcore".into(),
             topics: vec!["sensors/#".into()],
             qos: 1,
             username: None,
@@ -212,7 +212,7 @@ mod tests {
         let config = MqttConfig {
             enabled: true,
             broker_url: "mqtt://localhost:1883".into(),
-            client_id: "zeroclaw".into(),
+            client_id: "cclawcore".into(),
             topics: vec!["test".into()],
             qos: 1,
             username: None,
@@ -229,7 +229,7 @@ mod tests {
         let config = MqttConfig {
             enabled: true,
             broker_url: "mqtts://localhost:8883".into(),
-            client_id: "zeroclaw".into(),
+            client_id: "cclawcore".into(),
             topics: vec!["test".into()],
             qos: 1,
             username: None,
@@ -246,7 +246,7 @@ mod tests {
         let config = MqttConfig {
             enabled: true,
             broker_url: "mqtts://localhost:8883".into(),
-            client_id: "zeroclaw".into(),
+            client_id: "cclawcore".into(),
             topics: vec!["test".into()],
             qos: 1,
             username: None,

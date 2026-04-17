@@ -1,7 +1,9 @@
 {
   "identifier": "desktop",
-  "description": "Desktop-specific permissions for ZeroClaw",
-  "windows": ["main"],
+  "description": "Desktop-specific permissions for CclawCore",
+  "windows": [
+    "main"
+  ],
   "permissions": [
     "core:default",
     "shell:allow-open",

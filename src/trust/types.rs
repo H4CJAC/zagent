@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use zeroclaw_macros::Configurable;
+use cclawcore_macros::Configurable;
 
 /// Configuration for trust scoring
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Configurable)]

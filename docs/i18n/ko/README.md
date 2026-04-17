@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/zeroclaw-labs/zeroclaw/master/docs/assets/zeroclaw-banner.png" alt="ZeroClaw" width="600" />
+  <img src="https://raw.githubusercontent.com/cclawcore-labs/cclawcore/master/docs/assets/cclawcore-banner.png" alt="CclawCore" width="600" />
 </p>
 
-<h1 align="center">🦀 ZeroClaw — 개인 AI 어시스턴트</h1>
+<h1 align="center">🦀 CclawCore — 개인 AI 어시스턴트</h1>
 
 <p align="center">
   <strong>오버헤드 없음. 타협 없음. 100% Rust. 100% 독립적.</strong><br>
@@ -10,15 +10,15 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/zeroclaw-labs/zeroclaw/actions/workflows/ci-run.yml"><img src="https://img.shields.io/github/actions/workflow/status/zeroclaw-labs/zeroclaw/ci-run.yml?branch=master&label=build" alt="Build Status" /></a>
+  <a href="https://github.com/cclawcore-labs/cclawcore/actions/workflows/ci-run.yml"><img src="https://img.shields.io/github/actions/workflow/status/cclawcore-labs/cclawcore/ci-run.yml?branch=master&label=build" alt="Build Status" /></a>
   <a href="LICENSE-APACHE"><img src="https://img.shields.io/badge/license-MIT%20OR%20Apache%202.0-blue.svg" alt="License: MIT OR Apache-2.0" /></a>
   <a href="https://www.rust-lang.org"><img src="https://img.shields.io/badge/rust-edition%202024-orange?logo=rust" alt="Rust Edition 2024" /></a>
-  <a href="https://github.com/zeroclaw-labs/zeroclaw/releases/latest"><img src="https://img.shields.io/badge/version-v0.6.9-blue" alt="Version v0.6.9" /></a>
-  <a href="https://github.com/zeroclaw-labs/zeroclaw/graphs/contributors"><img src="https://img.shields.io/github/contributors/zeroclaw-labs/zeroclaw?color=green" alt="Contributors" /></a>
+  <a href="https://github.com/cclawcore-labs/cclawcore/releases/latest"><img src="https://img.shields.io/badge/version-v0.6.9-blue" alt="Version v0.6.9" /></a>
+  <a href="https://github.com/cclawcore-labs/cclawcore/graphs/contributors"><img src="https://img.shields.io/github/contributors/cclawcore-labs/cclawcore?color=green" alt="Contributors" /></a>
   <a href="https://buymeacoffee.com/argenistherose"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Donate-yellow.svg?style=flat&logo=buy-me-a-coffee" alt="Buy Me a Coffee" /></a>
-  <a href="https://x.com/zeroclawlabs?s=21"><img src="https://img.shields.io/badge/X-%40zeroclawlabs-000000?style=flat&logo=x&logoColor=white" alt="X: @zeroclawlabs" /></a>
+  <a href="https://x.com/cclawcorelabs?s=21"><img src="https://img.shields.io/badge/X-%40cclawcorelabs-000000?style=flat&logo=x&logoColor=white" alt="X: @cclawcorelabs" /></a>
   <a href="https://discord.com/invite/wDshRVqRjx"><img src="https://img.shields.io/badge/Discord-Join-5865F2?style=flat&logo=discord&logoColor=white" alt="Discord" /></a>
-  <a href="https://www.reddit.com/r/zeroclawlabs/"><img src="https://img.shields.io/badge/Reddit-r%2Fzeroclawlabs-FF4500?style=flat&logo=reddit&logoColor=white" alt="Reddit: r/zeroclawlabs" /></a>
+  <a href="https://www.reddit.com/r/cclawcorelabs/"><img src="https://img.shields.io/badge/Reddit-r%2Fcclawcorelabs-FF4500?style=flat&logo=reddit&logoColor=white" alt="Reddit: r/cclawcorelabs" /></a>
 </p>
 
 <p align="center">
@@ -60,12 +60,12 @@ Harvard, MIT, 그리고 Sundai.Club 커뮤니티의 학생들과 멤버들이 �
   <a href="../nb/README.md">🇳🇴 Norsk</a>
 </p>
 
-ZeroClaw는 자신의 기기에서 실행하는 개인 AI 어시스턴트입니다. 이미 사용하고 있는 채널(WhatsApp, Telegram, Slack, Discord, Signal, iMessage, Matrix, IRC, Email, Bluesky, Nostr, Mattermost, Nextcloud Talk, DingTalk, Lark, QQ, Reddit, LinkedIn, Twitter, MQTT, WeChat Work 등)에서 응답합니다. 실시간 제어를 위한 웹 대시보드가 있으며 하드웨어 주변기기(ESP32, STM32, Arduino, Raspberry Pi)에 연결할 수 있습니다. Gateway는 단순한 제어 평면이며, 제품은 어시스턴트 자체입니다.
+CclawCore는 자신의 기기에서 실행하는 개인 AI 어시스턴트입니다. 이미 사용하고 있는 채널(WhatsApp, Telegram, Slack, Discord, Signal, iMessage, Matrix, IRC, Email, Bluesky, Nostr, Mattermost, Nextcloud Talk, DingTalk, Lark, QQ, Reddit, LinkedIn, Twitter, MQTT, WeChat Work 등)에서 응답합니다. 실시간 제어를 위한 웹 대시보드가 있으며 하드웨어 주변기기(ESP32, STM32, Arduino, Raspberry Pi)에 연결할 수 있습니다. Gateway는 단순한 제어 평면이며, 제품은 어시스턴트 자체입니다.
 
 로컬에서 빠르고 항상 켜져 있는 개인 단일 사용자 어시스턴트를 원한다면 바로 이것입니다.
 
 <p align="center">
-  <a href="https://zeroclawlabs.ai">웹사이트</a> ·
+  <a href="https://cclawcorelabs.ai">웹사이트</a> ·
   <a href="docs/README.md">문서</a> ·
   <a href="docs/architecture.md">아키텍처</a> ·
   <a href="#빠른-시작-tldr">시작하기</a> ·
@@ -74,7 +74,7 @@ ZeroClaw는 자신의 기기에서 실행하는 개인 AI 어시스턴트입니�
   <a href="https://discord.com/invite/wDshRVqRjx">Discord</a>
 </p>
 
-> **권장 설정:** 터미널에서 `zeroclaw onboard`를 실행하세요. ZeroClaw Onboard가 gateway, workspace, 채널, 제공자 설정을 단계별로 안내합니다. macOS, Linux, Windows(WSL2)에서 작동하는 권장 설정 경로입니다. 새로 설치하시나요? 여기서 시작하세요: [시작하기](#빠른-시작-tldr)
+> **권장 설정:** 터미널에서 `cclawcore onboard`를 실행하세요. CclawCore Onboard가 gateway, workspace, 채널, 제공자 설정을 단계별로 안내합니다. macOS, Linux, Windows(WSL2)에서 작동하는 권장 설정 경로입니다. 새로 설치하시나요? 여기서 시작하세요: [시작하기](#빠른-시작-tldr)
 
 ### Subscription Auth (OAuth)
 
@@ -94,18 +94,18 @@ ZeroClaw는 자신의 기기에서 실행하는 개인 AI 어시스턴트입니�
 ### Homebrew (macOS/Linuxbrew)
 
 ```bash
-brew install zeroclaw
+brew install cclawcore
 ```
 
 ### 원클릭 부트스트랩
 
 ```bash
-git clone https://github.com/zeroclaw-labs/zeroclaw.git
-cd zeroclaw
+git clone https://github.com/cclawcore-labs/cclawcore.git
+cd cclawcore
 ./install.sh
 ```
 
-`zeroclaw onboard`는 설치 후 자동으로 실행되어 workspace와 제공자를 구성합니다.
+`cclawcore onboard`는 설치 후 자동으로 실행되어 workspace와 제공자를 구성합니다.
 
 ## 빠른 시작 (TL;DR)
 
@@ -116,67 +116,67 @@ cd zeroclaw
 ./install.sh --api-key "sk-..." --provider openrouter
 
 # Gateway 시작 (webhook 서버 + 웹 대시보드)
-zeroclaw gateway                # 기본값: 127.0.0.1:42617
-zeroclaw gateway --port 0       # 랜덤 포트 (보안 강화)
+cclawcore gateway                # 기본값: 127.0.0.1:42617
+cclawcore gateway --port 0       # 랜덤 포트 (보안 강화)
 
 # 어시스턴트와 대화
-zeroclaw agent -m "Hello, ZeroClaw!"
+cclawcore agent -m "Hello, CclawCore!"
 
 # 대화형 모드
-zeroclaw agent
+cclawcore agent
 
 # 완전 자율 런타임 시작 (gateway + 채널 + cron + hands)
-zeroclaw daemon
+cclawcore daemon
 
 # 상태 확인
-zeroclaw status
+cclawcore status
 
 # 진단 실행
-zeroclaw doctor
+cclawcore doctor
 ```
 
-업그레이드 하셨나요? 업데이트 후 `zeroclaw doctor`를 실행하세요.
+업그레이드 하셨나요? 업데이트 후 `cclawcore doctor`를 실행하세요.
 
 ### 소스에서 빌드 (개발용)
 
 ```bash
-git clone https://github.com/zeroclaw-labs/zeroclaw.git
-cd zeroclaw
+git clone https://github.com/cclawcore-labs/cclawcore.git
+cd cclawcore
 
 cargo build --release --locked
 cargo install --path . --force --locked
 
-zeroclaw onboard
+cclawcore onboard
 ```
 
 > **개발 폴백 (글로벌 설치 없이):** 명령 앞에 `cargo run --release --`를 붙이세요 (예: `cargo run --release -- status`).
 
 ## OpenClaw에서 마이그레이션
 
-ZeroClaw는 OpenClaw workspace, 메모리, 구성을 가져올 수 있습니다:
+CclawCore는 OpenClaw workspace, 메모리, 구성을 가져올 수 있습니다:
 
 ```bash
 # 마이그레이션 대상 미리보기 (안전, 읽기 전용)
-zeroclaw migrate openclaw --dry-run
+cclawcore migrate openclaw --dry-run
 
 # 마이그레이션 실행
-zeroclaw migrate openclaw
+cclawcore migrate openclaw
 ```
 
-이것은 메모리 항목, workspace 파일, 구성을 `~/.openclaw/`에서 `~/.zeroclaw/`로 마이그레이션합니다. 구성은 JSON에서 TOML로 자동 변환됩니다.
+이것은 메모리 항목, workspace 파일, 구성을 `~/.openclaw/`에서 `~/.cclawcore/`로 마이그레이션합니다. 구성은 JSON에서 TOML로 자동 변환됩니다.
 
 ## 보안 기본값 (DM 접근)
 
-ZeroClaw는 실제 메시징 서비스에 연결됩니다. 수신 DM을 신뢰할 수 없는 입력으로 취급하세요.
+CclawCore는 실제 메시징 서비스에 연결됩니다. 수신 DM을 신뢰할 수 없는 입력으로 취급하세요.
 
 전체 보안 가이드: [SECURITY.md](SECURITY.md)
 
 모든 채널의 기본 동작:
 
 - **DM 페어링** (기본값): 알 수 없는 발신자는 짧은 페어링 코드를 받으며 봇은 메시지를 처리하지 않습니다.
-- 승인: `zeroclaw pairing approve <channel> <code>` (발신자가 로컬 허용 목록에 추가됩니다).
+- 승인: `cclawcore pairing approve <channel> <code>` (발신자가 로컬 허용 목록에 추가됩니다).
 - 공개 수신 DM은 `config.toml`에서 명시적 옵트인이 필요합니다.
-- `zeroclaw doctor`를 실행하여 위험하거나 잘못 구성된 DM 정책을 확인하세요.
+- `cclawcore doctor`를 실행하여 위험하거나 잘못 구성된 DM 정책을 확인하세요.
 
 **자율성 수준:**
 
@@ -197,7 +197,7 @@ ZeroClaw는 실제 메시징 서비스에 연결됩니다. 수신 DM을 신뢰�
 
 | 날짜 (UTC) | 수준 | 공지 | 조치 |
 | ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-02-19 | _치명적_ | 우리는 `openagen/zeroclaw`, `zeroclaw.org` 또는 `zeroclaw.net`과 **관련이 없습니다**. `zeroclaw.org`과 `zeroclaw.net` 도메인은 현재 `openagen/zeroclaw` 포크를 가리키고 있으며, 해당 도메인/저장소는 우리의 공식 웹사이트/프로젝트를 사칭하고 있습니다. | 해당 소스의 정보, 바이너리, 모금, 공지를 신뢰하지 마세요. [이 저장소](https://github.com/zeroclaw-labs/zeroclaw)와 검증된 소셜 계정만 사용하세요. |
+| 2026-02-19 | _치명적_ | 우리는 `openagen/cclawcore`, `cclawcore.org` 또는 `cclawcore.net`과 **관련이 없습니다**. `cclawcore.org`과 `cclawcore.net` 도메인은 현재 `openagen/cclawcore` 포크를 가리키고 있으며, 해당 도메인/저장소는 우리의 공식 웹사이트/프로젝트를 사칭하고 있습니다. | 해당 소스의 정보, 바이너리, 모금, 공지를 신뢰하지 마세요. [이 저장소](https://github.com/cclawcore-labs/cclawcore)와 검증된 소셜 계정만 사용하세요. |
 | 2026-02-19 | _중요_ | Anthropic이 2026-02-19에 인증 및 자격증명 사용 약관을 업데이트했습니다. Claude Code OAuth 토큰(Free, Pro, Max)은 Claude Code와 Claude.ai 전용입니다. 다른 제품, 도구 또는 서비스(Agent SDK 포함)에서 Claude Free/Pro/Max OAuth 토큰을 사용하는 것은 허용되지 않으며 소비자 이용약관을 위반할 수 있습니다. | 잠재적 손실을 방지하기 위해 일시적으로 Claude Code OAuth 통합을 피하세요. 원본 조항: [Authentication and Credential Use](https://code.claude.com/docs/en/legal-and-compliance#authentication-and-credential-use). |
 
 ## 주요 특징
@@ -217,18 +217,18 @@ ZeroClaw는 실제 메시징 서비스에 연결됩니다. 수신 DM을 신뢰�
 - **스킬 플랫폼** — 번들, 커뮤니티, workspace 스킬과 보안 감사.
 - **터널 지원** — 원격 접속을 위한 Cloudflare, Tailscale, ngrok, OpenVPN, 사용자 정의 터널.
 
-### 팀이 ZeroClaw를 선택하는 이유
+### 팀이 CclawCore를 선택하는 이유
 
 - **기본 경량:** 작은 Rust 바이너리, 빠른 시작, 낮은 메모리 사용.
 - **기본 보안:** 페어링, 엄격한 샌드박싱, 명시적 허용 목록, workspace 범위 지정.
 - **완전히 교체 가능:** 핵심 시스템이 트레이트(제공자, 채널, 도구, 메모리, 터널).
 - **벤더 락인 없음:** OpenAI 호환 제공자 지원 + 플러그 가능한 사용자 정의 엔드포인트.
 
-## 벤치마크 스냅샷 (ZeroClaw vs OpenClaw, 재현 가능)
+## 벤치마크 스냅샷 (CclawCore vs OpenClaw, 재현 가능)
 
 로컬 머신 빠른 벤치마크 (macOS arm64, 2026년 2월) 0.8GHz 엣지 하드웨어로 정규화.
 
-|                           | OpenClaw      | NanoBot        | PicoClaw        | ZeroClaw 🦀          |
+|                           | OpenClaw      | NanoBot        | PicoClaw        | CclawCore 🦀          |
 | ------------------------- | ------------- | -------------- | --------------- | -------------------- |
 | **언어**              | TypeScript    | Python         | Go              | **Rust**             |
 | **RAM**                   | > 1GB         | > 100MB        | < 10MB          | **< 5MB**            |
@@ -236,20 +236,20 @@ ZeroClaw는 실제 메시징 서비스에 연결됩니다. 수신 DM을 신뢰�
 | **바이너리 크기**           | ~28MB (dist)  | N/A (Scripts)  | ~8MB            | **~8.8 MB**          |
 | **비용**                  | Mac Mini $599 | Linux SBC ~$50 | Linux Board $10 | **모든 하드웨어 $10** |
 
-> 참고: ZeroClaw 결과는 `/usr/bin/time -l`을 사용한 릴리스 빌드에서 측정되었습니다. OpenClaw는 Node.js 런타임이 필요하며(일반적으로 ~390MB 추가 메모리 오버헤드), NanoBot은 Python 런타임이 필요합니다. PicoClaw와 ZeroClaw는 정적 바이너리입니다. 위 RAM 수치는 런타임 메모리이며, 빌드 시 컴파일 요구사항은 더 높습니다.
+> 참고: CclawCore 결과는 `/usr/bin/time -l`을 사용한 릴리스 빌드에서 측정되었습니다. OpenClaw는 Node.js 런타임이 필요하며(일반적으로 ~390MB 추가 메모리 오버헤드), NanoBot은 Python 런타임이 필요합니다. PicoClaw와 CclawCore는 정적 바이너리입니다. 위 RAM 수치는 런타임 메모리이며, 빌드 시 컴파일 요구사항은 더 높습니다.
 
 <p align="center">
-  <img src="docs/assets/zeroclaw-comparison.jpeg" alt="ZeroClaw vs OpenClaw Comparison" width="800" />
+  <img src="docs/assets/cclawcore-comparison.jpeg" alt="CclawCore vs OpenClaw Comparison" width="800" />
 </p>
 
 ### 재현 가능한 로컬 측정
 
 ```bash
 cargo build --release
-ls -lh target/release/zeroclaw
+ls -lh target/release/cclawcore
 
-/usr/bin/time -l target/release/zeroclaw --help
-/usr/bin/time -l target/release/zeroclaw status
+/usr/bin/time -l target/release/cclawcore --help
+/usr/bin/time -l target/release/cclawcore status
 ```
 
 ## 지금까지 구축한 모든 것
@@ -325,7 +325,7 @@ Gateway에서 직접 제공하는 React 19 + Vite 6 + Tailwind CSS 4 웹 대시�
 
 ## 구성
 
-최소 `~/.zeroclaw/config.toml`:
+최소 `~/.cclawcore/config.toml`:
 
 ```toml
 default_provider = "anthropic"
@@ -393,35 +393,35 @@ kind = "cloudflare"  # 또는 "tailscale", "ngrok", "openvpn", "custom", "none"
 
 ## Subscription Auth (OpenAI Codex / Claude Code / Gemini)
 
-ZeroClaw는 구독 기반 인증 프로필(다중 계정, 저장 시 암호화)을 지원합니다.
+CclawCore는 구독 기반 인증 프로필(다중 계정, 저장 시 암호화)을 지원합니다.
 
-- 저장 파일: `~/.zeroclaw/auth-profiles.json`
-- 암호화 키: `~/.zeroclaw/.secret_key`
+- 저장 파일: `~/.cclawcore/auth-profiles.json`
+- 암호화 키: `~/.cclawcore/.secret_key`
 - 프로필 id 형식: `<provider>:<profile_name>` (예: `openai-codex:work`)
 
 ```bash
 # OpenAI Codex OAuth (ChatGPT 구독)
-zeroclaw auth login --provider openai-codex --device-code
+cclawcore auth login --provider openai-codex --device-code
 
 # Gemini OAuth
-zeroclaw auth login --provider gemini --profile default
+cclawcore auth login --provider gemini --profile default
 
 # Anthropic setup-token
-zeroclaw auth paste-token --provider anthropic --profile default --auth-kind authorization
+cclawcore auth paste-token --provider anthropic --profile default --auth-kind authorization
 
 # 확인 / 갱신 / 프로필 전환
-zeroclaw auth status
-zeroclaw auth refresh --provider openai-codex --profile default
-zeroclaw auth use --provider openai-codex --profile work
+cclawcore auth status
+cclawcore auth refresh --provider openai-codex --profile default
+cclawcore auth use --provider openai-codex --profile work
 
 # 구독 인증으로 에이전트 실행
-zeroclaw agent --provider openai-codex -m "hello"
-zeroclaw agent --provider anthropic -m "hello"
+cclawcore agent --provider openai-codex -m "hello"
+cclawcore agent --provider anthropic -m "hello"
 ```
 
 ## 에이전트 workspace + 스킬
 
-Workspace 루트: `~/.zeroclaw/workspace/` (구성을 통해 변경 가능).
+Workspace 루트: `~/.cclawcore/workspace/` (구성을 통해 변경 가능).
 
 주입되는 프롬프트 파일:
 - `IDENTITY.md` — 에이전트 성격과 역할
@@ -430,74 +430,74 @@ Workspace 루트: `~/.zeroclaw/workspace/` (구성을 통해 변경 가능).
 - `AGENTS.md` — 세션 규칙과 초기화 규칙
 - `SOUL.md` — 핵심 정체성과 운영 원칙
 
-스킬: `~/.zeroclaw/workspace/skills/<skill>/SKILL.md` 또는 `SKILL.toml`.
+스킬: `~/.cclawcore/workspace/skills/<skill>/SKILL.md` 또는 `SKILL.toml`.
 
 ```bash
 # 설치된 스킬 목록
-zeroclaw skills list
+cclawcore skills list
 
 # git에서 설치
-zeroclaw skills install https://github.com/user/my-skill.git
+cclawcore skills install https://github.com/user/my-skill.git
 
 # 설치 전 보안 감사
-zeroclaw skills audit https://github.com/user/my-skill.git
+cclawcore skills audit https://github.com/user/my-skill.git
 
 # 스킬 제거
-zeroclaw skills remove my-skill
+cclawcore skills remove my-skill
 ```
 
 ## CLI 명령어
 
 ```bash
 # Workspace 관리
-zeroclaw onboard              # 안내된 설정 마법사
-zeroclaw status               # 데몬/에이전트 상태 표시
-zeroclaw doctor               # 시스템 진단 실행
+cclawcore onboard              # 안내된 설정 마법사
+cclawcore status               # 데몬/에이전트 상태 표시
+cclawcore doctor               # 시스템 진단 실행
 
 # Gateway + 데몬
-zeroclaw gateway              # Gateway 서버 시작 (127.0.0.1:42617)
-zeroclaw daemon               # 완전 자율 런타임 시작
+cclawcore gateway              # Gateway 서버 시작 (127.0.0.1:42617)
+cclawcore daemon               # 완전 자율 런타임 시작
 
 # 에이전트
-zeroclaw agent                # 대화형 채팅 모드
-zeroclaw agent -m "message"   # 단일 메시지 모드
+cclawcore agent                # 대화형 채팅 모드
+cclawcore agent -m "message"   # 단일 메시지 모드
 
 # 서비스 관리
-zeroclaw service install      # OS 서비스로 설치 (launchd/systemd)
-zeroclaw service start|stop|restart|status
+cclawcore service install      # OS 서비스로 설치 (launchd/systemd)
+cclawcore service start|stop|restart|status
 
 # 채널
-zeroclaw channel list         # 구성된 채널 목록
-zeroclaw channel doctor       # 채널 상태 확인
-zeroclaw channel bind-telegram 123456789
+cclawcore channel list         # 구성된 채널 목록
+cclawcore channel doctor       # 채널 상태 확인
+cclawcore channel bind-telegram 123456789
 
 # Cron + 스케줄링
-zeroclaw cron list            # 예약된 작업 목록
-zeroclaw cron add "*/5 * * * *" --prompt "Check system health"
-zeroclaw cron remove <id>
+cclawcore cron list            # 예약된 작업 목록
+cclawcore cron add "*/5 * * * *" --prompt "Check system health"
+cclawcore cron remove <id>
 
 # 메모리
-zeroclaw memory list          # 메모리 항목 목록
-zeroclaw memory get <key>     # 메모리 조회
-zeroclaw memory stats         # 메모리 통계
+cclawcore memory list          # 메모리 항목 목록
+cclawcore memory get <key>     # 메모리 조회
+cclawcore memory stats         # 메모리 통계
 
 # 인증 프로필
-zeroclaw auth login --provider <name>
-zeroclaw auth status
-zeroclaw auth use --provider <name> --profile <profile>
+cclawcore auth login --provider <name>
+cclawcore auth status
+cclawcore auth use --provider <name> --profile <profile>
 
 # 하드웨어 주변기기
-zeroclaw hardware discover    # 연결된 기기 스캔
-zeroclaw peripheral list      # 연결된 주변기기 목록
-zeroclaw peripheral flash     # 기기에 펌웨어 플래시
+cclawcore hardware discover    # 연결된 기기 스캔
+cclawcore peripheral list      # 연결된 주변기기 목록
+cclawcore peripheral flash     # 기기에 펌웨어 플래시
 
 # 마이그레이션
-zeroclaw migrate openclaw --dry-run
-zeroclaw migrate openclaw
+cclawcore migrate openclaw --dry-run
+cclawcore migrate openclaw
 
 # 셸 자동완성
-source <(zeroclaw completions bash)
-zeroclaw completions zsh > ~/.zfunc/_zeroclaw
+source <(cclawcore completions bash)
+cclawcore completions zsh > ~/.zfunc/_cclawcore
 ```
 
 전체 명령어 참조: [docs/reference/cli/commands-reference.md](docs/reference/cli/commands-reference.md)
@@ -565,10 +565,10 @@ zeroclaw completions zsh > ~/.zfunc/_zeroclaw
 
 #### 한 줄 설치
 
-위 단계를 건너뛰고 모든 것(시스템 의존성, Rust, ZeroClaw)을 한 번에 설치:
+위 단계를 건너뛰고 모든 것(시스템 의존성, Rust, CclawCore)을 한 번에 설치:
 
 ```bash
-curl -LsSf https://raw.githubusercontent.com/zeroclaw-labs/zeroclaw/master/install.sh | bash
+curl -LsSf https://raw.githubusercontent.com/cclawcore-labs/cclawcore/master/install.sh | bash
 ```
 
 #### 컴파일 리소스 요구사항
@@ -611,7 +611,7 @@ curl -LsSf https://raw.githubusercontent.com/zeroclaw-labs/zeroclaw/master/insta
 - Windows: `x86_64`
 
 최신 에셋 다운로드:
-<https://github.com/zeroclaw-labs/zeroclaw/releases/latest>
+<https://github.com/cclawcore-labs/cclawcore/releases/latest>
 
 ## 문서
 
@@ -621,7 +621,7 @@ curl -LsSf https://raw.githubusercontent.com/zeroclaw-labs/zeroclaw/master/insta
 - [아키텍처 개요](docs/architecture.md)에서 전체 시스템 모델을 확인하세요.
 - [구성 참조](docs/reference/api/config-reference.md)에서 모든 키와 예제를 확인하세요.
 - [운영 런북](docs/ops/operations-runbook.md)으로 Gateway를 운영하세요.
-- [ZeroClaw Onboard](#빠른-시작-tldr)를 따라 안내된 설정을 진행하세요.
+- [CclawCore Onboard](#빠른-시작-tldr)를 따라 안내된 설정을 진행하세요.
 - [문제 해결 가이드](docs/ops/troubleshooting.md)로 일반적인 오류를 디버그하세요.
 - 노출하기 전에 [보안 가이드](docs/security/README.md)를 검토하세요.
 
@@ -653,14 +653,14 @@ curl -LsSf https://raw.githubusercontent.com/zeroclaw-labs/zeroclaw/master/insta
 
 ## Icy Crab 🦀
 
-ZeroClaw는 빠르고 효율적인 AI 어시스턴트인 smooth crab 🦀을 위해 만들어졌습니다. Argenis De La Rosa와 커뮤니티가 만들었습니다.
+CclawCore는 빠르고 효율적인 AI 어시스턴트인 smooth crab 🦀을 위해 만들어졌습니다. Argenis De La Rosa와 커뮤니티가 만들었습니다.
 
-- [zeroclawlabs.ai](https://zeroclawlabs.ai)
-- [@zeroclawlabs](https://x.com/zeroclawlabs)
+- [cclawcorelabs.ai](https://cclawcorelabs.ai)
+- [@cclawcorelabs](https://x.com/cclawcorelabs)
 
-## ZeroClaw 지원하기
+## CclawCore 지원하기
 
-ZeroClaw가 여러분의 작업에 도움이 되었고 지속적인 개발을 지원하고 싶다면 여기에서 기부할 수 있습니다:
+CclawCore가 여러분의 작업에 도움이 되었고 지속적인 개발을 지원하고 싶다면 여기에서 기부할 수 있습니다:
 
 <a href="https://buymeacoffee.com/argenistherose"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Donate-yellow.svg?style=for-the-badge&logo=buy-me-a-coffee" alt="Buy Me a Coffee" /></a>
 
@@ -677,7 +677,7 @@ ZeroClaw가 여러분의 작업에 도움이 되었고 지속적인 개발을 �
 
 ## 기여하기
 
-ZeroClaw가 처음이신가요? [`good first issue`](https://github.com/zeroclaw-labs/zeroclaw/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) 레이블이 붙은 이슈를 찾아보세요 — 시작하는 방법은 [기여 가이드](CONTRIBUTING.md#first-time-contributors)를 참조하세요. AI/vibe-coded PR도 환영합니다! 🤖
+CclawCore가 처음이신가요? [`good first issue`](https://github.com/cclawcore-labs/cclawcore/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) 레이블이 붙은 이슈를 찾아보세요 — 시작하는 방법은 [기여 가이드](CONTRIBUTING.md#first-time-contributors)를 참조하세요. AI/vibe-coded PR도 환영합니다! 🤖
 
 [CONTRIBUTING.md](CONTRIBUTING.md)와 [CLA.md](docs/contributing/cla.md)를 참조하세요. 트레이트를 구현하고 PR을 제출하세요:
 
@@ -689,26 +689,26 @@ ZeroClaw가 처음이신가요? [`good first issue`](https://github.com/zeroclaw
 - 새 `Memory` → `src/memory/`
 - 새 `Tunnel` → `src/tunnel/`
 - 새 `Peripheral` → `src/peripherals/`
-- 새 `Skill` → `~/.zeroclaw/workspace/skills/<name>/`
+- 새 `Skill` → `~/.cclawcore/workspace/skills/<name>/`
 
 <!-- BEGIN:RECENT_CONTRIBUTORS -->
 <!-- END:RECENT_CONTRIBUTORS -->
 
 ## ⚠️ 공식 저장소 및 사칭 경고
 
-**이것이 유일한 공식 ZeroClaw 저장소입니다:**
+**이것이 유일한 공식 CclawCore 저장소입니다:**
 
-> https://github.com/zeroclaw-labs/zeroclaw
+> https://github.com/cclawcore-labs/cclawcore
 
-"ZeroClaw"라고 주장하거나 ZeroClaw Labs와의 제휴를 암시하는 다른 저장소, 조직, 도메인 또는 패키지는 **승인되지 않았으며 이 프로젝트와 관련이 없습니다**. 알려진 비인가 포크는 [TRADEMARK.md](docs/maintainers/trademark.md)에 나열됩니다.
+"CclawCore"라고 주장하거나 CclawCore Labs와의 제휴를 암시하는 다른 저장소, 조직, 도메인 또는 패키지는 **승인되지 않았으며 이 프로젝트와 관련이 없습니다**. 알려진 비인가 포크는 [TRADEMARK.md](docs/maintainers/trademark.md)에 나열됩니다.
 
-사칭이나 상표 오용을 발견하면 [이슈를 열어](https://github.com/zeroclaw-labs/zeroclaw/issues) 신고해 주세요.
+사칭이나 상표 오용을 발견하면 [이슈를 열어](https://github.com/cclawcore-labs/cclawcore/issues) 신고해 주세요.
 
 ---
 
 ## 라이선스
 
-ZeroClaw는 최대한의 개방성과 기여자 보호를 위해 듀얼 라이선스가 적용됩니다:
+CclawCore는 최대한의 개방성과 기여자 보호를 위해 듀얼 라이선스가 적용됩니다:
 
 | 라이선스 | 사용 사례 |
 |---|---|
@@ -719,7 +719,7 @@ ZeroClaw는 최대한의 개방성과 기여자 보호를 위해 듀얼 라이�
 
 ### 상표
 
-**ZeroClaw** 이름과 로고는 ZeroClaw Labs의 상표입니다. 이 라이선스는 승인이나 제휴를 암시하기 위해 사용할 권한을 부여하지 않습니다. 허용 및 금지 사용은 [TRADEMARK.md](docs/maintainers/trademark.md)를 참조하세요.
+**CclawCore** 이름과 로고는 CclawCore Labs의 상표입니다. 이 라이선스는 승인이나 제휴를 암시하기 위해 사용할 권한을 부여하지 않습니다. 허용 및 금지 사용은 [TRADEMARK.md](docs/maintainers/trademark.md)를 참조하세요.
 
 ### 기여자 보호
 
@@ -730,12 +730,12 @@ ZeroClaw는 최대한의 개방성과 기여자 보호를 위해 듀얼 라이�
 
 ---
 
-**ZeroClaw** — 오버헤드 없음. 타협 없음. 어디서나 배포. 무엇이든 교체. 🦀
+**CclawCore** — 오버헤드 없음. 타협 없음. 어디서나 배포. 무엇이든 교체. 🦀
 
 ## 기여자
 
-<a href="https://github.com/zeroclaw-labs/zeroclaw/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=zeroclaw-labs/zeroclaw" alt="ZeroClaw contributors" />
+<a href="https://github.com/cclawcore-labs/cclawcore/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=cclawcore-labs/cclawcore" alt="CclawCore contributors" />
 </a>
 
 이 목록은 GitHub 기여자 그래프에서 생성되며 자동으로 업데이트됩니다.
@@ -743,11 +743,11 @@ ZeroClaw는 최대한의 개방성과 기여자 보호를 위해 듀얼 라이�
 ## 스타 히스토리
 
 <p align="center">
-  <a href="https://www.star-history.com/#zeroclaw-labs/zeroclaw&type=date&legend=top-left">
+  <a href="https://www.star-history.com/#cclawcore-labs/cclawcore&type=date&legend=top-left">
     <picture>
-     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=zeroclaw-labs/zeroclaw&type=date&theme=dark&legend=top-left" />
-     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=zeroclaw-labs/zeroclaw&type=date&legend=top-left" />
-     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=zeroclaw-labs/zeroclaw&type=date&legend=top-left" />
+     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=cclawcore-labs/cclawcore&type=date&theme=dark&legend=top-left" />
+     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=cclawcore-labs/cclawcore&type=date&legend=top-left" />
+     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=cclawcore-labs/cclawcore&type=date&legend=top-left" />
     </picture>
   </a>
 </p>

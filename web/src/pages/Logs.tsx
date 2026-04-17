@@ -46,7 +46,7 @@ function eventTypeStyle(type: string): { color: string; bg: string; border: stri
 
 interface LogEntry { id: string; event: SSEEvent; }
 
-const LOG_STORAGE_KEY = 'zeroclaw_live_logs';
+const LOG_STORAGE_KEY = 'cclawcore_live_logs';
 const MAX_PERSISTED_LOGS = 200;
 
 function loadPersistedLogs(): LogEntry[] {
@@ -108,7 +108,7 @@ export default function Logs() {
         });
         entryIdRef.current += events.length;
       })
-      .catch(() => {}); // History is best-effort
+      .catch(() => { }); // History is best-effort
 
     const client = new SSEClient();
 
@@ -251,7 +251,7 @@ export default function Logs() {
             agent activity over SSE — LLM requests, tool calls, agent start/end, and errors.
             {' '}<span className="font-semibold" style={{ color: 'var(--pc-text-muted)' }}>What does not: </span>
             daemon stdout and <code>RUST_LOG</code> tracing output go to the terminal or log file, not this stream.
-            {' '}To see tracing logs, run the daemon with <code>RUST_LOG=info zeroclaw</code> and check your terminal.
+            {' '}To see tracing logs, run the daemon with <code>RUST_LOG=info cclawcore</code> and check your terminal.
           </div>
           <button
             onClick={() => setInfoDismissed(true)}
@@ -316,7 +316,7 @@ export default function Logs() {
               </div>
             );
           })
-          )}
+        )}
       </div>
       {/* Footer: connection status */}
       <div className="flex items-center justify-center gap-2 px-6 py-2 border-t flex-shrink-0" style={{ borderColor: 'var(--pc-border)', background: 'var(--pc-bg-surface)' }}>

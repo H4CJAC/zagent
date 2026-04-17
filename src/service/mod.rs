@@ -5,8 +5,8 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str::FromStr;
 
-const SERVICE_LABEL: &str = "com.zeroclaw.daemon";
-const WINDOWS_TASK_NAME: &str = "ZeroClaw Daemon";
+const SERVICE_LABEL: &str = "com.cclawcore.daemon";
+const WINDOWS_TASK_NAME: &str = "CclawCore Daemon";
 
 /// Supported init systems for service management
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -89,7 +89,7 @@ fn windows_task_name() -> &'static str {
     WINDOWS_TASK_NAME
 }
 
-/// Returns whether the ZeroClaw daemon service is currently running.
+/// Returns whether the CclawCore daemon service is currently running.
 pub fn is_running() -> bool {
     if cfg!(target_os = "macos") {
         run_capture(Command::new("launchctl").arg("list"))
@@ -114,13 +114,13 @@ pub fn is_running() -> bool {
 
 fn is_running_linux() -> bool {
     // Try systemd first, then OpenRC — mirrors detect_init_system() order
-    if run_capture(Command::new("systemctl").args(["--user", "is-active", "zeroclaw.service"]))
+    if run_capture(Command::new("systemctl").args(["--user", "is-active", "cclawcore.service"]))
         .map(|out| out.trim() == "active")
         .unwrap_or(false)
     {
         return true;
     }
-    run_capture(Command::new("rc-service").args(["zeroclaw", "status"]))
+    run_capture(Command::new("rc-service").args(["cclawcore", "status"]))
         .map(|out| out.contains("started"))
         .unwrap_or(false)
 }
@@ -229,10 +229,10 @@ fn start_linux(init_system: InitSystem) -> Result<()> {
     match init_system {
         InitSystem::Systemd => {
             run_checked(Command::new("systemctl").args(["--user", "daemon-reload"]))?;
-            run_checked(Command::new("systemctl").args(["--user", "start", "zeroclaw.service"]))?;
+            run_checked(Command::new("systemctl").args(["--user", "start", "cclawcore.service"]))?;
         }
         InitSystem::Openrc => {
-            run_checked(Command::new("rc-service").args(["zeroclaw", "start"]))?;
+            run_checked(Command::new("rc-service").args(["cclawcore", "start"]))?;
         }
         InitSystem::Auto => unreachable!("Auto should be resolved before this point"),
     }
@@ -271,10 +271,10 @@ fn stop_linux(init_system: InitSystem) -> Result<()> {
     match init_system {
         InitSystem::Systemd => {
             let _ =
-                run_checked(Command::new("systemctl").args(["--user", "stop", "zeroclaw.service"]));
+                run_checked(Command::new("systemctl").args(["--user", "stop", "cclawcore.service"]));
         }
         InitSystem::Openrc => {
-            let _ = run_checked(Command::new("rc-service").args(["zeroclaw", "stop"]));
+            let _ = run_checked(Command::new("rc-service").args(["cclawcore", "stop"]));
         }
         InitSystem::Auto => unreachable!("Auto should be resolved before this point"),
     }
@@ -309,10 +309,10 @@ fn restart_linux(init_system: InitSystem) -> Result<()> {
     match init_system {
         InitSystem::Systemd => {
             run_checked(Command::new("systemctl").args(["--user", "daemon-reload"]))?;
-            run_checked(Command::new("systemctl").args(["--user", "restart", "zeroclaw.service"]))?;
+            run_checked(Command::new("systemctl").args(["--user", "restart", "cclawcore.service"]))?;
         }
         InitSystem::Openrc => {
-            run_checked(Command::new("rc-service").args(["zeroclaw", "restart"]))?;
+            run_checked(Command::new("rc-service").args(["cclawcore", "restart"]))?;
         }
         InitSystem::Auto => unreachable!("Auto should be resolved before this point"),
     }
@@ -375,17 +375,17 @@ fn status_linux(config: &Config, init_system: InitSystem) -> Result<()> {
             let out = run_capture(Command::new("systemctl").args([
                 "--user",
                 "is-active",
-                "zeroclaw.service",
+                "cclawcore.service",
             ]))
             .unwrap_or_else(|_| "unknown".into());
             println!("Service state: {}", out.trim());
             println!("Unit: {}", linux_service_file(config)?.display());
         }
         InitSystem::Openrc => {
-            let out = run_capture(Command::new("rc-service").args(["zeroclaw", "status"]))
+            let out = run_capture(Command::new("rc-service").args(["cclawcore", "status"]))
                 .unwrap_or_else(|_| "unknown".into());
             println!("Service state: {}", out.trim());
-            println!("Unit: /etc/init.d/zeroclaw");
+            println!("Unit: /etc/init.d/cclawcore");
         }
         InitSystem::Auto => unreachable!("Auto should be resolved before this point"),
     }
@@ -464,7 +464,7 @@ fn logs_linux(config: &Config, init_system: InitSystem, lines: usize, follow: bo
             let mut args = vec![
                 "--user".to_string(),
                 "-u".to_string(),
-                "zeroclaw.service".to_string(),
+                "cclawcore.service".to_string(),
                 "-n".to_string(),
                 lines.to_string(),
                 "--no-pager".to_string(),
@@ -481,13 +481,13 @@ fn logs_linux(config: &Config, init_system: InitSystem, lines: usize, follow: bo
             }
         }
         InitSystem::Openrc => {
-            // OpenRC logs go to /var/log/zeroclaw/error.log (as configured in the init script)
-            let log_file = Path::new("/var/log/zeroclaw/error.log");
+            // OpenRC logs go to /var/log/cclawcore/error.log (as configured in the init script)
+            let log_file = Path::new("/var/log/cclawcore/error.log");
             if !log_file.exists() {
                 // Fall back to access log
-                let access_log = Path::new("/var/log/zeroclaw/access.log");
+                let access_log = Path::new("/var/log/cclawcore/access.log");
                 if !access_log.exists() {
-                    bail!("No log files found at /var/log/zeroclaw/. Is the service installed?");
+                    bail!("No log files found at /var/log/cclawcore/. Is the service installed?");
                 }
                 return tail_file(access_log, lines, follow);
             }
@@ -595,7 +595,7 @@ fn uninstall(config: &Config, init_system: InitSystem) -> Result<()> {
             .parent()
             .map_or_else(|| PathBuf::from("."), PathBuf::from)
             .join("logs")
-            .join("zeroclaw-daemon.cmd");
+            .join("cclawcore-daemon.cmd");
         if wrapper.exists() {
             fs::remove_file(&wrapper).ok();
         }
@@ -618,19 +618,19 @@ fn uninstall_linux(config: &Config, init_system: InitSystem) -> Result<()> {
             println!("✅ Service uninstalled ({})", file.display());
         }
         InitSystem::Openrc => {
-            let init_script = Path::new("/etc/init.d/zeroclaw");
+            let init_script = Path::new("/etc/init.d/cclawcore");
             if init_script.exists() {
                 if let Err(err) =
-                    run_checked(Command::new("rc-update").args(["del", "zeroclaw", "default"]))
+                    run_checked(Command::new("rc-update").args(["del", "cclawcore", "default"]))
                 {
                     eprintln!(
-                        "⚠️  Warning: Could not remove zeroclaw from OpenRC default runlevel: {err}"
+                        "⚠️  Warning: Could not remove cclawcore from OpenRC default runlevel: {err}"
                     );
                 }
                 fs::remove_file(init_script)
                     .with_context(|| format!("Failed to remove {}", init_script.display()))?;
             }
-            println!("✅ Service uninstalled (/etc/init.d/zeroclaw)");
+            println!("✅ Service uninstalled (/etc/init.d/cclawcore)");
         }
         InitSystem::Auto => unreachable!("Auto should be resolved before this point"),
     }
@@ -638,7 +638,7 @@ fn uninstall_linux(config: &Config, init_system: InitSystem) -> Result<()> {
 }
 
 /// Detect if the executable lives under a Homebrew prefix and return the
-/// corresponding `var/zeroclaw` directory.
+/// corresponding `var/cclawcore` directory.
 ///
 /// Homebrew installs binaries into `<prefix>/Cellar/<formula>/<version>/bin/`
 /// and symlinks them to `<prefix>/bin/`. The canonical `var` directory is
@@ -646,21 +646,21 @@ fn uninstall_linux(config: &Config, init_system: InitSystem) -> Result<()> {
 fn detect_homebrew_var_dir(exe: &Path) -> Option<PathBuf> {
     let path_str = exe.to_string_lossy();
 
-    // Symlinked binary: <prefix>/bin/zeroclaw
-    // Cellar binary:    <prefix>/Cellar/zeroclaw/<version>/bin/zeroclaw
+    // Symlinked binary: <prefix>/bin/cclawcore
+    // Cellar binary:    <prefix>/Cellar/cclawcore/<version>/bin/cclawcore
     let prefix = if path_str.contains("/Cellar/") {
-        // Walk up from .../Cellar/zeroclaw/<ver>/bin/zeroclaw to the prefix
+        // Walk up from .../Cellar/cclawcore/<ver>/bin/cclawcore to the prefix
         let mut ancestor = exe.to_path_buf();
         while let Some(parent) = ancestor.parent() {
             ancestor = parent.to_path_buf();
             if ancestor.file_name().map_or(false, |n| n == "Cellar") {
                 // prefix is one level above Cellar
-                return ancestor.parent().map(|p| p.join("var").join("zeroclaw"));
+                return ancestor.parent().map(|p| p.join("var").join("cclawcore"));
             }
         }
         return None;
     } else if let Some(bin_parent) = exe.parent() {
-        // <prefix>/bin/zeroclaw → check if <prefix>/Cellar exists (Homebrew marker)
+        // <prefix>/bin/cclawcore → check if <prefix>/Cellar exists (Homebrew marker)
         if let Some(prefix) = bin_parent.parent() {
             if prefix.join("Cellar").is_dir() {
                 Some(prefix.to_path_buf())
@@ -674,7 +674,7 @@ fn detect_homebrew_var_dir(exe: &Path) -> Option<PathBuf> {
         None
     };
 
-    prefix.map(|p| p.join("var").join("zeroclaw"))
+    prefix.map(|p| p.join("var").join("cclawcore"))
 }
 
 fn install_macos(config: &Config, daemon_args: &DaemonArgs<'_>) -> Result<()> {
@@ -686,7 +686,7 @@ fn install_macos(config: &Config, daemon_args: &DaemonArgs<'_>) -> Result<()> {
     let exe = std::env::current_exe().context("Failed to resolve current executable")?;
 
     // When installed via Homebrew, use the Homebrew var directory for runtime
-    // data so that `brew services start zeroclaw` works out of the box.
+    // data so that `brew services start cclawcore` works out of the box.
     let homebrew_var_dir = detect_homebrew_var_dir(&exe);
     if let Some(ref var_dir) = homebrew_var_dir {
         fs::create_dir_all(var_dir).with_context(|| {
@@ -786,7 +786,7 @@ fn install_macos(config: &Config, daemon_args: &DaemonArgs<'_>) -> Result<()> {
     if let Some(ref var_dir) = homebrew_var_dir {
         println!("   Homebrew var: {}", var_dir.display());
     }
-    println!("   Start with: zeroclaw service start");
+    println!("   Start with: cclawcore service start");
     Ok(())
 }
 
@@ -816,7 +816,7 @@ fn install_linux_systemd(config: &Config, daemon_args: &DaemonArgs<'_>) -> Resul
     );
     let unit = format!(
         "[Unit]\n\
-         Description=ZeroClaw daemon\n\
+         Description=CclawCore daemon\n\
          After=network.target\n\
          \n\
          [Service]\n\
@@ -837,9 +837,9 @@ fn install_linux_systemd(config: &Config, daemon_args: &DaemonArgs<'_>) -> Resul
 
     fs::write(&file, unit)?;
     let _ = run_checked(Command::new("systemctl").args(["--user", "daemon-reload"]));
-    let _ = run_checked(Command::new("systemctl").args(["--user", "enable", "zeroclaw.service"]));
+    let _ = run_checked(Command::new("systemctl").args(["--user", "enable", "cclawcore.service"]));
     println!("✅ Installed systemd user service: {}", file.display());
-    println!("   Start with: zeroclaw service start");
+    println!("   Start with: cclawcore service start");
     Ok(())
 }
 
@@ -857,20 +857,20 @@ fn is_root() -> bool {
     false
 }
 
-/// Check if the zeroclaw user exists and has expected properties.
+/// Check if the cclawcore user exists and has expected properties.
 /// Returns Ok if user doesn't exist (OpenRC will handle creation or fail gracefully).
 /// Returns error if user exists but has unexpected properties.
-fn check_zeroclaw_user() -> Result<()> {
-    let output = Command::new("getent").args(["passwd", "zeroclaw"]).output();
+fn check_cclawcore_user() -> Result<()> {
+    let output = Command::new("getent").args(["passwd", "cclawcore"]).output();
     let is_alpine = Path::new("/etc/alpine-release").exists();
 
     let (del_cmd, add_cmd) = if is_alpine {
         (
-            "deluser zeroclaw && delgroup zeroclaw",
-            "addgroup -S zeroclaw && adduser -S -s /sbin/nologin -H -D -G zeroclaw zeroclaw",
+            "deluser cclawcore && delgroup cclawcore",
+            "addgroup -S cclawcore && adduser -S -s /sbin/nologin -H -D -G cclawcore cclawcore",
         )
     } else {
-        ("userdel zeroclaw", "useradd -r -s /sbin/nologin zeroclaw")
+        ("userdel cclawcore", "useradd -r -s /sbin/nologin cclawcore")
     };
 
     match output {
@@ -885,7 +885,7 @@ fn check_zeroclaw_user() -> Result<()> {
 
                 if uid.parse::<u32>().unwrap_or(999) >= 1000 {
                     bail!(
-                        "User 'zeroclaw' exists but has unexpected UID {} (expected system UID < 1000).\n\
+                        "User 'cclawcore' exists but has unexpected UID {} (expected system UID < 1000).\n\
                          Recreate with: sudo {} && sudo {}",
                         uid,
                         del_cmd,
@@ -895,7 +895,7 @@ fn check_zeroclaw_user() -> Result<()> {
 
                 if !shell.contains("nologin") && !shell.contains("false") {
                     bail!(
-                        "User 'zeroclaw' exists but has unexpected shell '{}'.\n\
+                        "User 'cclawcore' exists but has unexpected shell '{}'.\n\
                          Expected nologin/false for security. Fix with: sudo {} && sudo {}",
                         shell,
                         del_cmd,
@@ -903,9 +903,9 @@ fn check_zeroclaw_user() -> Result<()> {
                     );
                 }
 
-                if home != "/var/lib/zeroclaw" && home != "/nonexistent" {
+                if home != "/var/lib/cclawcore" && home != "/nonexistent" {
                     eprintln!(
-                        "⚠️  Warning: zeroclaw user has home directory '{}' (expected /var/lib/zeroclaw or /nonexistent)",
+                        "⚠️  Warning: cclawcore user has home directory '{}' (expected /var/lib/cclawcore or /nonexistent)",
                         home
                     );
                 }
@@ -918,31 +918,31 @@ fn check_zeroclaw_user() -> Result<()> {
     }
 }
 
-fn ensure_zeroclaw_user() -> Result<()> {
-    let output = Command::new("getent").args(["passwd", "zeroclaw"]).output();
+fn ensure_cclawcore_user() -> Result<()> {
+    let output = Command::new("getent").args(["passwd", "cclawcore"]).output();
     if let Ok(output) = output {
         if output.status.success() {
-            return check_zeroclaw_user();
+            return check_cclawcore_user();
         }
     }
 
     let is_alpine = Path::new("/etc/alpine-release").exists();
 
     if is_alpine {
-        let group_output = Command::new("getent").args(["group", "zeroclaw"]).output();
+        let group_output = Command::new("getent").args(["group", "cclawcore"]).output();
         let group_exists = group_output.map(|o| o.status.success()).unwrap_or(false);
 
         if !group_exists {
             let output = Command::new("addgroup")
-                .args(["-S", "zeroclaw"])
+                .args(["-S", "cclawcore"])
                 .output()
-                .context("Failed to create zeroclaw group")?;
+                .context("Failed to create cclawcore group")?;
 
             if !output.status.success() {
                 let stderr = String::from_utf8_lossy(&output.stderr);
-                bail!("Failed to create zeroclaw group: {}", stderr.trim());
+                bail!("Failed to create cclawcore group: {}", stderr.trim());
             }
-            println!("✅ Created system group: zeroclaw");
+            println!("✅ Created system group: cclawcore");
         }
 
         let output = Command::new("adduser")
@@ -953,44 +953,44 @@ fn ensure_zeroclaw_user() -> Result<()> {
                 "-H",
                 "-D",
                 "-G",
-                "zeroclaw",
-                "zeroclaw",
+                "cclawcore",
+                "cclawcore",
             ])
             .output()
-            .context("Failed to create zeroclaw user")?;
+            .context("Failed to create cclawcore user")?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            bail!("Failed to create zeroclaw user: {}", stderr.trim());
+            bail!("Failed to create cclawcore user: {}", stderr.trim());
         }
     } else {
         let output = Command::new("useradd")
-            .args(["-r", "-s", "/sbin/nologin", "zeroclaw"])
+            .args(["-r", "-s", "/sbin/nologin", "cclawcore"])
             .output()
-            .context("Failed to create zeroclaw user")?;
+            .context("Failed to create cclawcore user")?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
-            bail!("Failed to create zeroclaw user: {}", stderr.trim());
+            bail!("Failed to create cclawcore user: {}", stderr.trim());
         }
     }
 
-    println!("✅ Created system user: zeroclaw");
+    println!("✅ Created system user: cclawcore");
     Ok(())
 }
 
-/// Change ownership of a path to zeroclaw:zeroclaw
+/// Change ownership of a path to cclawcore:cclawcore
 #[cfg(unix)]
-fn chown_to_zeroclaw(path: &Path) -> Result<()> {
+fn chown_to_cclawcore(path: &Path) -> Result<()> {
     let output = Command::new("chown")
-        .args(["zeroclaw:zeroclaw", &path.to_string_lossy()])
+        .args(["cclawcore:cclawcore", &path.to_string_lossy()])
         .output()
         .context("Failed to run chown")?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
         bail!(
-            "Failed to change ownership of {} to zeroclaw:zeroclaw: {}",
+            "Failed to change ownership of {} to cclawcore:cclawcore: {}",
             path.display(),
             stderr.trim(),
         );
@@ -999,21 +999,21 @@ fn chown_to_zeroclaw(path: &Path) -> Result<()> {
 }
 
 #[cfg(not(unix))]
-fn chown_to_zeroclaw(_path: &Path) -> Result<()> {
+fn chown_to_cclawcore(_path: &Path) -> Result<()> {
     Ok(())
 }
 
 #[cfg(unix)]
-fn chown_recursive_to_zeroclaw(path: &Path) -> Result<()> {
+fn chown_recursive_to_cclawcore(path: &Path) -> Result<()> {
     let output = Command::new("chown")
-        .args(["-R", "zeroclaw:zeroclaw", &path.to_string_lossy()])
+        .args(["-R", "cclawcore:cclawcore", &path.to_string_lossy()])
         .output()
         .context("Failed to run recursive chown")?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
         bail!(
-            "Failed to recursively change ownership of {} to zeroclaw:zeroclaw: {}",
+            "Failed to recursively change ownership of {} to cclawcore:cclawcore: {}",
             path.display(),
             stderr.trim(),
         );
@@ -1023,7 +1023,7 @@ fn chown_recursive_to_zeroclaw(path: &Path) -> Result<()> {
 }
 
 #[cfg(not(unix))]
-fn chown_recursive_to_zeroclaw(_path: &Path) -> Result<()> {
+fn chown_recursive_to_cclawcore(_path: &Path) -> Result<()> {
     Ok(())
 }
 
@@ -1072,7 +1072,7 @@ fn resolve_invoking_user_config_dir() -> Option<PathBuf> {
                 let entry = String::from_utf8_lossy(&output.stdout);
                 let fields: Vec<&str> = entry.trim().split(':').collect();
                 if fields.len() >= 6 {
-                    return Some(PathBuf::from(fields[5]).join(".zeroclaw"));
+                    return Some(PathBuf::from(fields[5]).join(".cclawcore"));
                 }
             }
         }
@@ -1081,7 +1081,7 @@ fn resolve_invoking_user_config_dir() -> Option<PathBuf> {
     std::env::var("HOME")
         .ok()
         .map(PathBuf::from)
-        .map(|home| home.join(".zeroclaw"))
+        .map(|home| home.join(".cclawcore"))
 }
 
 fn migrate_openrc_runtime_state_if_needed(config_dir: &Path) -> Result<()> {
@@ -1125,7 +1125,7 @@ fn build_openrc_writability_probe_command(path: &Path, has_runuser: bool) -> (St
             "runuser".to_string(),
             vec![
                 "-u".to_string(),
-                "zeroclaw".to_string(),
+                "cclawcore".to_string(),
                 "--".to_string(),
                 "sh".to_string(),
                 "-c".to_string(),
@@ -1140,7 +1140,7 @@ fn build_openrc_writability_probe_command(path: &Path, has_runuser: bool) -> (St
                 "/bin/sh".to_string(),
                 "-c".to_string(),
                 probe,
-                "zeroclaw".to_string(),
+                "cclawcore".to_string(),
             ],
         )
     }
@@ -1168,8 +1168,8 @@ fn ensure_openrc_runtime_path_writable(path: &Path) -> Result<()> {
             stderr.trim()
         };
         bail!(
-            "OpenRC runtime user 'zeroclaw' cannot write {} ({details}). \
-             Re-run `sudo zeroclaw service install` and ensure ownership is zeroclaw:zeroclaw.",
+            "OpenRC runtime user 'cclawcore' cannot write {} ({details}). \
+             Re-run `sudo cclawcore service install` and ensure ownership is cclawcore:cclawcore.",
             path.display(),
         );
     }
@@ -1205,7 +1205,7 @@ fn warn_if_binary_in_home(exe_path: &Path) {
         eprintln!(
             "⚠️  Warning: Binary path '{}' appears to be in a user home directory.\n\
              For system-wide OpenRC service, consider installing to /usr/local/bin:\n\
-             sudo cp '{}' /usr/local/bin/zeroclaw",
+             sudo cp '{}' /usr/local/bin/cclawcore",
             exe_path.display(),
             exe_path.display()
         );
@@ -1227,21 +1227,21 @@ fn generate_openrc_script(
     format!(
         r#"#!/sbin/openrc-run
 
-name="zeroclaw"
-description="ZeroClaw daemon"
+name="cclawcore"
+description="CclawCore daemon"
 
 command="{exe}"
 command_args="--config-dir {config_dir} daemon{daemon_suffix}"
 command_background="yes"
-command_user="zeroclaw:zeroclaw"
+command_user="cclawcore:cclawcore"
 pidfile="/run/${{RC_SVCNAME}}.pid"
 umask 027
-output_log="/var/log/zeroclaw/access.log"
-error_log="/var/log/zeroclaw/error.log"
+output_log="/var/log/cclawcore/access.log"
+error_log="/var/log/cclawcore/error.log"
 
 # Provide HOME so headless browsers can create profile/cache directories.
 # Without this, Chromium/Firefox fail with sandbox or profile errors.
-export HOME="/var/lib/zeroclaw"
+export HOME="/var/lib/cclawcore"
 
 depend() {{
     need net
@@ -1249,7 +1249,7 @@ depend() {{
 }}
 
 start_pre() {{
-    checkpath --directory --owner zeroclaw:zeroclaw --mode 0750 /var/lib/zeroclaw
+    checkpath --directory --owner cclawcore:cclawcore --mode 0750 /var/lib/cclawcore
 }}
 "#,
         exe = exe_path.display(),
@@ -1259,7 +1259,7 @@ start_pre() {{
 }
 
 fn resolve_openrc_executable() -> Result<PathBuf> {
-    let preferred = Path::new("/usr/local/bin/zeroclaw");
+    let preferred = Path::new("/usr/local/bin/cclawcore");
     if preferred.exists() {
         return Ok(preferred.to_path_buf());
     }
@@ -1272,18 +1272,18 @@ fn install_linux_openrc(config: &Config, daemon_args: &DaemonArgs<'_>) -> Result
     if !is_root() {
         bail!(
             "OpenRC service installation requires root privileges.\n\
-             Please run with sudo: sudo zeroclaw service install"
+             Please run with sudo: sudo cclawcore service install"
         );
     }
 
-    ensure_zeroclaw_user()?;
+    ensure_cclawcore_user()?;
 
     let exe = resolve_openrc_executable()?;
     warn_if_binary_in_home(&exe);
 
-    let config_dir = Path::new("/etc/zeroclaw");
+    let config_dir = Path::new("/etc/cclawcore");
     let workspace_dir = config_dir.join("workspace");
-    let log_dir = Path::new("/var/log/zeroclaw");
+    let log_dir = Path::new("/var/log/cclawcore");
 
     if !config_dir.exists() {
         fs::create_dir_all(config_dir)
@@ -1310,9 +1310,9 @@ fn install_linux_openrc(config: &Config, daemon_args: &DaemonArgs<'_>) -> Result
                 || format!("Failed to set permissions on {}", workspace_dir.display()),
             )?;
         }
-        chown_to_zeroclaw(&workspace_dir)?;
+        chown_to_cclawcore(&workspace_dir)?;
         println!(
-            "✅ Created directory: {} (owned by zeroclaw:zeroclaw)",
+            "✅ Created directory: {} (owned by cclawcore:cclawcore)",
             workspace_dir.display()
         );
     }
@@ -1343,7 +1343,7 @@ fn install_linux_openrc(config: &Config, daemon_args: &DaemonArgs<'_>) -> Result
         }
     }
 
-    chown_recursive_to_zeroclaw(config_dir)?;
+    chown_recursive_to_cclawcore(config_dir)?;
 
     let created_log_dir = !log_dir.exists();
     if created_log_dir {
@@ -1357,19 +1357,19 @@ fn install_linux_openrc(config: &Config, daemon_args: &DaemonArgs<'_>) -> Result
         }
     }
 
-    chown_to_zeroclaw(log_dir)?;
+    chown_to_cclawcore(log_dir)?;
 
     ensure_openrc_runtime_dirs_writable(config_dir, &workspace_dir, log_dir)?;
 
     if created_log_dir {
         println!(
-            "✅ Created directory: {} (owned by zeroclaw:zeroclaw)",
+            "✅ Created directory: {} (owned by cclawcore:cclawcore)",
             log_dir.display()
         );
     }
 
     let init_script = generate_openrc_script(&exe, config_dir, daemon_args);
-    let init_path = Path::new("/etc/init.d/zeroclaw");
+    let init_path = Path::new("/etc/init.d/cclawcore");
     fs::write(init_path, init_script)
         .with_context(|| format!("Failed to write {}", init_path.display()))?;
 
@@ -1380,10 +1380,10 @@ fn install_linux_openrc(config: &Config, daemon_args: &DaemonArgs<'_>) -> Result
             .with_context(|| format!("Failed to set permissions on {}", init_path.display()))?;
     }
 
-    run_checked(Command::new("rc-update").args(["add", "zeroclaw", "default"]))?;
-    println!("✅ Installed OpenRC service: /etc/init.d/zeroclaw");
-    println!("   Config path: /etc/zeroclaw/config.toml");
-    println!("   Start with: sudo zeroclaw service start");
+    run_checked(Command::new("rc-update").args(["add", "cclawcore", "default"]))?;
+    println!("✅ Installed OpenRC service: /etc/init.d/cclawcore");
+    println!("   Config path: /etc/cclawcore/config.toml");
+    println!("   Start with: sudo cclawcore service start");
     let _ = config;
     Ok(())
 }
@@ -1397,7 +1397,7 @@ fn install_windows(config: &Config, daemon_args: &DaemonArgs<'_>) -> Result<()> 
         .join("logs");
     fs::create_dir_all(&logs_dir)?;
 
-    let wrapper = logs_dir.join("zeroclaw-daemon.cmd");
+    let wrapper = logs_dir.join("cclawcore-daemon.cmd");
     let stdout_log = logs_dir.join("daemon.stdout.log");
     let stderr_log = logs_dir.join("daemon.stderr.log");
 
@@ -1434,7 +1434,7 @@ fn install_windows(config: &Config, daemon_args: &DaemonArgs<'_>) -> Result<()> 
     println!("✅ Installed Windows scheduled task: {}", task_name);
     println!("   Wrapper: {}", wrapper.display());
     println!("   Logs: {}", logs_dir.display());
-    println!("   Start with: zeroclaw service start");
+    println!("   Start with: cclawcore service start");
     Ok(())
 }
 
@@ -1457,7 +1457,7 @@ fn linux_service_file(config: &Config) -> Result<PathBuf> {
         .join(".config")
         .join("systemd")
         .join("user")
-        .join("zeroclaw.service"))
+        .join("cclawcore.service"))
 }
 
 fn run_checked(command: &mut Command) -> Result<()> {
@@ -1525,12 +1525,12 @@ mod tests {
     fn linux_service_file_has_expected_suffix() {
         let file = linux_service_file(&Config::default()).unwrap();
         let path = file.to_string_lossy();
-        assert!(path.ends_with(".config/systemd/user/zeroclaw.service"));
+        assert!(path.ends_with(".config/systemd/user/cclawcore.service"));
     }
 
     #[test]
     fn windows_task_name_is_constant() {
-        assert_eq!(windows_task_name(), "ZeroClaw Daemon");
+        assert_eq!(windows_task_name(), "CclawCore Daemon");
     }
 
     #[cfg(target_os = "windows")]
@@ -1592,26 +1592,26 @@ mod tests {
     fn generate_openrc_script_contains_required_directives() {
         use std::path::PathBuf;
 
-        let exe_path = PathBuf::from("/usr/local/bin/zeroclaw");
+        let exe_path = PathBuf::from("/usr/local/bin/cclawcore");
         let no_extra = DaemonArgs {
             config_dir: None,
             sw: false,
         };
-        let script = generate_openrc_script(&exe_path, Path::new("/etc/zeroclaw"), &no_extra);
+        let script = generate_openrc_script(&exe_path, Path::new("/etc/cclawcore"), &no_extra);
 
         assert!(script.starts_with("#!/sbin/openrc-run"));
-        assert!(script.contains("name=\"zeroclaw\""));
-        assert!(script.contains("description=\"ZeroClaw daemon\""));
-        assert!(script.contains("command=\"/usr/local/bin/zeroclaw\""));
-        assert!(script.contains("command_args=\"--config-dir /etc/zeroclaw daemon\""));
-        assert!(!script.contains("env ZEROCLAW_CONFIG_DIR"));
-        assert!(!script.contains("env ZEROCLAW_WORKSPACE"));
+        assert!(script.contains("name=\"cclawcore\""));
+        assert!(script.contains("description=\"CclawCore daemon\""));
+        assert!(script.contains("command=\"/usr/local/bin/cclawcore\""));
+        assert!(script.contains("command_args=\"--config-dir /etc/cclawcore daemon\""));
+        assert!(!script.contains("env CCLAWCORE_CONFIG_DIR"));
+        assert!(!script.contains("env CCLAWCORE_WORKSPACE"));
         assert!(script.contains("command_background=\"yes\""));
-        assert!(script.contains("command_user=\"zeroclaw:zeroclaw\""));
+        assert!(script.contains("command_user=\"cclawcore:cclawcore\""));
         assert!(script.contains("pidfile=\"/run/${RC_SVCNAME}.pid\""));
         assert!(script.contains("umask 027"));
-        assert!(script.contains("output_log=\"/var/log/zeroclaw/access.log\""));
-        assert!(script.contains("error_log=\"/var/log/zeroclaw/error.log\""));
+        assert!(script.contains("output_log=\"/var/log/cclawcore/access.log\""));
+        assert!(script.contains("error_log=\"/var/log/cclawcore/error.log\""));
         assert!(script.contains("depend()"));
         assert!(script.contains("need net"));
         assert!(script.contains("after firewall"));
@@ -1621,29 +1621,29 @@ mod tests {
     fn generate_openrc_script_with_sw_flag() {
         use std::path::PathBuf;
 
-        let exe_path = PathBuf::from("/usr/local/bin/zeroclaw");
+        let exe_path = PathBuf::from("/usr/local/bin/cclawcore");
         let with_sw = DaemonArgs {
             config_dir: None,
             sw: true,
         };
-        let script = generate_openrc_script(&exe_path, Path::new("/etc/zeroclaw"), &with_sw);
+        let script = generate_openrc_script(&exe_path, Path::new("/etc/cclawcore"), &with_sw);
 
-        assert!(script.contains("command_args=\"--config-dir /etc/zeroclaw daemon --sw\""));
+        assert!(script.contains("command_args=\"--config-dir /etc/cclawcore daemon --sw\""));
     }
 
     #[test]
     fn generate_openrc_script_sets_home_for_browser() {
         use std::path::PathBuf;
 
-        let exe_path = PathBuf::from("/usr/local/bin/zeroclaw");
+        let exe_path = PathBuf::from("/usr/local/bin/cclawcore");
         let no_extra = DaemonArgs {
             config_dir: None,
             sw: false,
         };
-        let script = generate_openrc_script(&exe_path, Path::new("/etc/zeroclaw"), &no_extra);
+        let script = generate_openrc_script(&exe_path, Path::new("/etc/cclawcore"), &no_extra);
 
         assert!(
-            script.contains("export HOME=\"/var/lib/zeroclaw\""),
+            script.contains("export HOME=\"/var/lib/cclawcore\""),
             "OpenRC script must set HOME for headless browser support"
         );
     }
@@ -1652,32 +1652,32 @@ mod tests {
     fn generate_openrc_script_creates_home_directory() {
         use std::path::PathBuf;
 
-        let exe_path = PathBuf::from("/usr/local/bin/zeroclaw");
+        let exe_path = PathBuf::from("/usr/local/bin/cclawcore");
         let no_extra = DaemonArgs {
             config_dir: None,
             sw: false,
         };
-        let script = generate_openrc_script(&exe_path, Path::new("/etc/zeroclaw"), &no_extra);
+        let script = generate_openrc_script(&exe_path, Path::new("/etc/cclawcore"), &no_extra);
 
         assert!(
             script.contains("start_pre()"),
             "OpenRC script must have start_pre to create HOME dir"
         );
         assert!(
-            script.contains("checkpath --directory --owner zeroclaw:zeroclaw"),
-            "start_pre must ensure /var/lib/zeroclaw exists with correct ownership"
+            script.contains("checkpath --directory --owner cclawcore:cclawcore"),
+            "start_pre must ensure /var/lib/cclawcore exists with correct ownership"
         );
     }
 
     #[test]
     fn systemd_unit_contains_home_and_pass_environment() {
         let unit = "[Unit]\n\
-             Description=ZeroClaw daemon\n\
+             Description=CclawCore daemon\n\
              After=network.target\n\
              \n\
              [Service]\n\
              Type=simple\n\
-             ExecStart=/usr/local/bin/zeroclaw daemon\n\
+             ExecStart=/usr/local/bin/cclawcore daemon\n\
              Restart=always\n\
              RestartSec=3\n\
              # Ensure HOME is set so headless browsers can create profile/cache dirs.\n\
@@ -1704,14 +1704,14 @@ mod tests {
     fn warn_if_binary_in_home_detects_home_path() {
         use std::path::PathBuf;
 
-        let home_path = PathBuf::from("/home/user/.cargo/bin/zeroclaw");
+        let home_path = PathBuf::from("/home/user/.cargo/bin/cclawcore");
         assert!(home_path.to_string_lossy().contains("/home/"));
         assert!(home_path.to_string_lossy().contains(".cargo/bin"));
 
-        let cargo_path = PathBuf::from("/home/user/.cargo/bin/zeroclaw");
+        let cargo_path = PathBuf::from("/home/user/.cargo/bin/cclawcore");
         assert!(cargo_path.to_string_lossy().contains(".cargo/bin"));
 
-        let system_path = PathBuf::from("/usr/local/bin/zeroclaw");
+        let system_path = PathBuf::from("/usr/local/bin/cclawcore");
         assert!(!system_path.to_string_lossy().contains("/home/"));
         assert!(!system_path.to_string_lossy().contains(".cargo/bin"));
     }
@@ -1729,38 +1729,38 @@ mod tests {
     #[test]
     fn openrc_writability_probe_prefers_runuser_when_available() {
         let (program, args) =
-            build_openrc_writability_probe_command(Path::new("/etc/zeroclaw"), true);
+            build_openrc_writability_probe_command(Path::new("/etc/cclawcore"), true);
         assert_eq!(program, "runuser");
         assert_eq!(
             args,
             vec![
                 "-u".to_string(),
-                "zeroclaw".to_string(),
+                "cclawcore".to_string(),
                 "--".to_string(),
                 "sh".to_string(),
                 "-c".to_string(),
-                "test -w '/etc/zeroclaw'".to_string()
+                "test -w '/etc/cclawcore'".to_string()
             ]
         );
     }
 
     #[test]
     fn detect_homebrew_var_dir_from_cellar_path() {
-        let exe = PathBuf::from("/opt/homebrew/Cellar/zeroclaw/1.2.3/bin/zeroclaw");
+        let exe = PathBuf::from("/opt/homebrew/Cellar/cclawcore/1.2.3/bin/cclawcore");
         let var_dir = detect_homebrew_var_dir(&exe);
-        assert_eq!(var_dir, Some(PathBuf::from("/opt/homebrew/var/zeroclaw")));
+        assert_eq!(var_dir, Some(PathBuf::from("/opt/homebrew/var/cclawcore")));
     }
 
     #[test]
     fn detect_homebrew_var_dir_intel_cellar_path() {
-        let exe = PathBuf::from("/usr/local/Cellar/zeroclaw/1.0.0/bin/zeroclaw");
+        let exe = PathBuf::from("/usr/local/Cellar/cclawcore/1.0.0/bin/cclawcore");
         let var_dir = detect_homebrew_var_dir(&exe);
-        assert_eq!(var_dir, Some(PathBuf::from("/usr/local/var/zeroclaw")));
+        assert_eq!(var_dir, Some(PathBuf::from("/usr/local/var/cclawcore")));
     }
 
     #[test]
     fn detect_homebrew_var_dir_non_homebrew_path() {
-        let exe = PathBuf::from("/home/user/.cargo/bin/zeroclaw");
+        let exe = PathBuf::from("/home/user/.cargo/bin/cclawcore");
         let var_dir = detect_homebrew_var_dir(&exe);
         assert_eq!(var_dir, None);
     }
@@ -1769,7 +1769,7 @@ mod tests {
     #[test]
     fn openrc_writability_probe_falls_back_to_su() {
         let (program, args) =
-            build_openrc_writability_probe_command(Path::new("/etc/zeroclaw/workspace"), false);
+            build_openrc_writability_probe_command(Path::new("/etc/cclawcore/workspace"), false);
         assert_eq!(program, "su");
         assert_eq!(
             args,
@@ -1777,8 +1777,8 @@ mod tests {
                 "-s".to_string(),
                 "/bin/sh".to_string(),
                 "-c".to_string(),
-                "test -w '/etc/zeroclaw/workspace'".to_string(),
-                "zeroclaw".to_string()
+                "test -w '/etc/cclawcore/workspace'".to_string(),
+                "cclawcore".to_string()
             ]
         );
     }
@@ -1786,7 +1786,7 @@ mod tests {
     #[cfg(not(target_os = "windows"))]
     #[test]
     fn tail_file_errors_on_missing_file() {
-        let missing = Path::new("/tmp/zeroclaw-test-nonexistent-log-file.log");
+        let missing = Path::new("/tmp/cclawcore-test-nonexistent-log-file.log");
         let result = tail_file(missing, 10, false);
         assert!(result.is_err(), "tail on missing file should fail");
     }
@@ -1828,7 +1828,7 @@ mod tests {
 
     #[test]
     fn daemon_args_full_args_with_config_dir_and_sw() {
-        let dir = PathBuf::from("/home/user/.config/zeroclaw");
+        let dir = PathBuf::from("/home/user/.config/cclawcore");
         let args = DaemonArgs {
             config_dir: Some(dir.as_path()),
             sw: true,
@@ -1837,7 +1837,7 @@ mod tests {
             args.full_args(),
             vec![
                 "--config-dir",
-                "/home/user/.config/zeroclaw",
+                "/home/user/.config/cclawcore",
                 "daemon",
                 "--sw",
             ]
@@ -1846,14 +1846,14 @@ mod tests {
 
     #[test]
     fn daemon_args_full_args_config_dir_only() {
-        let dir = PathBuf::from("/etc/zeroclaw");
+        let dir = PathBuf::from("/etc/cclawcore");
         let args = DaemonArgs {
             config_dir: Some(dir.as_path()),
             sw: false,
         };
         assert_eq!(
             args.full_args(),
-            vec!["--config-dir", "/etc/zeroclaw", "daemon"]
+            vec!["--config-dir", "/etc/cclawcore", "daemon"]
         );
     }
 

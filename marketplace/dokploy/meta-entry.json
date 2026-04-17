@@ -1,13 +1,16 @@
 {
-  "id": "zeroclaw",
-  "name": "ZeroClaw",
+  "id": "cclawcore",
+  "name": "CclawCore",
   "version": "0.6.9",
   "description": "Fast, small, and fully autonomous AI personal assistant infrastructure. Deploy anywhere, swap anything. 100% Rust.",
-  "logo": "zeroclaw.png",
+  "logo": "cclawcore.png",
   "links": {
-    "github": "https://github.com/zeroclaw-labs/zeroclaw",
-    "website": "https://zeroclaw.com/",
-    "docs": "https://github.com/zeroclaw-labs/zeroclaw#readme"
+    "github": "https://github.com/cclawcore-labs/cclawcore",
+    "website": "https://cclawcore.com/",
+    "docs": "https://github.com/cclawcore-labs/cclawcore#readme"
   },
-  "tags": ["ai", "self-hosted"]
+  "tags": [
+    "ai",
+    "self-hosted"
+  ]
 }

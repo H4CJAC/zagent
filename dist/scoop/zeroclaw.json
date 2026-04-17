@@ -1,27 +1,27 @@
 {
     "version": "0.5.9",
     "description": "Zero overhead. Zero compromise. 100% Rust. The fastest, smallest AI assistant.",
-    "homepage": "https://github.com/zeroclaw-labs/zeroclaw",
+    "homepage": "https://github.com/cclawcore-labs/cclawcore",
     "license": "MIT|Apache-2.0",
     "architecture": {
         "64bit": {
-            "url": "https://github.com/zeroclaw-labs/zeroclaw/releases/download/v0.5.9/zeroclaw-x86_64-pc-windows-msvc.zip",
+            "url": "https://github.com/cclawcore-labs/cclawcore/releases/download/v0.5.9/cclawcore-x86_64-pc-windows-msvc.zip",
             "hash": "",
-            "bin": "zeroclaw.exe"
+            "bin": "cclawcore.exe"
         }
     },
     "checkver": {
-        "github": "https://github.com/zeroclaw-labs/zeroclaw"
+        "github": "https://github.com/cclawcore-labs/cclawcore"
     },
     "autoupdate": {
         "architecture": {
             "64bit": {
-                "url": "https://github.com/zeroclaw-labs/zeroclaw/releases/download/v$version/zeroclaw-x86_64-pc-windows-msvc.zip"
+                "url": "https://github.com/cclawcore-labs/cclawcore/releases/download/v$version/cclawcore-x86_64-pc-windows-msvc.zip"
             }
         },
         "hash": {
-            "url": "https://github.com/zeroclaw-labs/zeroclaw/releases/download/v$version/SHA256SUMS",
-            "regex": "([a-f0-9]{64})\\s+zeroclaw-x86_64-pc-windows-msvc\\.zip"
+            "url": "https://github.com/cclawcore-labs/cclawcore/releases/download/v$version/SHA256SUMS",
+            "regex": "([a-f0-9]{64})\\s+cclawcore-x86_64-pc-windows-msvc\\.zip"
         }
     }
 }

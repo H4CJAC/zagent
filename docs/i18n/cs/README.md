@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/zeroclaw-labs/zeroclaw/master/docs/assets/zeroclaw-banner.png" alt="ZeroClaw" width="600" />
+  <img src="https://raw.githubusercontent.com/cclawcore-labs/cclawcore/master/docs/assets/cclawcore-banner.png" alt="CclawCore" width="600" />
 </p>
 
-<h1 align="center">🦀 ZeroClaw — Osobní AI Asistent</h1>
+<h1 align="center">🦀 CclawCore — Osobní AI Asistent</h1>
 
 <p align="center">
   <strong>Nulová režie. Nulový kompromis. 100% Rust. 100% Agnostický.</strong><br>
@@ -10,15 +10,15 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/zeroclaw-labs/zeroclaw/actions/workflows/ci-run.yml"><img src="https://img.shields.io/github/actions/workflow/status/zeroclaw-labs/zeroclaw/ci-run.yml?branch=master&label=build" alt="Build Status" /></a>
+  <a href="https://github.com/cclawcore-labs/cclawcore/actions/workflows/ci-run.yml"><img src="https://img.shields.io/github/actions/workflow/status/cclawcore-labs/cclawcore/ci-run.yml?branch=master&label=build" alt="Build Status" /></a>
   <a href="LICENSE-APACHE"><img src="https://img.shields.io/badge/license-MIT%20OR%20Apache%202.0-blue.svg" alt="License: MIT OR Apache-2.0" /></a>
   <a href="https://www.rust-lang.org"><img src="https://img.shields.io/badge/rust-edition%202024-orange?logo=rust" alt="Rust Edition 2024" /></a>
-  <a href="https://github.com/zeroclaw-labs/zeroclaw/releases/latest"><img src="https://img.shields.io/badge/version-v0.6.9-blue" alt="Version v0.6.9" /></a>
-  <a href="https://github.com/zeroclaw-labs/zeroclaw/graphs/contributors"><img src="https://img.shields.io/github/contributors/zeroclaw-labs/zeroclaw?color=green" alt="Contributors" /></a>
+  <a href="https://github.com/cclawcore-labs/cclawcore/releases/latest"><img src="https://img.shields.io/badge/version-v0.6.9-blue" alt="Version v0.6.9" /></a>
+  <a href="https://github.com/cclawcore-labs/cclawcore/graphs/contributors"><img src="https://img.shields.io/github/contributors/cclawcore-labs/cclawcore?color=green" alt="Contributors" /></a>
   <a href="https://buymeacoffee.com/argenistherose"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Donate-yellow.svg?style=flat&logo=buy-me-a-coffee" alt="Buy Me a Coffee" /></a>
-  <a href="https://x.com/zeroclawlabs?s=21"><img src="https://img.shields.io/badge/X-%40zeroclawlabs-000000?style=flat&logo=x&logoColor=white" alt="X: @zeroclawlabs" /></a>
+  <a href="https://x.com/cclawcorelabs?s=21"><img src="https://img.shields.io/badge/X-%40cclawcorelabs-000000?style=flat&logo=x&logoColor=white" alt="X: @cclawcorelabs" /></a>
   <a href="https://discord.com/invite/wDshRVqRjx"><img src="https://img.shields.io/badge/Discord-Join-5865F2?style=flat&logo=discord&logoColor=white" alt="Discord" /></a>
-  <a href="https://www.reddit.com/r/zeroclawlabs/"><img src="https://img.shields.io/badge/Reddit-r%2Fzeroclawlabs-FF4500?style=flat&logo=reddit&logoColor=white" alt="Reddit: r/zeroclawlabs" /></a>
+  <a href="https://www.reddit.com/r/cclawcorelabs/"><img src="https://img.shields.io/badge/Reddit-r%2Fcclawcorelabs-FF4500?style=flat&logo=reddit&logoColor=white" alt="Reddit: r/cclawcorelabs" /></a>
 </p>
 
 <p align="center">
@@ -60,12 +60,12 @@ Vytvořeno studenty a členy komunit Harvard, MIT a Sundai.Club.
   <a href="../nb/README.md">🇳🇴 Norsk</a>
 </p>
 
-ZeroClaw je osobní AI asistent, který spouštíte na vlastních zařízeních. Odpovídá vám na kanálech, které již používáte (WhatsApp, Telegram, Slack, Discord, Signal, iMessage, Matrix, IRC, Email, Bluesky, Nostr, Mattermost, Nextcloud Talk, DingTalk, Lark, QQ, Reddit, LinkedIn, Twitter, MQTT, WeChat Work a další). Má webový panel pro řízení v reálném čase a může se připojit k hardwarovým periferiím (ESP32, STM32, Arduino, Raspberry Pi). Gateway je pouze řídicí rovina — produktem je asistent.
+CclawCore je osobní AI asistent, který spouštíte na vlastních zařízeních. Odpovídá vám na kanálech, které již používáte (WhatsApp, Telegram, Slack, Discord, Signal, iMessage, Matrix, IRC, Email, Bluesky, Nostr, Mattermost, Nextcloud Talk, DingTalk, Lark, QQ, Reddit, LinkedIn, Twitter, MQTT, WeChat Work a další). Má webový panel pro řízení v reálném čase a může se připojit k hardwarovým periferiím (ESP32, STM32, Arduino, Raspberry Pi). Gateway je pouze řídicí rovina — produktem je asistent.
 
 Pokud hledáte osobního jednouživatelského asistenta, který je lokální, rychlý a vždy dostupný — toto je ono.
 
 <p align="center">
-  <a href="https://zeroclawlabs.ai">Webové stránky</a> ·
+  <a href="https://cclawcorelabs.ai">Webové stránky</a> ·
   <a href="docs/README.md">Dokumentace</a> ·
   <a href="docs/architecture.md">Architektura</a> ·
   <a href="#rychlý-start">Začínáme</a> ·
@@ -74,7 +74,7 @@ Pokud hledáte osobního jednouživatelského asistenta, který je lokální, ry
   <a href="https://discord.com/invite/wDshRVqRjx">Discord</a>
 </p>
 
-> **Doporučené nastavení:** spusťte `zeroclaw onboard` ve vašem terminálu. ZeroClaw Onboard vás krok za krokem provede nastavením gateway, workspace, kanálů a poskytovatele. Je to doporučená cesta nastavení a funguje na macOS, Linux a Windows (přes WSL2). Nová instalace? Začněte zde: [Začínáme](#rychlý-start)
+> **Doporučené nastavení:** spusťte `cclawcore onboard` ve vašem terminálu. CclawCore Onboard vás krok za krokem provede nastavením gateway, workspace, kanálů a poskytovatele. Je to doporučená cesta nastavení a funguje na macOS, Linux a Windows (přes WSL2). Nová instalace? Začněte zde: [Začínáme](#rychlý-start)
 
 ### Autentizace předplatného (OAuth)
 
@@ -94,18 +94,18 @@ Běhové prostředí: stabilní toolchain Rust. Jeden binární soubor, žádné
 ### Homebrew (macOS/Linuxbrew)
 
 ```bash
-brew install zeroclaw
+brew install cclawcore
 ```
 
 ### Instalace jedním kliknutím
 
 ```bash
-git clone https://github.com/zeroclaw-labs/zeroclaw.git
-cd zeroclaw
+git clone https://github.com/cclawcore-labs/cclawcore.git
+cd cclawcore
 ./install.sh
 ```
 
-`zeroclaw onboard` se automaticky spustí po instalaci pro konfiguraci vašeho workspace a poskytovatele.
+`cclawcore onboard` se automaticky spustí po instalaci pro konfiguraci vašeho workspace a poskytovatele.
 
 ## Rychlý start (TL;DR)
 
@@ -116,67 +116,67 @@ Kompletní průvodce pro začátečníky (autentizace, párování, kanály): [Z
 ./install.sh --api-key "sk-..." --provider openrouter
 
 # Spuštění gateway (webhook server + webový panel)
-zeroclaw gateway                # výchozí: 127.0.0.1:42617
-zeroclaw gateway --port 0       # náhodný port (posílené zabezpečení)
+cclawcore gateway                # výchozí: 127.0.0.1:42617
+cclawcore gateway --port 0       # náhodný port (posílené zabezpečení)
 
 # Komunikace s asistentem
-zeroclaw agent -m "Hello, ZeroClaw!"
+cclawcore agent -m "Hello, CclawCore!"
 
 # Interaktivní režim
-zeroclaw agent
+cclawcore agent
 
 # Spuštění plného autonomního běhového prostředí (gateway + kanály + cron + hands)
-zeroclaw daemon
+cclawcore daemon
 
 # Kontrola stavu
-zeroclaw status
+cclawcore status
 
 # Spuštění diagnostiky
-zeroclaw doctor
+cclawcore doctor
 ```
 
-Aktualizujete? Spusťte `zeroclaw doctor` po aktualizaci.
+Aktualizujete? Spusťte `cclawcore doctor` po aktualizaci.
 
 ### Ze zdrojového kódu (vývoj)
 
 ```bash
-git clone https://github.com/zeroclaw-labs/zeroclaw.git
-cd zeroclaw
+git clone https://github.com/cclawcore-labs/cclawcore.git
+cd cclawcore
 
 cargo build --release --locked
 cargo install --path . --force --locked
 
-zeroclaw onboard
+cclawcore onboard
 ```
 
 > **Vývojářský fallback (bez globální instalace):** předřaďte příkazy `cargo run --release --` (příklad: `cargo run --release -- status`).
 
 ## Migrace z OpenClaw
 
-ZeroClaw může importovat váš workspace, paměť a konfiguraci OpenClaw:
+CclawCore může importovat váš workspace, paměť a konfiguraci OpenClaw:
 
 ```bash
 # Náhled toho, co bude migrováno (bezpečné, pouze čtení)
-zeroclaw migrate openclaw --dry-run
+cclawcore migrate openclaw --dry-run
 
 # Spuštění migrace
-zeroclaw migrate openclaw
+cclawcore migrate openclaw
 ```
 
-Migruje záznamy paměti, soubory workspace a konfiguraci z `~/.openclaw/` do `~/.zeroclaw/`. Konfigurace je automaticky převedena z JSON do TOML.
+Migruje záznamy paměti, soubory workspace a konfiguraci z `~/.openclaw/` do `~/.cclawcore/`. Konfigurace je automaticky převedena z JSON do TOML.
 
 ## Výchozí nastavení zabezpečení (přístup DM)
 
-ZeroClaw se připojuje k reálným komunikačním platformám. Zacházejte s příchozími DM jako s nedůvěryhodným vstupem.
+CclawCore se připojuje k reálným komunikačním platformám. Zacházejte s příchozími DM jako s nedůvěryhodným vstupem.
 
 Kompletní průvodce zabezpečením: [SECURITY.md](SECURITY.md)
 
 Výchozí chování na všech kanálech:
 
 - **Párování DM** (výchozí): neznámí odesílatelé obdrží krátký párovací kód a bot nezpracovává jejich zprávu.
-- Schvalte pomocí: `zeroclaw pairing approve <channel> <code>` (poté je odesílatel přidán na lokální allowlist).
+- Schvalte pomocí: `cclawcore pairing approve <channel> <code>` (poté je odesílatel přidán na lokální allowlist).
 - Veřejné příchozí DM vyžadují explicitní opt-in v `config.toml`.
-- Spusťte `zeroclaw doctor` pro odhalení rizikových nebo špatně nakonfigurovaných DM politik.
+- Spusťte `cclawcore doctor` pro odhalení rizikových nebo špatně nakonfigurovaných DM politik.
 
 **Úrovně autonomie:**
 
@@ -197,7 +197,7 @@ Používejte tuto nástěnku pro důležitá oznámení (zlomové změny, bezpe�
 
 | Datum (UTC) | Úroveň       | Oznámení                                                                                                                                                                                                                                                                                                                                                 | Akce                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-02-19 | _Kritické_  | **Nejsme spojeni** s `openagen/zeroclaw`, `zeroclaw.org` ani `zeroclaw.net`. Domény `zeroclaw.org` a `zeroclaw.net` aktuálně směřují na fork `openagen/zeroclaw` a tato doména/repozitář se vydávají za naši oficiální stránku/projekt.                                                                                       | Nedůvěřujte informacím, binárním souborům, sbírkám ani oznámením z těchto zdrojů. Používejte pouze [toto repozitárium](https://github.com/zeroclaw-labs/zeroclaw) a naše ověřené sociální účty.                                                                                                                                                                                                                                                                                                                                                                       |
+| 2026-02-19 | _Kritické_  | **Nejsme spojeni** s `openagen/cclawcore`, `cclawcore.org` ani `cclawcore.net`. Domény `cclawcore.org` a `cclawcore.net` aktuálně směřují na fork `openagen/cclawcore` a tato doména/repozitář se vydávají za naši oficiální stránku/projekt.                                                                                       | Nedůvěřujte informacím, binárním souborům, sbírkám ani oznámením z těchto zdrojů. Používejte pouze [toto repozitárium](https://github.com/cclawcore-labs/cclawcore) a naše ověřené sociální účty.                                                                                                                                                                                                                                                                                                                                                                       |
 | 2026-02-19 | _Důležité_ | Anthropic aktualizoval podmínky autentizace a použití přihlašovacích údajů 2026-02-19. OAuth tokeny Claude Code (Free, Pro, Max) jsou určeny výhradně pro Claude Code a Claude.ai; používání OAuth tokenů z Claude Free/Pro/Max v jakémkoli jiném produktu, nástroji nebo službě (včetně Agent SDK) není povoleno a může porušovat Podmínky služby. | Prosím dočasně se vyhněte integracím Claude Code OAuth, abyste předešli potenciálním ztrátám. Původní klauzule: [Authentication and Credential Use](https://code.claude.com/docs/en/legal-and-compliance#authentication-and-credential-use).                                                                                                                                                                                                                                                                                                                                                    |
 
 ## Hlavní rysy
@@ -217,18 +217,18 @@ Používejte tuto nástěnku pro důležitá oznámení (zlomové změny, bezpe�
 - **Platforma dovedností** — vestavěné, komunitní a workspace dovednosti s bezpečnostním auditem.
 - **Podpora tunelů** — Cloudflare, Tailscale, ngrok, OpenVPN a vlastní tunely pro vzdálený přístup.
 
-### Proč týmy volí ZeroClaw
+### Proč týmy volí CclawCore
 
 - **Lehký ve výchozím stavu:** malý Rust binární soubor, rychlý start, nízká paměťová stopa.
 - **Bezpečný od návrhu:** párování, přísný sandboxing, explicitní allowlisty, izolace workspace.
 - **Plně vyměnitelný:** základní systémy jsou traity (poskytovatelé, kanály, nástroje, paměť, tunely).
 - **Žádný vendor lock-in:** podpora poskytovatelů kompatibilních s OpenAI + připojitelné vlastní endpointy.
 
-## Srovnání výkonu (ZeroClaw vs OpenClaw, reprodukovatelné)
+## Srovnání výkonu (CclawCore vs OpenClaw, reprodukovatelné)
 
 Rychlý benchmark na lokálním stroji (macOS arm64, únor 2026) normalizovaný pro edge hardware 0.8GHz.
 
-|                           | OpenClaw      | NanoBot        | PicoClaw        | ZeroClaw 🦀          |
+|                           | OpenClaw      | NanoBot        | PicoClaw        | CclawCore 🦀          |
 | ------------------------- | ------------- | -------------- | --------------- | -------------------- |
 | **Jazyk**                 | TypeScript    | Python         | Go              | **Rust**             |
 | **RAM**                   | > 1GB         | > 100MB        | < 10MB          | **< 5MB**            |
@@ -236,20 +236,20 @@ Rychlý benchmark na lokálním stroji (macOS arm64, únor 2026) normalizovaný 
 | **Velikost binárky**      | ~28MB (dist)  | N/A (Skripty)  | ~8MB            | **~8.8 MB**          |
 | **Náklady**               | Mac Mini $599 | Linux SBC ~$50 | Linux Board $10 | **Jakýkoli hardware $10** |
 
-> Poznámky: Výsledky ZeroClaw jsou měřeny na release buildech pomocí `/usr/bin/time -l`. OpenClaw vyžaduje běhové prostředí Node.js (typicky ~390MB dodatečné paměťové režie), zatímco NanoBot vyžaduje běhové prostředí Python. PicoClaw a ZeroClaw jsou statické binárky. Výše uvedené hodnoty RAM jsou runtime paměť; požadavky kompilace jsou vyšší.
+> Poznámky: Výsledky CclawCore jsou měřeny na release buildech pomocí `/usr/bin/time -l`. OpenClaw vyžaduje běhové prostředí Node.js (typicky ~390MB dodatečné paměťové režie), zatímco NanoBot vyžaduje běhové prostředí Python. PicoClaw a CclawCore jsou statické binárky. Výše uvedené hodnoty RAM jsou runtime paměť; požadavky kompilace jsou vyšší.
 
 <p align="center">
-  <img src="docs/assets/zeroclaw-comparison.jpeg" alt="ZeroClaw vs OpenClaw Comparison" width="800" />
+  <img src="docs/assets/cclawcore-comparison.jpeg" alt="CclawCore vs OpenClaw Comparison" width="800" />
 </p>
 
 ### Reprodukovatelné lokální měření
 
 ```bash
 cargo build --release
-ls -lh target/release/zeroclaw
+ls -lh target/release/cclawcore
 
-/usr/bin/time -l target/release/zeroclaw --help
-/usr/bin/time -l target/release/zeroclaw status
+/usr/bin/time -l target/release/cclawcore --help
+/usr/bin/time -l target/release/cclawcore status
 ```
 
 ## Vše, co jsme dosud vytvořili
@@ -325,7 +325,7 @@ Webový panel React 19 + Vite 6 + Tailwind CSS 4 servírovaný přímo z Gateway
 
 ## Konfigurace
 
-Minimální `~/.zeroclaw/config.toml`:
+Minimální `~/.cclawcore/config.toml`:
 
 ```toml
 default_provider = "anthropic"
@@ -393,35 +393,35 @@ Nastavte `runtime.kind = "docker"` pro přísný sandboxing nebo síťovou izola
 
 ## Autentizace předplatného (OpenAI Codex / Claude Code / Gemini)
 
-ZeroClaw podporuje nativní autorizační profily předplatného (více účtů, šifrování v klidu).
+CclawCore podporuje nativní autorizační profily předplatného (více účtů, šifrování v klidu).
 
-- Soubor úložiště: `~/.zeroclaw/auth-profiles.json`
-- Šifrovací klíč: `~/.zeroclaw/.secret_key`
+- Soubor úložiště: `~/.cclawcore/auth-profiles.json`
+- Šifrovací klíč: `~/.cclawcore/.secret_key`
 - Formát ID profilu: `<provider>:<profile_name>` (příklad: `openai-codex:work`)
 
 ```bash
 # OpenAI Codex OAuth (předplatné ChatGPT)
-zeroclaw auth login --provider openai-codex --device-code
+cclawcore auth login --provider openai-codex --device-code
 
 # Gemini OAuth
-zeroclaw auth login --provider gemini --profile default
+cclawcore auth login --provider gemini --profile default
 
 # Anthropic setup-token
-zeroclaw auth paste-token --provider anthropic --profile default --auth-kind authorization
+cclawcore auth paste-token --provider anthropic --profile default --auth-kind authorization
 
 # Kontrola / obnovení / přepnutí profilu
-zeroclaw auth status
-zeroclaw auth refresh --provider openai-codex --profile default
-zeroclaw auth use --provider openai-codex --profile work
+cclawcore auth status
+cclawcore auth refresh --provider openai-codex --profile default
+cclawcore auth use --provider openai-codex --profile work
 
 # Spuštění agenta s autentizací předplatného
-zeroclaw agent --provider openai-codex -m "hello"
-zeroclaw agent --provider anthropic -m "hello"
+cclawcore agent --provider openai-codex -m "hello"
+cclawcore agent --provider anthropic -m "hello"
 ```
 
 ## Workspace agenta + dovednosti
 
-Kořenový adresář workspace: `~/.zeroclaw/workspace/` (konfigurovatelné přes config).
+Kořenový adresář workspace: `~/.cclawcore/workspace/` (konfigurovatelné přes config).
 
 Injektované soubory promptů:
 - `IDENTITY.md` — osobnost a role agenta
@@ -430,74 +430,74 @@ Injektované soubory promptů:
 - `AGENTS.md` — konvence relací a inicializační pravidla
 - `SOUL.md` — základní identita a provozní principy
 
-Dovednosti: `~/.zeroclaw/workspace/skills/<skill>/SKILL.md` nebo `SKILL.toml`.
+Dovednosti: `~/.cclawcore/workspace/skills/<skill>/SKILL.md` nebo `SKILL.toml`.
 
 ```bash
 # Seznam nainstalovaných dovedností
-zeroclaw skills list
+cclawcore skills list
 
 # Instalace z git
-zeroclaw skills install https://github.com/user/my-skill.git
+cclawcore skills install https://github.com/user/my-skill.git
 
 # Bezpečnostní audit před instalací
-zeroclaw skills audit https://github.com/user/my-skill.git
+cclawcore skills audit https://github.com/user/my-skill.git
 
 # Odebrání dovednosti
-zeroclaw skills remove my-skill
+cclawcore skills remove my-skill
 ```
 
 ## CLI příkazy
 
 ```bash
 # Správa workspace
-zeroclaw onboard              # Průvodce nastavením
-zeroclaw status               # Zobrazení stavu démona/agenta
-zeroclaw doctor               # Spuštění diagnostiky systému
+cclawcore onboard              # Průvodce nastavením
+cclawcore status               # Zobrazení stavu démona/agenta
+cclawcore doctor               # Spuštění diagnostiky systému
 
 # Gateway + démon
-zeroclaw gateway              # Spuštění gateway serveru (127.0.0.1:42617)
-zeroclaw daemon               # Spuštění plného autonomního runtime
+cclawcore gateway              # Spuštění gateway serveru (127.0.0.1:42617)
+cclawcore daemon               # Spuštění plného autonomního runtime
 
 # Agent
-zeroclaw agent                # Interaktivní režim chatu
-zeroclaw agent -m "message"   # Režim jedné zprávy
+cclawcore agent                # Interaktivní režim chatu
+cclawcore agent -m "message"   # Režim jedné zprávy
 
 # Správa služeb
-zeroclaw service install      # Instalace jako služba OS (launchd/systemd)
-zeroclaw service start|stop|restart|status
+cclawcore service install      # Instalace jako služba OS (launchd/systemd)
+cclawcore service start|stop|restart|status
 
 # Kanály
-zeroclaw channel list         # Seznam konfigurovaných kanálů
-zeroclaw channel doctor       # Kontrola zdraví kanálů
-zeroclaw channel bind-telegram 123456789
+cclawcore channel list         # Seznam konfigurovaných kanálů
+cclawcore channel doctor       # Kontrola zdraví kanálů
+cclawcore channel bind-telegram 123456789
 
 # Cron + plánování
-zeroclaw cron list            # Seznam naplánovaných úloh
-zeroclaw cron add "*/5 * * * *" --prompt "Check system health"
-zeroclaw cron remove <id>
+cclawcore cron list            # Seznam naplánovaných úloh
+cclawcore cron add "*/5 * * * *" --prompt "Check system health"
+cclawcore cron remove <id>
 
 # Paměť
-zeroclaw memory list          # Seznam záznamů paměti
-zeroclaw memory get <key>     # Získání záznamu
-zeroclaw memory stats         # Statistiky paměti
+cclawcore memory list          # Seznam záznamů paměti
+cclawcore memory get <key>     # Získání záznamu
+cclawcore memory stats         # Statistiky paměti
 
 # Autorizační profily
-zeroclaw auth login --provider <name>
-zeroclaw auth status
-zeroclaw auth use --provider <name> --profile <profile>
+cclawcore auth login --provider <name>
+cclawcore auth status
+cclawcore auth use --provider <name> --profile <profile>
 
 # Hardwarové periferie
-zeroclaw hardware discover    # Skenování připojených zařízení
-zeroclaw peripheral list      # Seznam připojených periferií
-zeroclaw peripheral flash     # Flash firmwaru na zařízení
+cclawcore hardware discover    # Skenování připojených zařízení
+cclawcore peripheral list      # Seznam připojených periferií
+cclawcore peripheral flash     # Flash firmwaru na zařízení
 
 # Migrace
-zeroclaw migrate openclaw --dry-run
-zeroclaw migrate openclaw
+cclawcore migrate openclaw --dry-run
+cclawcore migrate openclaw
 
 # Doplňování shellu
-source <(zeroclaw completions bash)
-zeroclaw completions zsh > ~/.zfunc/_zeroclaw
+source <(cclawcore completions bash)
+cclawcore completions zsh > ~/.zfunc/_cclawcore
 ```
 
 Kompletní reference příkazů: [docs/reference/cli/commands-reference.md](docs/reference/cli/commands-reference.md)
@@ -565,10 +565,10 @@ Kompletní reference příkazů: [docs/reference/cli/commands-reference.md](docs
 
 #### Jednořádkový instalátor
 
-Nebo přeskočte výše uvedené kroky a nainstalujte vše (systémové závislosti, Rust, ZeroClaw) jedním příkazem:
+Nebo přeskočte výše uvedené kroky a nainstalujte vše (systémové závislosti, Rust, CclawCore) jedním příkazem:
 
 ```bash
-curl -LsSf https://raw.githubusercontent.com/zeroclaw-labs/zeroclaw/master/install.sh | bash
+curl -LsSf https://raw.githubusercontent.com/cclawcore-labs/cclawcore/master/install.sh | bash
 ```
 
 #### Požadavky na zdroje kompilace
@@ -611,7 +611,7 @@ Vydané assety jsou publikovány pro:
 - Windows: `x86_64`
 
 Stáhněte nejnovější assety z:
-<https://github.com/zeroclaw-labs/zeroclaw/releases/latest>
+<https://github.com/cclawcore-labs/cclawcore/releases/latest>
 
 ## Dokumentace
 
@@ -621,7 +621,7 @@ Používejte tyto, když jste prošli onboardingem a chcete hlubší referenci.
 - Přečtěte si [přehled architektury](docs/architecture.md) pro úplný model systému.
 - Použijte [referenci konfigurace](docs/reference/api/config-reference.md), když potřebujete každý klíč a příklad.
 - Provozujte Gateway podle [provozní příručky](docs/ops/operations-runbook.md).
-- Následujte [ZeroClaw Onboard](#rychlý-start) pro průvodce nastavením.
+- Následujte [CclawCore Onboard](#rychlý-start) pro průvodce nastavením.
 - Odlaďte běžné chyby s [průvodcem řešením problémů](docs/ops/troubleshooting.md).
 - Projděte [bezpečnostní pokyny](docs/security/README.md) před vystavením čehokoli.
 
@@ -653,14 +653,14 @@ Používejte tyto, když jste prošli onboardingem a chcete hlubší referenci.
 
 ## Icy Crab 🦀
 
-ZeroClaw byl vytvořen pro smooth crab 🦀, rychlého a efektivního AI asistenta. Vytvořil Argenis De La Rosa a komunita.
+CclawCore byl vytvořen pro smooth crab 🦀, rychlého a efektivního AI asistenta. Vytvořil Argenis De La Rosa a komunita.
 
-- [zeroclawlabs.ai](https://zeroclawlabs.ai)
-- [@zeroclawlabs](https://x.com/zeroclawlabs)
+- [cclawcorelabs.ai](https://cclawcorelabs.ai)
+- [@cclawcorelabs](https://x.com/cclawcorelabs)
 
-## Podpořte ZeroClaw
+## Podpořte CclawCore
 
-Pokud vám ZeroClaw pomáhá v práci a chcete podpořit další vývoj, můžete přispět zde:
+Pokud vám CclawCore pomáhá v práci a chcete podpořit další vývoj, můžete přispět zde:
 
 <a href="https://buymeacoffee.com/argenistherose"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Donate-yellow.svg?style=for-the-badge&logo=buy-me-a-coffee" alt="Buy Me a Coffee" /></a>
 
@@ -677,7 +677,7 @@ Stavíme otevřeně, protože nejlepší nápady přicházejí odevšad. Pokud t
 
 ## Přispívání
 
-Jste v ZeroClaw noví? Hledejte issues označené [`good first issue`](https://github.com/zeroclaw-labs/zeroclaw/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) — podívejte se na náš [Průvodce přispíváním](CONTRIBUTING.md#first-time-contributors), jak začít. AI/vibe-coded PR vítány! 🤖
+Jste v CclawCore noví? Hledejte issues označené [`good first issue`](https://github.com/cclawcore-labs/cclawcore/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) — podívejte se na náš [Průvodce přispíváním](CONTRIBUTING.md#first-time-contributors), jak začít. AI/vibe-coded PR vítány! 🤖
 
 Viz [CONTRIBUTING.md](CONTRIBUTING.md) a [CLA.md](docs/contributing/cla.md). Implementujte trait, odešlete PR:
 
@@ -689,26 +689,26 @@ Viz [CONTRIBUTING.md](CONTRIBUTING.md) a [CLA.md](docs/contributing/cla.md). Imp
 - Nový `Memory` → `src/memory/`
 - Nový `Tunnel` → `src/tunnel/`
 - Nový `Peripheral` → `src/peripherals/`
-- Nový `Skill` → `~/.zeroclaw/workspace/skills/<name>/`
+- Nový `Skill` → `~/.cclawcore/workspace/skills/<name>/`
 
 <!-- BEGIN:RECENT_CONTRIBUTORS -->
 <!-- END:RECENT_CONTRIBUTORS -->
 
 ## ⚠️ Oficiální repozitář a varování před podvržením identity
 
-**Toto je jediný oficiální repozitář ZeroClaw:**
+**Toto je jediný oficiální repozitář CclawCore:**
 
-> https://github.com/zeroclaw-labs/zeroclaw
+> https://github.com/cclawcore-labs/cclawcore
 
-Jakýkoli jiný repozitář, organizace, doména nebo balíček tvrdící, že je „ZeroClaw" nebo naznačující spojení se ZeroClaw Labs je **neautorizovaný a není spojen s tímto projektem**. Známé neautorizované forky budou uvedeny v [TRADEMARK.md](docs/maintainers/trademark.md).
+Jakýkoli jiný repozitář, organizace, doména nebo balíček tvrdící, že je „CclawCore" nebo naznačující spojení se CclawCore Labs je **neautorizovaný a není spojen s tímto projektem**. Známé neautorizované forky budou uvedeny v [TRADEMARK.md](docs/maintainers/trademark.md).
 
-Pokud narazíte na podvržení identity nebo zneužití ochranné známky, prosím [otevřete issue](https://github.com/zeroclaw-labs/zeroclaw/issues).
+Pokud narazíte na podvržení identity nebo zneužití ochranné známky, prosím [otevřete issue](https://github.com/cclawcore-labs/cclawcore/issues).
 
 ---
 
 ## Licence
 
-ZeroClaw je dvojitě licencován pro maximální otevřenost a ochranu přispěvatelů:
+CclawCore je dvojitě licencován pro maximální otevřenost a ochranu přispěvatelů:
 
 | Licence | Případ použití |
 |---------|---------------|
@@ -719,7 +719,7 @@ Můžete si vybrat kteroukoli licenci. **Přispěvatelé automaticky udělují p
 
 ### Ochranná známka
 
-Název **ZeroClaw** a logo jsou ochranné známky ZeroClaw Labs. Tato licence neuděluje povolení k jejich použití pro naznačení podpory nebo spojení. Viz [TRADEMARK.md](docs/maintainers/trademark.md) pro povolená a zakázaná použití.
+Název **CclawCore** a logo jsou ochranné známky CclawCore Labs. Tato licence neuděluje povolení k jejich použití pro naznačení podpory nebo spojení. Viz [TRADEMARK.md](docs/maintainers/trademark.md) pro povolená a zakázaná použití.
 
 ### Ochrana přispěvatelů
 
@@ -730,12 +730,12 @@ Název **ZeroClaw** a logo jsou ochranné známky ZeroClaw Labs. Tato licence ne
 
 ---
 
-**ZeroClaw** — Nulová režie. Nulový kompromis. Nasaďte kdekoli. Vyměňte cokoli. 🦀
+**CclawCore** — Nulová režie. Nulový kompromis. Nasaďte kdekoli. Vyměňte cokoli. 🦀
 
 ## Přispěvatelé
 
-<a href="https://github.com/zeroclaw-labs/zeroclaw/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=zeroclaw-labs/zeroclaw" alt="ZeroClaw contributors" />
+<a href="https://github.com/cclawcore-labs/cclawcore/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=cclawcore-labs/cclawcore" alt="CclawCore contributors" />
 </a>
 
 Tento seznam je generován z grafu přispěvatelů GitHub a aktualizuje se automaticky.
@@ -743,11 +743,11 @@ Tento seznam je generován z grafu přispěvatelů GitHub a aktualizuje se autom
 ## Historie hvězd
 
 <p align="center">
-  <a href="https://www.star-history.com/#zeroclaw-labs/zeroclaw&type=date&legend=top-left">
+  <a href="https://www.star-history.com/#cclawcore-labs/cclawcore&type=date&legend=top-left">
     <picture>
-     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=zeroclaw-labs/zeroclaw&type=date&theme=dark&legend=top-left" />
-     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=zeroclaw-labs/zeroclaw&type=date&legend=top-left" />
-     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=zeroclaw-labs/zeroclaw&type=date&legend=top-left" />
+     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=cclawcore-labs/cclawcore&type=date&theme=dark&legend=top-left" />
+     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=cclawcore-labs/cclawcore&type=date&legend=top-left" />
+     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=cclawcore-labs/cclawcore&type=date&legend=top-left" />
     </picture>
   </a>
 </p>

@@ -1,7 +1,9 @@
 {
   "identifier": "mobile",
-  "description": "Mobile-specific permissions for ZeroClaw",
-  "windows": ["main"],
+  "description": "Mobile-specific permissions for CclawCore",
+  "windows": [
+    "main"
+  ],
   "permissions": [
     "core:default"
   ]

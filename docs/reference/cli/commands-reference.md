@@ -1,6 +1,6 @@
-# ZeroClaw Commands Reference
+# CclawCore Commands Reference
 
-This reference is derived from the current CLI surface (`zeroclaw --help`).
+This reference is derived from the current CLI surface (`cclawcore --help`).
 
 Last verified: **March 26, 2026**.
 
@@ -34,13 +34,13 @@ Last verified: **March 26, 2026**.
 
 ### `onboard`
 
-- `zeroclaw onboard`
-- `zeroclaw onboard --channels-only`
-- `zeroclaw onboard --force`
-- `zeroclaw onboard --reinit`
-- `zeroclaw onboard --api-key <KEY> --provider <ID> --memory <sqlite|lucid|markdown|none>`
-- `zeroclaw onboard --api-key <KEY> --provider <ID> --model <MODEL_ID> --memory <sqlite|lucid|markdown|none>`
-- `zeroclaw onboard --api-key <KEY> --provider <ID> --model <MODEL_ID> --memory <sqlite|lucid|markdown|none> --force`
+- `cclawcore onboard`
+- `cclawcore onboard --channels-only`
+- `cclawcore onboard --force`
+- `cclawcore onboard --reinit`
+- `cclawcore onboard --api-key <KEY> --provider <ID> --memory <sqlite|lucid|markdown|none>`
+- `cclawcore onboard --api-key <KEY> --provider <ID> --model <MODEL_ID> --memory <sqlite|lucid|markdown|none>`
+- `cclawcore onboard --api-key <KEY> --provider <ID> --model <MODEL_ID> --memory <sqlite|lucid|markdown|none> --force`
 
 `onboard` safety behavior:
 
@@ -48,15 +48,15 @@ Last verified: **March 26, 2026**.
   - Full onboarding (overwrite `config.toml`)
   - Provider-only update (update provider/model/API key while preserving existing channels, tunnel, memory, hooks, and other settings)
 - In non-interactive environments, existing `config.toml` causes a safe refusal unless `--force` is passed.
-- Use `zeroclaw onboard --channels-only` when you only need to rotate channel tokens/allowlists.
-- Use `zeroclaw onboard --reinit` to start fresh. This backs up your existing config directory with a timestamp suffix and creates a new configuration from scratch.
+- Use `cclawcore onboard --channels-only` when you only need to rotate channel tokens/allowlists.
+- Use `cclawcore onboard --reinit` to start fresh. This backs up your existing config directory with a timestamp suffix and creates a new configuration from scratch.
 
 ### `agent`
 
-- `zeroclaw agent`
-- `zeroclaw agent -m "Hello"`
-- `zeroclaw agent --provider <ID> --model <MODEL> --temperature <0.0-2.0>`
-- `zeroclaw agent --peripheral <board:path>`
+- `cclawcore agent`
+- `cclawcore agent -m "Hello"`
+- `cclawcore agent --provider <ID> --model <MODEL> --temperature <0.0-2.0>`
+- `cclawcore agent --peripheral <board:path>`
 
 Tip:
 
@@ -64,9 +64,9 @@ Tip:
 
 ### `acp`
 
-- `zeroclaw acp`
-- `zeroclaw acp --max-sessions <N>`
-- `zeroclaw acp --session-timeout <SECONDS>`
+- `cclawcore acp`
+- `cclawcore acp --max-sessions <N>`
+- `cclawcore acp --session-timeout <SECONDS>`
 
 Start the ACP (Agent Control Protocol) server for IDE and tool integration.
 
@@ -78,21 +78,21 @@ Start the ACP (Agent Control Protocol) server for IDE and tool integration.
 
 ### `gateway` / `daemon`
 
-- `zeroclaw gateway [--host <HOST>] [--port <PORT>]`
-- `zeroclaw daemon [--host <HOST>] [--port <PORT>]`
+- `cclawcore gateway [--host <HOST>] [--port <PORT>]`
+- `cclawcore daemon [--host <HOST>] [--port <PORT>]`
 
 ### `estop`
 
-- `zeroclaw estop` (engage `kill-all`)
-- `zeroclaw estop --level network-kill`
-- `zeroclaw estop --level domain-block --domain "*.chase.com" [--domain "*.paypal.com"]`
-- `zeroclaw estop --level tool-freeze --tool shell [--tool browser]`
-- `zeroclaw estop status`
-- `zeroclaw estop resume`
-- `zeroclaw estop resume --network`
-- `zeroclaw estop resume --domain "*.chase.com"`
-- `zeroclaw estop resume --tool shell`
-- `zeroclaw estop resume --otp <123456>`
+- `cclawcore estop` (engage `kill-all`)
+- `cclawcore estop --level network-kill`
+- `cclawcore estop --level domain-block --domain "*.chase.com" [--domain "*.paypal.com"]`
+- `cclawcore estop --level tool-freeze --tool shell [--tool browser]`
+- `cclawcore estop status`
+- `cclawcore estop resume`
+- `cclawcore estop resume --network`
+- `cclawcore estop resume --domain "*.chase.com"`
+- `cclawcore estop resume --tool shell`
+- `cclawcore estop resume --otp <123456>`
 
 Notes:
 
@@ -102,23 +102,23 @@ Notes:
 
 ### `service`
 
-- `zeroclaw service install`
-- `zeroclaw service start`
-- `zeroclaw service stop`
-- `zeroclaw service restart`
-- `zeroclaw service status`
-- `zeroclaw service uninstall`
+- `cclawcore service install`
+- `cclawcore service start`
+- `cclawcore service stop`
+- `cclawcore service restart`
+- `cclawcore service status`
+- `cclawcore service uninstall`
 
 ### `cron`
 
-- `zeroclaw cron list`
-- `zeroclaw cron add <expr> [--tz <IANA_TZ>] <command>`
-- `zeroclaw cron add-at <rfc3339_timestamp> <command>`
-- `zeroclaw cron add-every <every_ms> <command>`
-- `zeroclaw cron once <delay> <command>`
-- `zeroclaw cron remove <id>`
-- `zeroclaw cron pause <id>`
-- `zeroclaw cron resume <id>`
+- `cclawcore cron list`
+- `cclawcore cron add <expr> [--tz <IANA_TZ>] <command>`
+- `cclawcore cron add-at <rfc3339_timestamp> <command>`
+- `cclawcore cron add-every <every_ms> <command>`
+- `cclawcore cron once <delay> <command>`
+- `cclawcore cron remove <id>`
+- `cclawcore cron pause <id>`
+- `cclawcore cron resume <id>`
 
 Notes:
 
@@ -127,29 +127,29 @@ Notes:
 
 ### `models`
 
-- `zeroclaw models refresh`
-- `zeroclaw models refresh --provider <ID>`
-- `zeroclaw models refresh --force`
+- `cclawcore models refresh`
+- `cclawcore models refresh --provider <ID>`
+- `cclawcore models refresh --force`
 
 `models refresh` currently supports live catalog refresh for provider IDs: `openrouter`, `openai`, `anthropic`, `groq`, `mistral`, `deepseek`, `xai`, `together-ai`, `gemini`, `ollama`, `llamacpp`, `sglang`, `vllm`, `astrai`, `venice`, `fireworks`, `cohere`, `moonshot`, `glm`, `zai`, `qwen`, and `nvidia`.
 
 ### `doctor`
 
-- `zeroclaw doctor`
-- `zeroclaw doctor models [--provider <ID>] [--use-cache]`
-- `zeroclaw doctor traces [--limit <N>] [--event <TYPE>] [--contains <TEXT>]`
-- `zeroclaw doctor traces --id <TRACE_ID>`
+- `cclawcore doctor`
+- `cclawcore doctor models [--provider <ID>] [--use-cache]`
+- `cclawcore doctor traces [--limit <N>] [--event <TYPE>] [--contains <TEXT>]`
+- `cclawcore doctor traces --id <TRACE_ID>`
 
 `doctor traces` reads runtime tool/model diagnostics from `observability.runtime_trace_path`.
 
 ### `channel`
 
-- `zeroclaw channel list`
-- `zeroclaw channel start`
-- `zeroclaw channel doctor`
-- `zeroclaw channel bind-telegram <IDENTITY>`
-- `zeroclaw channel add <type> <json>`
-- `zeroclaw channel remove <name>`
+- `cclawcore channel list`
+- `cclawcore channel start`
+- `cclawcore channel doctor`
+- `cclawcore channel bind-telegram <IDENTITY>`
+- `cclawcore channel add <type> <json>`
+- `cclawcore channel remove <name>`
 
 Runtime in-chat commands (Telegram/Discord while channel server is running):
 
@@ -170,14 +170,14 @@ Channel runtime also watches `config.toml` and hot-applies updates to:
 
 ### `integrations`
 
-- `zeroclaw integrations info <name>`
+- `cclawcore integrations info <name>`
 
 ### `skills`
 
-- `zeroclaw skills list`
-- `zeroclaw skills audit <source_or_name>`
-- `zeroclaw skills install <source>`
-- `zeroclaw skills remove <name>`
+- `cclawcore skills list`
+- `cclawcore skills audit <source_or_name>`
+- `cclawcore skills install <source>`
+- `cclawcore skills remove <name>`
 
 `<source>` accepts git remotes (`https://...`, `http://...`, `ssh://...`, and `git@host:owner/repo.git`) or a local filesystem path.
 
@@ -193,52 +193,52 @@ Skill manifests (`SKILL.toml`) support `prompts` and `[[tools]]`; both are injec
 
 ### `migrate`
 
-- `zeroclaw migrate openclaw [--source <path>] [--dry-run]`
+- `cclawcore migrate openclaw [--source <path>] [--dry-run]`
 
 ### `config`
 
-- `zeroclaw config schema`
+- `cclawcore config schema`
 
 `config schema` prints a JSON Schema (draft 2020-12) for the full `config.toml` contract to stdout.
 
 ### `completions`
 
-- `zeroclaw completions bash`
-- `zeroclaw completions fish`
-- `zeroclaw completions zsh`
-- `zeroclaw completions powershell`
-- `zeroclaw completions elvish`
+- `cclawcore completions bash`
+- `cclawcore completions fish`
+- `cclawcore completions zsh`
+- `cclawcore completions powershell`
+- `cclawcore completions elvish`
 
 `completions` is stdout-only by design so scripts can be sourced directly without log/warning contamination.
 
 ### `hardware`
 
-- `zeroclaw hardware discover`
-- `zeroclaw hardware introspect <path>`
-- `zeroclaw hardware info [--chip <chip_name>]`
+- `cclawcore hardware discover`
+- `cclawcore hardware introspect <path>`
+- `cclawcore hardware info [--chip <chip_name>]`
 
 ### `peripheral`
 
-- `zeroclaw peripheral list`
-- `zeroclaw peripheral add <board> <path>`
-- `zeroclaw peripheral flash [--port <serial_port>]`
-- `zeroclaw peripheral setup-uno-q [--host <ip_or_host>]`
-- `zeroclaw peripheral flash-nucleo`
+- `cclawcore peripheral list`
+- `cclawcore peripheral add <board> <path>`
+- `cclawcore peripheral flash [--port <serial_port>]`
+- `cclawcore peripheral setup-uno-q [--host <ip_or_host>]`
+- `cclawcore peripheral flash-nucleo`
 
 ### `props`
 
 Manage individual config properties without editing `config.toml` directly.
 Properties are addressed by dotted path (e.g. `channels.matrix.mention-only`).
 
-- `zeroclaw props list` — list all properties with current values
-- `zeroclaw props list --secrets` — list only secret (encrypted) fields
-- `zeroclaw props list --filter channels.matrix` — filter by path prefix
-- `zeroclaw props get <path>` — get a single property value (secrets show set/unset status)
-- `zeroclaw props set <path> <value>` — set a property value
-- `zeroclaw props set <path>` — secret fields prompt for masked input; enum fields offer interactive selection
-- `zeroclaw props set --no-interactive <path> <value>` — scripted mode, no prompts
-- `zeroclaw props init <section>` — create an unconfigured section with defaults (`enabled=false`)
-- `zeroclaw props init` — initialize all unconfigured sections
+- `cclawcore props list` — list all properties with current values
+- `cclawcore props list --secrets` — list only secret (encrypted) fields
+- `cclawcore props list --filter channels.matrix` — filter by path prefix
+- `cclawcore props get <path>` — get a single property value (secrets show set/unset status)
+- `cclawcore props set <path> <value>` — set a property value
+- `cclawcore props set <path>` — secret fields prompt for masked input; enum fields offer interactive selection
+- `cclawcore props set --no-interactive <path> <value>` — scripted mode, no prompts
+- `cclawcore props init <section>` — create an unconfigured section with defaults (`enabled=false`)
+- `cclawcore props init` — initialize all unconfigured sections
 
 Secret fields (API keys, tokens, passwords) are automatically detected via `#[secret]`
 annotations. When setting a secret, input is masked regardless of whether a value is
@@ -247,7 +247,7 @@ provided on the command line.
 Enum fields (e.g. `stream-mode`, `search-mode`) offer interactive selection via arrow
 keys when the value is omitted. Provide the value directly to skip the prompt.
 
-Shell tab-completion for property paths is included in `zeroclaw completions <shell>`.
+Shell tab-completion for property paths is included in `cclawcore completions <shell>`.
 
 #### Adding new config fields
 
@@ -260,6 +260,6 @@ New enum types require a one-line `HasPropKind` impl. See `CONTRIBUTING.md` for 
 To verify docs against your current binary quickly:
 
 ```bash
-zeroclaw --help
-zeroclaw <command> --help
+cclawcore --help
+cclawcore <command> --help
 ```

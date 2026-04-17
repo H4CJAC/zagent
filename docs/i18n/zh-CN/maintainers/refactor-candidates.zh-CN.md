@@ -129,7 +129,7 @@ Shell 命令验证（300+ 行引号感知解析）、webhook 签名验证和配�
 
 **原因：** "SOP" 术语过重，不能传达模块的作用。"Runbooks" 是带有审批门控的触发器驱动自动化流程的行业标准术语。
 
-**范围：** 重命名模块（`src/sop/` → `src/runbooks/`），更新配置键（`[sop]` → `[runbooks]`）、CLI 子命令（`zeroclaw sop` → `zeroclaw runbook`）、所有内部类型（`Sop*` → `Runbook*`）、文档（`docs/sop/` → 匹配新结构）以及 CLAUDE.md 中的引用。
+**范围：** 重命名模块（`src/sop/` → `src/runbooks/`），更新配置键（`[sop]` → `[runbooks]`）、CLI 子命令（`cclawcore sop` → `cclawcore runbook`）、所有内部类型（`Sop*` → `Runbook*`）、文档（`docs/sop/` → 匹配新结构）以及 CLAUDE.md 中的引用。
 
 ### 将国际化文档整合到 `docs/i18n/<语言区域>/`
 
@@ -145,7 +145,7 @@ Shell 命令验证（300+ 行引号感知解析）、webhook 签名验证和配�
 
 ### TODO：模糊测试 —— 将存根升级为真实覆盖
 
-**当前状态：** `fuzz/fuzz_targets/` 中存在 5 个模糊测试目标，但只有 `fuzz_command_validation` 测试真实的 ZeroClaw 代码。其他 4 个（`fuzz_config_parse`、`fuzz_tool_params`、`fuzz_webhook_payload`、`fuzz_provider_response`）仅模糊测试 `serde_json::from_str::<Value>` 或 `toml::from_str::<Value>` —— 它们测试第三方 crate 内部，而非 ZeroClaw 逻辑。
+**当前状态：** `fuzz/fuzz_targets/` 中存在 5 个模糊测试目标，但只有 `fuzz_command_validation` 测试真实的 CclawCore 代码。其他 4 个（`fuzz_config_parse`、`fuzz_tool_params`、`fuzz_webhook_payload`、`fuzz_provider_response`）仅模糊测试 `serde_json::from_str::<Value>` 或 `toml::from_str::<Value>` —— 它们测试第三方 crate 内部，而非 CclawCore 逻辑。
 
 **将现有存根连接到真实代码路径：**
 

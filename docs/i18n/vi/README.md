@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/zeroclaw-labs/zeroclaw/master/docs/assets/zeroclaw-banner.png" alt="ZeroClaw" width="600" />
+  <img src="https://raw.githubusercontent.com/cclawcore-labs/cclawcore/master/docs/assets/cclawcore-banner.png" alt="CclawCore" width="600" />
 </p>
 
-<h1 align="center">🦀 ZeroClaw — Trợ lý AI Cá nhân</h1>
+<h1 align="center">🦀 CclawCore — Trợ lý AI Cá nhân</h1>
 
 <p align="center">
   <strong>Không tốn thêm tài nguyên. Không đánh đổi. 100% Rust. 100% Đa nền tảng.</strong><br>
@@ -10,15 +10,15 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/zeroclaw-labs/zeroclaw/actions/workflows/ci-run.yml"><img src="https://img.shields.io/github/actions/workflow/status/zeroclaw-labs/zeroclaw/ci-run.yml?branch=master&label=build" alt="Build Status" /></a>
+  <a href="https://github.com/cclawcore-labs/cclawcore/actions/workflows/ci-run.yml"><img src="https://img.shields.io/github/actions/workflow/status/cclawcore-labs/cclawcore/ci-run.yml?branch=master&label=build" alt="Build Status" /></a>
   <a href="LICENSE-APACHE"><img src="https://img.shields.io/badge/license-MIT%20OR%20Apache%202.0-blue.svg" alt="License: MIT OR Apache-2.0" /></a>
   <a href="https://www.rust-lang.org"><img src="https://img.shields.io/badge/rust-edition%202024-orange?logo=rust" alt="Rust Edition 2024" /></a>
-  <a href="https://github.com/zeroclaw-labs/zeroclaw/releases/latest"><img src="https://img.shields.io/badge/version-v0.6.9-blue" alt="Version v0.6.9" /></a>
-  <a href="https://github.com/zeroclaw-labs/zeroclaw/graphs/contributors"><img src="https://img.shields.io/github/contributors/zeroclaw-labs/zeroclaw?color=green" alt="Contributors" /></a>
+  <a href="https://github.com/cclawcore-labs/cclawcore/releases/latest"><img src="https://img.shields.io/badge/version-v0.6.9-blue" alt="Version v0.6.9" /></a>
+  <a href="https://github.com/cclawcore-labs/cclawcore/graphs/contributors"><img src="https://img.shields.io/github/contributors/cclawcore-labs/cclawcore?color=green" alt="Contributors" /></a>
   <a href="https://buymeacoffee.com/argenistherose"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Donate-yellow.svg?style=flat&logo=buy-me-a-coffee" alt="Buy Me a Coffee" /></a>
-  <a href="https://x.com/zeroclawlabs?s=21"><img src="https://img.shields.io/badge/X-%40zeroclawlabs-000000?style=flat&logo=x&logoColor=white" alt="X: @zeroclawlabs" /></a>
+  <a href="https://x.com/cclawcorelabs?s=21"><img src="https://img.shields.io/badge/X-%40cclawcorelabs-000000?style=flat&logo=x&logoColor=white" alt="X: @cclawcorelabs" /></a>
   <a href="https://discord.com/invite/wDshRVqRjx"><img src="https://img.shields.io/badge/Discord-Join-5865F2?style=flat&logo=discord&logoColor=white" alt="Discord" /></a>
-  <a href="https://www.reddit.com/r/zeroclawlabs/"><img src="https://img.shields.io/badge/Reddit-r%2Fzeroclawlabs-FF4500?style=flat&logo=reddit&logoColor=white" alt="Reddit: r/zeroclawlabs" /></a>
+  <a href="https://www.reddit.com/r/cclawcorelabs/"><img src="https://img.shields.io/badge/Reddit-r%2Fcclawcorelabs-FF4500?style=flat&logo=reddit&logoColor=white" alt="Reddit: r/cclawcorelabs" /></a>
 </p>
 
 <p align="center">
@@ -60,12 +60,12 @@
   <a href="../nb/README.md">🇳🇴 Norsk</a>
 </p>
 
-ZeroClaw là trợ lý AI cá nhân mà bạn chạy trên thiết bị của mình. Nó trả lời bạn trên các kênh bạn đang sử dụng (WhatsApp, Telegram, Slack, Discord, Signal, iMessage, Matrix, IRC, Email, Bluesky, Nostr, Mattermost, Nextcloud Talk, DingTalk, Lark, QQ, Reddit, LinkedIn, Twitter, MQTT, WeChat Work, và nhiều hơn nữa). Nó có bảng điều khiển web để kiểm soát thời gian thực và có thể kết nối với thiết bị ngoại vi phần cứng (ESP32, STM32, Arduino, Raspberry Pi). Gateway chỉ là mặt phẳng điều khiển — sản phẩm chính là trợ lý.
+CclawCore là trợ lý AI cá nhân mà bạn chạy trên thiết bị của mình. Nó trả lời bạn trên các kênh bạn đang sử dụng (WhatsApp, Telegram, Slack, Discord, Signal, iMessage, Matrix, IRC, Email, Bluesky, Nostr, Mattermost, Nextcloud Talk, DingTalk, Lark, QQ, Reddit, LinkedIn, Twitter, MQTT, WeChat Work, và nhiều hơn nữa). Nó có bảng điều khiển web để kiểm soát thời gian thực và có thể kết nối với thiết bị ngoại vi phần cứng (ESP32, STM32, Arduino, Raspberry Pi). Gateway chỉ là mặt phẳng điều khiển — sản phẩm chính là trợ lý.
 
 Nếu bạn muốn một trợ lý cá nhân, đơn người dùng, chạy cục bộ, nhanh và luôn sẵn sàng, đây chính là nó.
 
 <p align="center">
-  <a href="https://zeroclawlabs.ai">Website</a> ·
+  <a href="https://cclawcorelabs.ai">Website</a> ·
   <a href="docs/README.md">Tài liệu</a> ·
   <a href="docs/architecture.md">Kiến trúc</a> ·
   <a href="#bắt-đầu-nhanh-tldr">Bắt đầu</a> ·
@@ -74,7 +74,7 @@ Nếu bạn muốn một trợ lý cá nhân, đơn người dùng, chạy cục
   <a href="https://discord.com/invite/wDshRVqRjx">Discord</a>
 </p>
 
-> **Cài đặt khuyến nghị:** chạy `zeroclaw onboard` trong terminal. ZeroClaw Onboard hướng dẫn bạn từng bước thiết lập gateway, workspace, kênh và provider. Đây là đường dẫn cài đặt được khuyến nghị và hoạt động trên macOS, Linux, và Windows (qua WSL2). Cài đặt mới? Bắt đầu tại đây: [Bắt đầu](#bắt-đầu-nhanh-tldr)
+> **Cài đặt khuyến nghị:** chạy `cclawcore onboard` trong terminal. CclawCore Onboard hướng dẫn bạn từng bước thiết lập gateway, workspace, kênh và provider. Đây là đường dẫn cài đặt được khuyến nghị và hoạt động trên macOS, Linux, và Windows (qua WSL2). Cài đặt mới? Bắt đầu tại đây: [Bắt đầu](#bắt-đầu-nhanh-tldr)
 
 ### Subscription Auth (OAuth)
 
@@ -94,18 +94,18 @@ Runtime: Rust stable toolchain. Binary đơn, không phụ thuộc runtime.
 ### Homebrew (macOS/Linuxbrew)
 
 ```bash
-brew install zeroclaw
+brew install cclawcore
 ```
 
 ### Bootstrap một lần bấm
 
 ```bash
-git clone https://github.com/zeroclaw-labs/zeroclaw.git
-cd zeroclaw
+git clone https://github.com/cclawcore-labs/cclawcore.git
+cd cclawcore
 ./install.sh
 ```
 
-`zeroclaw onboard` tự động chạy sau khi cài đặt để cấu hình workspace và provider.
+`cclawcore onboard` tự động chạy sau khi cài đặt để cấu hình workspace và provider.
 
 ## Bắt đầu nhanh (TL;DR)
 
@@ -116,67 +116,67 @@ Hướng dẫn đầy đủ cho người mới (xác thực, ghép cặp, kênh)
 ./install.sh --api-key "sk-..." --provider openrouter
 
 # Khởi động gateway (webhook server + bảng điều khiển web)
-zeroclaw gateway                # mặc định: 127.0.0.1:42617
-zeroclaw gateway --port 0       # cổng ngẫu nhiên (tăng cường bảo mật)
+cclawcore gateway                # mặc định: 127.0.0.1:42617
+cclawcore gateway --port 0       # cổng ngẫu nhiên (tăng cường bảo mật)
 
 # Nói chuyện với trợ lý
-zeroclaw agent -m "Hello, ZeroClaw!"
+cclawcore agent -m "Hello, CclawCore!"
 
 # Chế độ tương tác
-zeroclaw agent
+cclawcore agent
 
 # Khởi động runtime tự trị đầy đủ (gateway + kênh + cron + hands)
-zeroclaw daemon
+cclawcore daemon
 
 # Kiểm tra trạng thái
-zeroclaw status
+cclawcore status
 
 # Chạy chẩn đoán
-zeroclaw doctor
+cclawcore doctor
 ```
 
-Đang nâng cấp? Chạy `zeroclaw doctor` sau khi cập nhật.
+Đang nâng cấp? Chạy `cclawcore doctor` sau khi cập nhật.
 
 ### Build từ source (phát triển)
 
 ```bash
-git clone https://github.com/zeroclaw-labs/zeroclaw.git
-cd zeroclaw
+git clone https://github.com/cclawcore-labs/cclawcore.git
+cd cclawcore
 
 cargo build --release --locked
 cargo install --path . --force --locked
 
-zeroclaw onboard
+cclawcore onboard
 ```
 
 > **Chạy trực tiếp khi phát triển (không cần cài toàn cục):** thêm `cargo run --release --` trước lệnh (ví dụ: `cargo run --release -- status`).
 
 ## Chuyển đổi từ OpenClaw
 
-ZeroClaw có thể nhập workspace, bộ nhớ và cấu hình OpenClaw của bạn:
+CclawCore có thể nhập workspace, bộ nhớ và cấu hình OpenClaw của bạn:
 
 ```bash
 # Xem trước những gì sẽ được chuyển đổi (an toàn, chỉ đọc)
-zeroclaw migrate openclaw --dry-run
+cclawcore migrate openclaw --dry-run
 
 # Chạy chuyển đổi
-zeroclaw migrate openclaw
+cclawcore migrate openclaw
 ```
 
-Thao tác này chuyển đổi các mục bộ nhớ, file workspace và cấu hình từ `~/.openclaw/` sang `~/.zeroclaw/`. Cấu hình được tự động chuyển từ JSON sang TOML.
+Thao tác này chuyển đổi các mục bộ nhớ, file workspace và cấu hình từ `~/.openclaw/` sang `~/.cclawcore/`. Cấu hình được tự động chuyển từ JSON sang TOML.
 
 ## Mặc định bảo mật (truy cập DM)
 
-ZeroClaw kết nối với các dịch vụ nhắn tin thực. Xem DM đến như đầu vào không đáng tin cậy.
+CclawCore kết nối với các dịch vụ nhắn tin thực. Xem DM đến như đầu vào không đáng tin cậy.
 
 Hướng dẫn bảo mật đầy đủ: [SECURITY.md](SECURITY.md)
 
 Hành vi mặc định trên tất cả các kênh:
 
 - **Ghép cặp DM** (mặc định): người gửi không xác định nhận mã ghép cặp ngắn và bot không xử lý tin nhắn của họ.
-- Phê duyệt bằng: `zeroclaw pairing approve <channel> <code>` (người gửi được thêm vào danh sách cho phép cục bộ).
+- Phê duyệt bằng: `cclawcore pairing approve <channel> <code>` (người gửi được thêm vào danh sách cho phép cục bộ).
 - DM đến công khai yêu cầu opt-in rõ ràng trong `config.toml`.
-- Chạy `zeroclaw doctor` để phát hiện chính sách DM nguy hiểm hoặc cấu hình sai.
+- Chạy `cclawcore doctor` để phát hiện chính sách DM nguy hiểm hoặc cấu hình sai.
 
 **Mức tự trị:**
 
@@ -197,7 +197,7 @@ Bảng này dành cho các thông báo quan trọng (thay đổi không tương 
 
 | Ngày (UTC) | Mức độ | Thông báo | Hành động |
 | ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-02-19 | _Nghiêm trọng_ | Chúng tôi **không liên kết** với `openagen/zeroclaw`, `zeroclaw.org` hay `zeroclaw.net`. Các tên miền `zeroclaw.org` và `zeroclaw.net` hiện đang trỏ đến fork `openagen/zeroclaw`, và các tên miền/repository đó đang mạo danh website/dự án chính thức của chúng tôi. | Không tin tưởng thông tin, binary, gây quỹ, hay thông báo từ các nguồn đó. Chỉ sử dụng [repository này](https://github.com/zeroclaw-labs/zeroclaw) và các tài khoản mạng xã hội đã được xác minh của chúng tôi. |
+| 2026-02-19 | _Nghiêm trọng_ | Chúng tôi **không liên kết** với `openagen/cclawcore`, `cclawcore.org` hay `cclawcore.net`. Các tên miền `cclawcore.org` và `cclawcore.net` hiện đang trỏ đến fork `openagen/cclawcore`, và các tên miền/repository đó đang mạo danh website/dự án chính thức của chúng tôi. | Không tin tưởng thông tin, binary, gây quỹ, hay thông báo từ các nguồn đó. Chỉ sử dụng [repository này](https://github.com/cclawcore-labs/cclawcore) và các tài khoản mạng xã hội đã được xác minh của chúng tôi. |
 | 2026-02-19 | _Quan trọng_ | Anthropic đã cập nhật điều khoản Xác thực và Sử dụng Thông tin xác thực vào 2026-02-19. Token OAuth Claude Code (Free, Pro, Max) dành riêng cho Claude Code và Claude.ai; việc sử dụng OAuth token từ Claude Free/Pro/Max trong bất kỳ sản phẩm, công cụ hay dịch vụ nào khác (bao gồm Agent SDK) đều không được phép và có thể vi phạm Điều khoản Dịch vụ cho Người tiêu dùng. | Vui lòng tạm thời tránh tích hợp Claude Code OAuth để ngăn ngừa khả năng mất mát. Điều khoản gốc: [Authentication and Credential Use](https://code.claude.com/docs/en/legal-and-compliance#authentication-and-credential-use). |
 
 ## Điểm nổi bật
@@ -217,18 +217,18 @@ Bảng này dành cho các thông báo quan trọng (thay đổi không tương 
 - **Nền tảng skill** — skill đi kèm, cộng đồng, và workspace với kiểm tra bảo mật.
 - **Hỗ trợ tunnel** — Cloudflare, Tailscale, ngrok, OpenVPN, và tunnel tùy chỉnh cho truy cập từ xa.
 
-### Vì sao các team chọn ZeroClaw
+### Vì sao các team chọn CclawCore
 
 - **Tinh gọn mặc định:** binary Rust nhỏ, khởi động nhanh, ít tốn bộ nhớ.
 - **Bảo mật từ gốc:** ghép cặp, sandbox nghiêm ngặt, danh sách cho phép rõ ràng, giới hạn workspace.
 - **Hoán đổi hoàn toàn:** hệ thống lõi đều là trait (provider, channel, tool, memory, tunnel).
 - **Không khóa vendor:** hỗ trợ provider tương thích OpenAI + endpoint tùy chỉnh dễ mở rộng.
 
-## So sánh hiệu năng (ZeroClaw vs OpenClaw, có thể tái tạo)
+## So sánh hiệu năng (CclawCore vs OpenClaw, có thể tái tạo)
 
 Benchmark nhanh trên máy cục bộ (macOS arm64, tháng 2/2026) quy chuẩn cho phần cứng edge 0.8GHz.
 
-|                           | OpenClaw      | NanoBot        | PicoClaw        | ZeroClaw 🦀          |
+|                           | OpenClaw      | NanoBot        | PicoClaw        | CclawCore 🦀          |
 | ------------------------- | ------------- | -------------- | --------------- | -------------------- |
 | **Ngôn ngữ**              | TypeScript    | Python         | Go              | **Rust**             |
 | **RAM**                   | > 1GB         | > 100MB        | < 10MB          | **< 5MB**            |
@@ -236,20 +236,20 @@ Benchmark nhanh trên máy cục bộ (macOS arm64, tháng 2/2026) quy chuẩn c
 | **Kích thước binary**           | ~28MB (dist)  | N/A (Scripts)  | ~8MB            | **~8.8 MB**          |
 | **Chi phí**                  | Mac Mini $599 | Linux SBC ~$50 | Linux Board $10 | **Phần cứng bất kỳ $10** |
 
-> Ghi chú: Kết quả ZeroClaw được đo trên release build sử dụng `/usr/bin/time -l`. OpenClaw yêu cầu runtime Node.js (thường thêm ~390MB bộ nhớ overhead), NanoBot yêu cầu runtime Python. PicoClaw và ZeroClaw là static binary. Số RAM ở trên là bộ nhớ runtime; yêu cầu biên dịch lúc build cao hơn.
+> Ghi chú: Kết quả CclawCore được đo trên release build sử dụng `/usr/bin/time -l`. OpenClaw yêu cầu runtime Node.js (thường thêm ~390MB bộ nhớ overhead), NanoBot yêu cầu runtime Python. PicoClaw và CclawCore là static binary. Số RAM ở trên là bộ nhớ runtime; yêu cầu biên dịch lúc build cao hơn.
 
 <p align="center">
-  <img src="docs/assets/zeroclaw-comparison.jpeg" alt="ZeroClaw vs OpenClaw Comparison" width="800" />
+  <img src="docs/assets/cclawcore-comparison.jpeg" alt="CclawCore vs OpenClaw Comparison" width="800" />
 </p>
 
 ### Tự đo trên máy bạn
 
 ```bash
 cargo build --release
-ls -lh target/release/zeroclaw
+ls -lh target/release/cclawcore
 
-/usr/bin/time -l target/release/zeroclaw --help
-/usr/bin/time -l target/release/zeroclaw status
+/usr/bin/time -l target/release/cclawcore --help
+/usr/bin/time -l target/release/cclawcore status
 ```
 
 ## Tất cả những gì chúng tôi đã xây dựng
@@ -325,7 +325,7 @@ Bảng điều khiển web React 19 + Vite 6 + Tailwind CSS 4 được phục v�
 
 ## Cấu hình
 
-Tối thiểu `~/.zeroclaw/config.toml`:
+Tối thiểu `~/.cclawcore/config.toml`:
 
 ```toml
 default_provider = "anthropic"
@@ -393,35 +393,35 @@ Chi tiết: [Channel reference](docs/reference/api/channels-reference.md) · [Co
 
 ## Subscription Auth (OpenAI Codex / Claude Code / Gemini)
 
-ZeroClaw hỗ trợ profile xác thực theo gói đăng ký (đa tài khoản, mã hóa khi lưu).
+CclawCore hỗ trợ profile xác thực theo gói đăng ký (đa tài khoản, mã hóa khi lưu).
 
-- File lưu trữ: `~/.zeroclaw/auth-profiles.json`
-- Khóa mã hóa: `~/.zeroclaw/.secret_key`
+- File lưu trữ: `~/.cclawcore/auth-profiles.json`
+- Khóa mã hóa: `~/.cclawcore/.secret_key`
 - Định dạng profile id: `<provider>:<profile_name>` (ví dụ: `openai-codex:work`)
 
 ```bash
 # OpenAI Codex OAuth (đăng ký ChatGPT)
-zeroclaw auth login --provider openai-codex --device-code
+cclawcore auth login --provider openai-codex --device-code
 
 # Gemini OAuth
-zeroclaw auth login --provider gemini --profile default
+cclawcore auth login --provider gemini --profile default
 
 # Anthropic setup-token
-zeroclaw auth paste-token --provider anthropic --profile default --auth-kind authorization
+cclawcore auth paste-token --provider anthropic --profile default --auth-kind authorization
 
 # Kiểm tra / làm mới / chuyển profile
-zeroclaw auth status
-zeroclaw auth refresh --provider openai-codex --profile default
-zeroclaw auth use --provider openai-codex --profile work
+cclawcore auth status
+cclawcore auth refresh --provider openai-codex --profile default
+cclawcore auth use --provider openai-codex --profile work
 
 # Chạy agent với xác thực đăng ký
-zeroclaw agent --provider openai-codex -m "hello"
-zeroclaw agent --provider anthropic -m "hello"
+cclawcore agent --provider openai-codex -m "hello"
+cclawcore agent --provider anthropic -m "hello"
 ```
 
 ## Workspace agent + skill
 
-Thư mục gốc workspace: `~/.zeroclaw/workspace/` (có thể cấu hình qua config).
+Thư mục gốc workspace: `~/.cclawcore/workspace/` (có thể cấu hình qua config).
 
 Các file prompt được inject:
 - `IDENTITY.md` — tính cách và vai trò agent
@@ -430,74 +430,74 @@ Các file prompt được inject:
 - `AGENTS.md` — quy ước phiên và quy tắc khởi tạo
 - `SOUL.md` — bản sắc cốt lõi và nguyên tắc vận hành
 
-Skill: `~/.zeroclaw/workspace/skills/<skill>/SKILL.md` hoặc `SKILL.toml`.
+Skill: `~/.cclawcore/workspace/skills/<skill>/SKILL.md` hoặc `SKILL.toml`.
 
 ```bash
 # Liệt kê skill đã cài
-zeroclaw skills list
+cclawcore skills list
 
 # Cài từ git
-zeroclaw skills install https://github.com/user/my-skill.git
+cclawcore skills install https://github.com/user/my-skill.git
 
 # Kiểm tra bảo mật trước khi cài
-zeroclaw skills audit https://github.com/user/my-skill.git
+cclawcore skills audit https://github.com/user/my-skill.git
 
 # Xóa skill
-zeroclaw skills remove my-skill
+cclawcore skills remove my-skill
 ```
 
 ## Lệnh CLI
 
 ```bash
 # Quản lý workspace
-zeroclaw onboard              # Trình hướng dẫn cài đặt
-zeroclaw status               # Hiển thị trạng thái daemon/agent
-zeroclaw doctor               # Chạy chẩn đoán hệ thống
+cclawcore onboard              # Trình hướng dẫn cài đặt
+cclawcore status               # Hiển thị trạng thái daemon/agent
+cclawcore doctor               # Chạy chẩn đoán hệ thống
 
 # Gateway + daemon
-zeroclaw gateway              # Khởi động gateway server (127.0.0.1:42617)
-zeroclaw daemon               # Khởi động runtime tự trị đầy đủ
+cclawcore gateway              # Khởi động gateway server (127.0.0.1:42617)
+cclawcore daemon               # Khởi động runtime tự trị đầy đủ
 
 # Agent
-zeroclaw agent                # Chế độ chat tương tác
-zeroclaw agent -m "message"   # Chế độ tin nhắn đơn
+cclawcore agent                # Chế độ chat tương tác
+cclawcore agent -m "message"   # Chế độ tin nhắn đơn
 
 # Quản lý dịch vụ
-zeroclaw service install      # Cài đặt làm dịch vụ OS (launchd/systemd)
-zeroclaw service start|stop|restart|status
+cclawcore service install      # Cài đặt làm dịch vụ OS (launchd/systemd)
+cclawcore service start|stop|restart|status
 
 # Kênh
-zeroclaw channel list         # Liệt kê kênh đã cấu hình
-zeroclaw channel doctor       # Kiểm tra sức khỏe kênh
-zeroclaw channel bind-telegram 123456789
+cclawcore channel list         # Liệt kê kênh đã cấu hình
+cclawcore channel doctor       # Kiểm tra sức khỏe kênh
+cclawcore channel bind-telegram 123456789
 
 # Cron + lên lịch
-zeroclaw cron list            # Liệt kê tác vụ đã lên lịch
-zeroclaw cron add "*/5 * * * *" --prompt "Check system health"
-zeroclaw cron remove <id>
+cclawcore cron list            # Liệt kê tác vụ đã lên lịch
+cclawcore cron add "*/5 * * * *" --prompt "Check system health"
+cclawcore cron remove <id>
 
 # Bộ nhớ
-zeroclaw memory list          # Liệt kê mục bộ nhớ
-zeroclaw memory get <key>     # Truy xuất bộ nhớ
-zeroclaw memory stats         # Thống kê bộ nhớ
+cclawcore memory list          # Liệt kê mục bộ nhớ
+cclawcore memory get <key>     # Truy xuất bộ nhớ
+cclawcore memory stats         # Thống kê bộ nhớ
 
 # Profile xác thực
-zeroclaw auth login --provider <name>
-zeroclaw auth status
-zeroclaw auth use --provider <name> --profile <profile>
+cclawcore auth login --provider <name>
+cclawcore auth status
+cclawcore auth use --provider <name> --profile <profile>
 
 # Thiết bị ngoại vi phần cứng
-zeroclaw hardware discover    # Quét thiết bị đã kết nối
-zeroclaw peripheral list      # Liệt kê thiết bị ngoại vi đã kết nối
-zeroclaw peripheral flash     # Flash firmware vào thiết bị
+cclawcore hardware discover    # Quét thiết bị đã kết nối
+cclawcore peripheral list      # Liệt kê thiết bị ngoại vi đã kết nối
+cclawcore peripheral flash     # Flash firmware vào thiết bị
 
 # Chuyển đổi
-zeroclaw migrate openclaw --dry-run
-zeroclaw migrate openclaw
+cclawcore migrate openclaw --dry-run
+cclawcore migrate openclaw
 
 # Tự động hoàn thành shell
-source <(zeroclaw completions bash)
-zeroclaw completions zsh > ~/.zfunc/_zeroclaw
+source <(cclawcore completions bash)
+cclawcore completions zsh > ~/.zfunc/_cclawcore
 ```
 
 Tham khảo đầy đủ các lệnh: [docs/reference/cli/commands-reference.md](docs/reference/cli/commands-reference.md)
@@ -565,10 +565,10 @@ Tham khảo đầy đủ các lệnh: [docs/reference/cli/commands-reference.md]
 
 #### Cài bằng một lệnh
 
-Hoặc bỏ qua các bước trên và cài hết mọi thứ (system deps, Rust, ZeroClaw) bằng một lệnh:
+Hoặc bỏ qua các bước trên và cài hết mọi thứ (system deps, Rust, CclawCore) bằng một lệnh:
 
 ```bash
-curl -LsSf https://raw.githubusercontent.com/zeroclaw-labs/zeroclaw/master/install.sh | bash
+curl -LsSf https://raw.githubusercontent.com/cclawcore-labs/cclawcore/master/install.sh | bash
 ```
 
 #### Yêu cầu tài nguyên biên dịch
@@ -611,7 +611,7 @@ Release asset được phát hành cho:
 - Windows: `x86_64`
 
 Tải asset mới nhất tại:
-<https://github.com/zeroclaw-labs/zeroclaw/releases/latest>
+<https://github.com/cclawcore-labs/cclawcore/releases/latest>
 
 ## Tài liệu
 
@@ -621,7 +621,7 @@ Dùng khi bạn đã hoàn thành onboarding và muốn tham khảo sâu hơn.
 - Đọc [tổng quan kiến trúc](docs/architecture.md) cho mô hình hệ thống đầy đủ.
 - Dùng [tham khảo cấu hình](docs/reference/api/config-reference.md) khi cần mọi key và ví dụ.
 - Vận hành Gateway theo [sổ tay vận hành](docs/ops/operations-runbook.md).
-- Theo [ZeroClaw Onboard](#bắt-đầu-nhanh-tldr) để cài đặt có hướng dẫn.
+- Theo [CclawCore Onboard](#bắt-đầu-nhanh-tldr) để cài đặt có hướng dẫn.
 - Debug lỗi thường gặp với [hướng dẫn khắc phục sự cố](docs/ops/troubleshooting.md).
 - Xem lại [hướng dẫn bảo mật](docs/security/README.md) trước khi phơi bày bất kỳ thứ gì.
 
@@ -653,14 +653,14 @@ Dùng khi bạn đã hoàn thành onboarding và muốn tham khảo sâu hơn.
 
 ## Icy Crab 🦀
 
-ZeroClaw được xây dựng cho smooth crab 🦀, một trợ lý AI nhanh và hiệu quả. Được xây dựng bởi Argenis De La Rosa và cộng đồng.
+CclawCore được xây dựng cho smooth crab 🦀, một trợ lý AI nhanh và hiệu quả. Được xây dựng bởi Argenis De La Rosa và cộng đồng.
 
-- [zeroclawlabs.ai](https://zeroclawlabs.ai)
-- [@zeroclawlabs](https://x.com/zeroclawlabs)
+- [cclawcorelabs.ai](https://cclawcorelabs.ai)
+- [@cclawcorelabs](https://x.com/cclawcorelabs)
 
-## Ủng hộ ZeroClaw
+## Ủng hộ CclawCore
 
-Nếu ZeroClaw giúp ích cho công việc của bạn và bạn muốn hỗ trợ phát triển, bạn có thể quyên góp tại đây:
+Nếu CclawCore giúp ích cho công việc của bạn và bạn muốn hỗ trợ phát triển, bạn có thể quyên góp tại đây:
 
 <a href="https://buymeacoffee.com/argenistherose"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-Donate-yellow.svg?style=for-the-badge&logo=buy-me-a-coffee" alt="Buy Me a Coffee" /></a>
 
@@ -677,7 +677,7 @@ Chúng tôi xây dựng công khai vì ý tưởng hay đến từ khắp nơi. 
 
 ## Đóng góp
 
-Mới với ZeroClaw? Tìm các issue có nhãn [`good first issue`](https://github.com/zeroclaw-labs/zeroclaw/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) — xem [Hướng dẫn đóng góp](CONTRIBUTING.md#first-time-contributors) để bắt đầu. PR AI/vibe-coded đều được chào đón! 🤖
+Mới với CclawCore? Tìm các issue có nhãn [`good first issue`](https://github.com/cclawcore-labs/cclawcore/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) — xem [Hướng dẫn đóng góp](CONTRIBUTING.md#first-time-contributors) để bắt đầu. PR AI/vibe-coded đều được chào đón! 🤖
 
 Xem [CONTRIBUTING.md](CONTRIBUTING.md) và [CLA.md](docs/contributing/cla.md). Triển khai một trait, gửi PR:
 
@@ -689,26 +689,26 @@ Xem [CONTRIBUTING.md](CONTRIBUTING.md) và [CLA.md](docs/contributing/cla.md). T
 - `Memory` mới → `src/memory/`
 - `Tunnel` mới → `src/tunnel/`
 - `Peripheral` mới → `src/peripherals/`
-- `Skill` mới → `~/.zeroclaw/workspace/skills/<name>/`
+- `Skill` mới → `~/.cclawcore/workspace/skills/<name>/`
 
 <!-- BEGIN:RECENT_CONTRIBUTORS -->
 <!-- END:RECENT_CONTRIBUTORS -->
 
 ## ⚠️ Repository chính thức & Cảnh báo mạo danh
 
-**Đây là repository ZeroClaw chính thức duy nhất:**
+**Đây là repository CclawCore chính thức duy nhất:**
 
-> https://github.com/zeroclaw-labs/zeroclaw
+> https://github.com/cclawcore-labs/cclawcore
 
-Bất kỳ repository, tổ chức, tên miền hay gói nào khác tuyên bố là "ZeroClaw" hoặc ngụ ý liên kết với ZeroClaw Labs đều **không được ủy quyền và không liên kết với dự án này**. Các fork không được ủy quyền đã biết sẽ được liệt kê trong [TRADEMARK.md](docs/maintainers/trademark.md).
+Bất kỳ repository, tổ chức, tên miền hay gói nào khác tuyên bố là "CclawCore" hoặc ngụ ý liên kết với CclawCore Labs đều **không được ủy quyền và không liên kết với dự án này**. Các fork không được ủy quyền đã biết sẽ được liệt kê trong [TRADEMARK.md](docs/maintainers/trademark.md).
 
-Nếu bạn phát hiện mạo danh hoặc lạm dụng nhãn hiệu, vui lòng [mở một issue](https://github.com/zeroclaw-labs/zeroclaw/issues).
+Nếu bạn phát hiện mạo danh hoặc lạm dụng nhãn hiệu, vui lòng [mở một issue](https://github.com/cclawcore-labs/cclawcore/issues).
 
 ---
 
 ## Giấy phép
 
-ZeroClaw được cấp phép kép để tối đa hóa tính mở và bảo vệ người đóng góp:
+CclawCore được cấp phép kép để tối đa hóa tính mở và bảo vệ người đóng góp:
 
 | Giấy phép | Trường hợp sử dụng |
 |---|---|
@@ -719,7 +719,7 @@ Bạn có thể chọn một trong hai giấy phép. **Người đóng góp tự
 
 ### Nhãn hiệu
 
-Tên **ZeroClaw** và logo là nhãn hiệu của ZeroClaw Labs. Giấy phép này không cấp phép sử dụng chúng để ngụ ý chứng thực hoặc liên kết. Xem [TRADEMARK.md](docs/maintainers/trademark.md) để biết các sử dụng được phép và bị cấm.
+Tên **CclawCore** và logo là nhãn hiệu của CclawCore Labs. Giấy phép này không cấp phép sử dụng chúng để ngụ ý chứng thực hoặc liên kết. Xem [TRADEMARK.md](docs/maintainers/trademark.md) để biết các sử dụng được phép và bị cấm.
 
 ### Bảo vệ người đóng góp
 
@@ -730,12 +730,12 @@ Tên **ZeroClaw** và logo là nhãn hiệu của ZeroClaw Labs. Giấy phép n�
 
 ---
 
-**ZeroClaw** — Không tốn thêm tài nguyên. Không đánh đổi. Triển khai ở đâu cũng được. Thay thế gì cũng được. 🦀
+**CclawCore** — Không tốn thêm tài nguyên. Không đánh đổi. Triển khai ở đâu cũng được. Thay thế gì cũng được. 🦀
 
 ## Người đóng góp
 
-<a href="https://github.com/zeroclaw-labs/zeroclaw/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=zeroclaw-labs/zeroclaw" alt="ZeroClaw contributors" />
+<a href="https://github.com/cclawcore-labs/cclawcore/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=cclawcore-labs/cclawcore" alt="CclawCore contributors" />
 </a>
 
 Danh sách này được tạo từ biểu đồ người đóng góp GitHub và cập nhật tự động.
@@ -743,11 +743,11 @@ Danh sách này được tạo từ biểu đồ người đóng góp GitHub và
 ## Lịch sử Star
 
 <p align="center">
-  <a href="https://www.star-history.com/#zeroclaw-labs/zeroclaw&type=date&legend=top-left">
+  <a href="https://www.star-history.com/#cclawcore-labs/cclawcore&type=date&legend=top-left">
     <picture>
-     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=zeroclaw-labs/zeroclaw&type=date&theme=dark&legend=top-left" />
-     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=zeroclaw-labs/zeroclaw&type=date&legend=top-left" />
-     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=zeroclaw-labs/zeroclaw&type=date&legend=top-left" />
+     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=cclawcore-labs/cclawcore&type=date&theme=dark&legend=top-left" />
+     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=cclawcore-labs/cclawcore&type=date&legend=top-left" />
+     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=cclawcore-labs/cclawcore&type=date&legend=top-left" />
     </picture>
   </a>
 </p>

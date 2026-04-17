@@ -1,4 +1,4 @@
-# ZeroClaw Dokümantasyon Özeti (Birleşik İçindekiler)
+# CclawCore Dokümantasyon Özeti (Birleşik İçindekiler)
 
 Bu dosya, dokümantasyon sisteminin kanonik içindekiler tablosudur.
 

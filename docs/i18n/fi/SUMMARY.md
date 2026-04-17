@@ -1,4 +1,4 @@
-# ZeroClaw-dokumentaation yhteenveto (Yhtenäinen sisällysluettelo)
+# CclawCore-dokumentaation yhteenveto (Yhtenäinen sisällysluettelo)
 
 Tämä tiedosto muodostaa dokumentaatiojärjestelmän kanonisen sisällysluettelon.
 

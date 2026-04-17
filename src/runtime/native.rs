@@ -25,8 +25,8 @@ impl RuntimeAdapter for NativeRuntime {
 
     fn storage_path(&self) -> PathBuf {
         directories::UserDirs::new().map_or_else(
-            || PathBuf::from(".zeroclaw"),
-            |u| u.home_dir().join(".zeroclaw"),
+            || PathBuf::from(".cclawcore"),
+            |u| u.home_dir().join(".cclawcore"),
         )
     }
 
@@ -85,9 +85,9 @@ mod tests {
     }
 
     #[test]
-    fn native_storage_path_contains_zeroclaw() {
+    fn native_storage_path_contains_cclawcore() {
         let path = NativeRuntime::new().storage_path();
-        assert!(path.to_string_lossy().contains("zeroclaw"));
+        assert!(path.to_string_lossy().contains("cclawcore"));
     }
 
     #[test]

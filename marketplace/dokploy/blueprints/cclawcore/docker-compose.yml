@@ -1,0 +1,16 @@
+version: "3.8"
+services:
+  cclawcore:
+    image: ghcr.io/cclawcore-labs/cclawcore:0.6.9
+    restart: unless-stopped
+    environment:
+      - API_KEY=${API_KEY}
+      - PROVIDER=${PROVIDER:-openrouter}
+      - CCLAWCORE_ALLOW_PUBLIC_BIND=true
+      - CCLAWCORE_GATEWAY_PORT=42617
+    volumes:
+      - cclawcore-data:/cclawcore-data
+    expose:
+      - 42617
+volumes:
+  cclawcore-data: {}

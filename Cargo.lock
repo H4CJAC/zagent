@@ -13000,7 +13000,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "zeroclaw-desktop"
+name = "cclawcore-desktop"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -13019,7 +13019,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "zeroclaw-macros"
+name = "cclawcore-macros"
 version = "0.1.0"
 dependencies = [
  "proc-macro2",
@@ -13028,7 +13028,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "zeroclaw-robot-kit"
+name = "cclawcore-robot-kit"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -13050,7 +13050,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "zeroclawlabs"
+name = "cclawcorelabs"
 version = "0.6.9"
 dependencies = [
  "aardvark-sys",
@@ -13152,7 +13152,7 @@ dependencies = [
  "webpki-roots 1.0.6",
  "which",
  "wiremock",
- "zeroclaw-macros",
+ "cclawcore-macros",
  "zip",
 ]
 

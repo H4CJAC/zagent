@@ -70,14 +70,14 @@ bump "marketplace/dokploy/meta-entry.json" \
   '"version": "[0-9]+\.[0-9]+\.[0-9]+"' \
   "\"version\": \"${VERSION}\""
 
-bump "marketplace/dokploy/blueprints/zeroclaw/docker-compose.yml" \
-  'ghcr\.io/zeroclaw-labs/zeroclaw:[0-9]+\.[0-9]+\.[0-9]+' \
-  "ghcr.io/zeroclaw-labs/zeroclaw:${VERSION}"
+bump "marketplace/dokploy/blueprints/cclawcore/docker-compose.yml" \
+  'ghcr\.io/cclawcore-labs/cclawcore:[0-9]+\.[0-9]+\.[0-9]+' \
+  "ghcr.io/cclawcore-labs/cclawcore:${VERSION}"
 
 # ── Marketplace: EasyPanel ─────────────────────────────────────────
 bump "marketplace/easypanel/meta.yaml" \
-  'ghcr\.io/zeroclaw-labs/zeroclaw:[0-9]+\.[0-9]+\.[0-9]+' \
-  "ghcr.io/zeroclaw-labs/zeroclaw:${VERSION}"
+  'ghcr\.io/cclawcore-labs/cclawcore:[0-9]+\.[0-9]+\.[0-9]+' \
+  "ghcr.io/cclawcore-labs/cclawcore:${VERSION}"
 
 # ── Workflow description examples ──────────────────────────────────
 echo "Workflow descriptions..."

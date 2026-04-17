@@ -1,4 +1,4 @@
-# ZeroClaw Dokumentáció Összefoglaló (Egységes tartalomjegyzék)
+# CclawCore Dokumentáció Összefoglaló (Egységes tartalomjegyzék)
 
 Ez a fájl a dokumentációs rendszer kanonikus tartalomjegyzéke.
 

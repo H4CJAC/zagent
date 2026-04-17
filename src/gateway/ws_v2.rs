@@ -39,7 +39,7 @@ use futures_util::{SinkExt, StreamExt};
 use std::sync::Arc;
 use tokio_util::sync::CancellationToken;
 
-const WS_V2_PROTOCOL: &str = "zeroclaw.v2";
+const WS_V2_PROTOCOL: &str = "cclawcore.v2";
 const BEARER_SUBPROTO_PREFIX: &str = "bearer.";
 const GW_V2_SESSION_PREFIX: &str = "gw2_";
 

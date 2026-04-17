@@ -52,8 +52,8 @@ Record each policy change with:
 Use these commands to export the current effective policy:
 
 ```bash
-gh api repos/zeroclaw-labs/zeroclaw/actions/permissions
-gh api repos/zeroclaw-labs/zeroclaw/actions/permissions/selected-actions
+gh api repos/cclawcore-labs/cclawcore/actions/permissions
+gh api repos/cclawcore-labs/cclawcore/actions/permissions/selected-actions
 ```
 
 ## Guardrails

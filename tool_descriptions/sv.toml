@@ -44,7 +44,7 @@ model_routing_config = "Hantera standardmodellinställningar, scenariobaserade l
 notion = "Interagera med Notion: fråga databaser, läs/skapa/uppdatera sidor och sök i arbetsytan."
 pdf_read = "Extrahera ren text från en PDF-fil i arbetsytan. Returnerar all läsbar text. PDF:er med enbart bilder eller krypterade PDF:er ger tomt resultat. Kräver build-funktionen 'rag-pdf'."
 project_intel = "Projektleveransintelligens: generera statusrapporter, upptäck risker, utkasta kunduppdateringar, sammanfatta sprintar och uppskatta arbetsinsats. Skrivskyddat analysverktyg."
-proxy_config = "Hantera ZeroClaw proxy-inställningar (omfång: environment | zeroclaw | services), inklusive tillämpning på runtime och processmiljö"
+proxy_config = "Hantera CclawCore proxy-inställningar (omfång: environment | cclawcore | services), inklusive tillämpning på runtime och processmiljö"
 pushover = "Skicka en Pushover-avisering till din enhet. Kräver PUSHOVER_TOKEN och PUSHOVER_USER_KEY i .env-filen."
 schedule = """Hantera schemalagda uppgifter (enbart shell). Åtgärder: create/add/once/list/get/cancel/remove/pause/resume. VARNING: Detta verktyg skapar shell-jobb vars utdata bara loggas, INTE levereras till någon kanal. För att skicka ett schemalagt meddelande till Discord/Telegram/Slack/Matrix, använd verktyget cron_add med job_type='agent' och en leveranskonfiguration som {"mode":"announce","channel":"discord","to":"<channel_id>"}."""
 screenshot = "Ta en skärmbild av aktuell skärm. Returnerar filsökvägen och base64-kodade PNG-data."

@@ -1,20 +1,20 @@
-# documentation: https://github.com/zeroclaw-labs/zeroclaw
+# documentation: https://github.com/cclawcore-labs/cclawcore
 # slogan: Fast, small, fully autonomous AI personal assistant infrastructure — deploy anywhere, swap anything
 # tags: ai, agent, assistant, self-hosted, llm, chatbot, rust
-# logo: svgs/zeroclaw.png
+# logo: svgs/cclawcore.png
 # port: 42617
 
 services:
-  zeroclaw:
-    image: ghcr.io/zeroclaw-labs/zeroclaw:latest
+  cclawcore:
+    image: ghcr.io/cclawcore-labs/cclawcore:latest
     restart: unless-stopped
     environment:
       - API_KEY=${SERVICE_PASSWORD_APIKEY:-}
       - PROVIDER=${PROVIDER:-openrouter}
-      - ZEROCLAW_ALLOW_PUBLIC_BIND=true
-      - ZEROCLAW_GATEWAY_PORT=42617
+      - CCLAWCORE_ALLOW_PUBLIC_BIND=true
+      - CCLAWCORE_GATEWAY_PORT=42617
     volumes:
-      - zeroclaw-data:/zeroclaw-data
+      - cclawcore-data:/cclawcore-data
     ports:
       - "42617:42617"
     deploy:
@@ -26,11 +26,11 @@ services:
           cpus: "0.5"
           memory: 32M
     healthcheck:
-      test: ["CMD", "zeroclaw", "status", "--format=exit-code"]
+      test: ["CMD", "cclawcore", "status", "--format=exit-code"]
       interval: 60s
       timeout: 10s
       retries: 3
       start_period: 10s
 
 volumes:
-  zeroclaw-data:
+  cclawcore-data:

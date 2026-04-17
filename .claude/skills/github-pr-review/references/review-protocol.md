@@ -85,7 +85,7 @@ Check the `size:*` label.
 Scan the diff for violations of `docs/contributing/pr-discipline.md`:
 - Real names, personal emails, phone numbers, addresses
 - Access tokens, API keys, credentials, private URLs
-- Test fixtures or examples using identity-specific language instead of project-scoped placeholders (`user_a`, `test_user`, `zeroclaw_user`, etc.)
+- Test fixtures or examples using identity-specific language instead of project-scoped placeholders (`user_a`, `test_user`, `cclawcore_user`, etc.)
 
 **IF** violations found → Comment with specific locations and required fixes. Do not proceed to deep review.
 

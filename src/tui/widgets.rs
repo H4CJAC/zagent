@@ -175,7 +175,7 @@ impl Widget for StepIndicator<'_> {
     }
 }
 
-/// ASCII art banner widget — spells ZEROCLAW in block characters.
+/// ASCII art banner widget — spells CCLAWCORE in block characters.
 pub struct Banner;
 
 const BANNER_ART: &str = r"
@@ -198,7 +198,7 @@ impl Widget for Banner {
         }
 
         lines.push(Line::from(Span::styled(
-            "\u{1f980} ZEROCLAW \u{1f980}",
+            "\u{1f980} CCLAWCORE \u{1f980}",
             theme::accent_style(),
         )));
         lines.push(Line::from(""));
