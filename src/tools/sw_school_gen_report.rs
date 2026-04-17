@@ -4,8 +4,9 @@
 //! embedded writing guidelines to produce a structured report document.
 
 use super::sw_lesson_common::{
-    LlmProviderConfig, ensure_skill_scripts, err_result, fetch_sw_user_data, gen_session_id,
-    opt_str, require_str, require_sw_token, run_claw_query_cached, truncate_str,
+    LlmProviderConfig, cache_key, cached_query, ensure_skill_scripts, err_result,
+    fetch_sw_user_data, gen_session_id, opt_str, require_str, require_sw_token,
+    run_claw_query_cached, truncate_str,
 };
 use super::traits::{Tool, ToolResult};
 use async_trait::async_trait;
@@ -271,22 +272,45 @@ impl Tool for SwSchoolGenReportTool {
             );
         }
 
-        let provider = match self.llm.create_provider() {
-            Ok(p) => p,
-            Err(e) => return Ok(err_result(format!("创建 LLM provider 失败: {e}"))),
-        };
+        // Cache the LLM report generation result.
+        let mut key_parts = vec![topic.as_str(), length, resolved_school.as_str()];
+        if !extra_data.is_empty() {
+            key_parts.push(extra_data.as_str());
+        }
+        if !extra_req.is_empty() {
+            key_parts.push(extra_req.as_str());
+        }
+        let report_cache_key = cache_key(&key_parts);
 
-        let report_text = match provider
-            .chat_with_system(
-                Some(&system_prompt),
-                &user_prompt,
-                &self.llm.model,
-                self.llm.temperature,
-            )
-            .await
+        let llm = self.llm.clone();
+        let ws = self.workspace_dir.clone();
+        let report_text = match cached_query(
+            &ws,
+            "school_report/gen_report",
+            &report_cache_key,
+            &topic,
+            self.cache_ttl_secs,
+            self.cache_delay_ms,
+            Some(&self.llm),
+            || async move {
+                let provider = llm
+                    .create_provider()
+                    .map_err(|e| anyhow::anyhow!("创建 LLM provider 失败: {e}"))?;
+                provider
+                    .chat_with_system(
+                        Some(&system_prompt),
+                        &user_prompt,
+                        &llm.model,
+                        llm.temperature,
+                    )
+                    .await
+                    .map_err(|e| anyhow::anyhow!("LLM 汇报材料生成失败: {e}"))
+            },
+        )
+        .await
         {
             Ok(text) => text,
-            Err(e) => return Ok(err_result(format!("LLM 汇报材料生成失败: {e}"))),
+            Err(e) => return Ok(err_result(e.to_string())),
         };
 
         let out_dir = self
