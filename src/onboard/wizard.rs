@@ -215,6 +215,7 @@ pub async fn run_wizard(force: bool) -> Result<Config> {
         sop: crate::config::SopConfig::default(),
         shell_tool: crate::config::ShellToolConfig::default(),
         logging: crate::config::LoggingConfig::default(),
+        output_sanitizer: crate::config::OutputSanitizerConfig::default(),
         seewo_cloud: crate::config::SeewoCloudConfig::default(),
     };
 
@@ -677,6 +678,7 @@ async fn run_quick_setup_with_home(
         sop: crate::config::SopConfig::default(),
         shell_tool: crate::config::ShellToolConfig::default(),
         logging: crate::config::LoggingConfig::default(),
+        output_sanitizer: crate::config::OutputSanitizerConfig::default(),
         seewo_cloud: crate::config::SeewoCloudConfig::default(),
     };
 

@@ -513,6 +513,11 @@ pub struct Config {
     #[nested]
     pub logging: LoggingConfig,
 
+    /// Output sanitizer: replace sensitive words in outbound messages (`[output_sanitizer]`).
+    #[serde(default)]
+    #[nested]
+    pub output_sanitizer: OutputSanitizerConfig,
+
     /// Seewo cloud integration (`[seewo_cloud]`).
     #[serde(default)]
     #[nested]
@@ -5490,6 +5495,47 @@ fn default_rotation() -> String {
     "daily".to_string()
 }
 
+// ── Output Sanitizer ─────────────────────────────────────────────
+
+/// A single sanitization rule: multiple patterns that share one replacement.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct SanitizeRule {
+    /// Sensitive words to match (case-insensitive).
+    pub patterns: Vec<String>,
+    /// Text that replaces every match.
+    pub replacement: String,
+}
+
+/// Output sanitizer configuration (`[output_sanitizer]` section).
+///
+/// Replaces sensitive words in outbound LLM messages before they reach
+/// the client.  User-defined rules are merged with built-in defaults;
+/// when the same pattern appears in both, the user replacement wins.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Configurable)]
+#[prefix = "output_sanitizer"]
+pub struct OutputSanitizerConfig {
+    /// Master switch — set to `false` to disable all output sanitization.
+    #[serde(default = "default_sanitizer_enabled")]
+    pub enabled: bool,
+
+    /// Additional replacement rules (merged with built-in defaults).
+    #[serde(default)]
+    pub rules: Vec<SanitizeRule>,
+}
+
+impl Default for OutputSanitizerConfig {
+    fn default() -> Self {
+        Self {
+            enabled: default_sanitizer_enabled(),
+            rules: Vec::new(),
+        }
+    }
+}
+
+fn default_sanitizer_enabled() -> bool {
+    true
+}
+
 // ── Hooks ────────────────────────────────────────────────────────
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Configurable)]
@@ -9087,6 +9133,7 @@ impl Default for Config {
             sop: SopConfig::default(),
             shell_tool: ShellToolConfig::default(),
             logging: LoggingConfig::default(),
+            output_sanitizer: OutputSanitizerConfig::default(),
             seewo_cloud: SeewoCloudConfig::default(),
         }
     }
@@ -11603,6 +11650,7 @@ auto_save = true
             sop: SopConfig::default(),
             shell_tool: ShellToolConfig::default(),
             logging: LoggingConfig::default(),
+            output_sanitizer: OutputSanitizerConfig::default(),
             seewo_cloud: SeewoCloudConfig::default(),
         };
 
@@ -12136,6 +12184,7 @@ default_temperature = 0.7
             sop: SopConfig::default(),
             shell_tool: ShellToolConfig::default(),
             logging: LoggingConfig::default(),
+            output_sanitizer: OutputSanitizerConfig::default(),
             seewo_cloud: SeewoCloudConfig::default(),
         };
 

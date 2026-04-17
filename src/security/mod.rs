@@ -34,6 +34,7 @@ pub mod iam_policy;
 pub mod landlock;
 pub mod leak_detector;
 pub mod nevis;
+pub mod output_sanitizer;
 pub mod otp;
 pub mod pairing;
 pub mod playbook;
@@ -76,6 +77,7 @@ pub use leak_detector::{LeakDetector, LeakResult};
 pub use prompt_guard::{GuardAction, GuardResult, PromptGuard};
 #[allow(unused_imports)]
 pub use workspace_boundary::{BoundaryVerdict, WorkspaceBoundary};
+pub use output_sanitizer::{StreamSanitizer, WordReplacer};
 
 /// Redact sensitive values for safe logging. Shows first 4 characters + "***" suffix.
 /// Uses char-boundary-safe indexing to avoid panics on multi-byte UTF-8 strings.

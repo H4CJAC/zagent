@@ -553,6 +553,18 @@ async fn process_turn(
     let mut cancelled = false;
     let mut client_gone = false;
 
+    // Build output sanitizer from config.
+    let replacer = {
+        let cfg = state.config.lock();
+        if cfg.output_sanitizer.enabled {
+            crate::security::WordReplacer::from_config(&cfg.output_sanitizer.rules)
+        } else {
+            crate::security::WordReplacer::new(vec![])
+        }
+    };
+    let mut content_sanitizer = crate::security::StreamSanitizer::new(replacer.clone());
+    let mut thinking_sanitizer = crate::security::StreamSanitizer::new(replacer.clone());
+
     loop {
         tokio::select! {
             biased;
@@ -561,14 +573,20 @@ async fn process_turn(
                 match event {
                     Some(DraftEvent::Content(delta)) => {
                         full_response.push_str(&delta);
-                        let _ = send_json(sender, serde_json::json!({
-                            "type": "chunk", "content": delta,
-                        })).await;
+                        let safe = content_sanitizer.push(&delta);
+                        if !safe.is_empty() {
+                            let _ = send_json(sender, serde_json::json!({
+                                "type": "chunk", "content": safe,
+                            })).await;
+                        }
                     }
                     Some(DraftEvent::Thinking(delta)) => {
-                        let _ = send_json(sender, serde_json::json!({
-                            "type": "thinking", "content": delta,
-                        })).await;
+                        let safe = thinking_sanitizer.push(&delta);
+                        if !safe.is_empty() {
+                            let _ = send_json(sender, serde_json::json!({
+                                "type": "thinking", "content": safe,
+                            })).await;
+                        }
                     }
                     Some(DraftEvent::ToolCallStart { call_id, name, args }) => {
                         let _ = send_json(sender, serde_json::json!({
@@ -577,12 +595,12 @@ async fn process_turn(
                     }
                     Some(DraftEvent::ToolCallResult { call_id, name, output }) => {
                         let _ = send_json(sender, serde_json::json!({
-                            "type": "tool_result", "call_id": call_id, "name": name, "output": output,
+                            "type": "tool_result", "call_id": call_id, "name": name, "output": replacer.sanitize(&output),
                         })).await;
                     }
                     Some(DraftEvent::ToolChunk { call_id, name, content }) => {
                         let _ = send_json(sender, serde_json::json!({
-                            "type": "tool_chunk", "call_id": call_id, "name": name, "content": content,
+                            "type": "tool_chunk", "call_id": call_id, "name": name, "content": replacer.sanitize(&content),
                         })).await;
                     }
                     Some(DraftEvent::Progress(text)) => {
@@ -591,6 +609,8 @@ async fn process_turn(
                         })).await;
                     }
                     Some(DraftEvent::Clear) => {
+                        content_sanitizer.reset();
+                        thinking_sanitizer.reset();
                         full_response.clear();
                         let _ = send_json(sender, serde_json::json!({ "type": "chunk_reset" })).await;
                     }
@@ -620,11 +640,22 @@ async fn process_turn(
             }
 
             result = &mut loop_fut => {
+                // Flush any remaining buffered content from stream sanitizers.
+                let remaining_content = content_sanitizer.flush();
+                if !remaining_content.is_empty() {
+                    let _ = send_json(sender, serde_json::json!({
+                        "type": "chunk", "content": remaining_content,
+                    })).await;
+                }
+                let remaining_thinking = thinking_sanitizer.flush();
+                if !remaining_thinking.is_empty() {
+                    let _ = send_json(sender, serde_json::json!({
+                        "type": "thinking", "content": remaining_thinking,
+                    })).await;
+                }
                 match result {
                     Ok(text) => {
-                        if full_response != text {
-                            full_response = text;
-                        }
+                        full_response = replacer.sanitize(&text);
                         let _ = send_json(sender, serde_json::json!({ "type": "chunk_reset" })).await;
                         let _ = send_json(sender, serde_json::json!({
                             "type": "done", "full_response": full_response,
@@ -635,6 +666,7 @@ async fn process_turn(
                             let _ = send_json(sender, serde_json::json!({ "type": "cancelled" })).await;
                         } else {
                             let sanitized = crate::providers::sanitize_api_error(&e.to_string());
+                            let sanitized = replacer.sanitize(&sanitized);
                             let error_code = if sanitized.to_lowercase().contains("api key")
                                 || sanitized.to_lowercase().contains("authentication")
                                 || sanitized.to_lowercase().contains("unauthorized")
