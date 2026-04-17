@@ -518,6 +518,8 @@ pub struct LlmProviderConfig {
     /// matching, structured field extraction, etc.). Defaults to 0.0 for
     /// deterministic output; override for models that reject 0.0 (e.g. Kimi → 1.0).
     pub no_thinking_temperature: Option<f64>,
+    /// Max cached entries for LLM semantic matching. Default: 20.
+    pub cache_semantic_max_candidates: usize,
     pub api_key: Option<String>,
     pub api_url: Option<String>,
     pub runtime_options: crate::providers::ProviderRuntimeOptions,
@@ -707,7 +709,7 @@ pub async fn extract_structured_fields(
     }
 }
 
-const MAX_SEMANTIC_CANDIDATES: usize = 20;
+const DEFAULT_SEMANTIC_CANDIDATES: usize = 20;
 
 const SEMANTIC_MATCH_PROMPT: &str = "\
 判断以下新查询与哪个已缓存查询在语义上等价（即会产生相同的数据查询结果）。
@@ -773,7 +775,12 @@ async fn semantic_match_cached(
         };
         t(&b.1).cmp(&t(&a.1))
     });
-    candidates.truncate(MAX_SEMANTIC_CANDIDATES);
+    let max_candidates = if llm.cache_semantic_max_candidates > 0 {
+        llm.cache_semantic_max_candidates
+    } else {
+        DEFAULT_SEMANTIC_CANDIDATES
+    };
+    candidates.truncate(max_candidates);
 
     let candidate_list: String = candidates
         .iter()

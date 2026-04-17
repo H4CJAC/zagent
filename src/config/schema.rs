@@ -564,6 +564,15 @@ pub struct SeewoCloudConfig {
     /// Override for models that reject 0.0 (e.g. Kimi → set to 1.0).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub no_thinking_temperature: Option<f64>,
+    /// Max number of cached entries to consider during LLM semantic matching.
+    /// Higher values improve recall but increase prompt size and latency.
+    /// Default: 20.
+    #[serde(default = "default_cache_semantic_max_candidates")]
+    pub cache_semantic_max_candidates: usize,
+}
+
+fn default_cache_semantic_max_candidates() -> usize {
+    20
 }
 
 /// Multi-client workspace isolation configuration.

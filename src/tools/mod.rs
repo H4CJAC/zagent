@@ -449,6 +449,9 @@ pub fn all_tools_with_runtime(
                 no_thinking_temperature: root_config
                     .seewo_cloud
                     .no_thinking_temperature,
+                cache_semantic_max_candidates: root_config
+                    .seewo_cloud
+                    .cache_semantic_max_candidates,
                 api_key: root_config.api_key.clone(),
                 api_url: root_config.api_url.clone(),
                 runtime_options: opts,
@@ -569,6 +572,9 @@ pub fn all_tools_with_runtime(
             model: llm_task_model,
             temperature: root_config.default_temperature,
             no_thinking_temperature: root_config.seewo_cloud.no_thinking_temperature,
+            cache_semantic_max_candidates: root_config
+                .seewo_cloud
+                .cache_semantic_max_candidates,
             api_key: root_config.api_key.clone(),
             api_url: root_config.api_url.clone(),
             runtime_options: llm_task_runtime_options,
