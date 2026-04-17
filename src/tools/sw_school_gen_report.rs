@@ -149,19 +149,31 @@ impl Tool for SwSchoolGenReportTool {
             Err(e) => return Ok(e),
         };
 
-        // Resolve school name from user info if not provided.
-        let resolved_school = if school_name.is_empty() {
+        // Resolve school name + ID from user info if not provided.
+        let (resolved_school, school_scope) = if school_name.is_empty() {
             match fetch_sw_user_data(&token).await {
-                Ok(data) => data
-                    .get("unitName")
-                    .and_then(|v| v.as_str())
-                    .filter(|s| !s.is_empty())
-                    .unwrap_or("本校")
-                    .to_string(),
-                Err(_) => "本校".into(),
+                Ok(data) => {
+                    let name = data
+                        .get("unitName")
+                        .and_then(|v| v.as_str())
+                        .filter(|s| !s.is_empty())
+                        .unwrap_or("本校");
+                    let uid = data
+                        .get("unitId")
+                        .and_then(|v| v.as_str())
+                        .filter(|s| !s.is_empty())
+                        .unwrap_or("");
+                    let scope = if uid.is_empty() {
+                        name.to_string()
+                    } else {
+                        format!("{name}(uid:{uid})")
+                    };
+                    (name.to_string(), scope)
+                }
+                Err(_) => ("本校".into(), "本校".into()),
             }
         } else {
-            school_name
+            (school_name.clone(), school_name)
         };
 
         // Fetch school data via claw_query.
@@ -170,17 +182,20 @@ impl Tool for SwSchoolGenReportTool {
             Err(e) => return Ok(err_result(format!("释放脚本失败: {e}"))),
         };
 
-        let query_text = if data_query.is_empty() {
-            format!(
-                "查询{resolved_school}的以下数据用于撰写「{topic}」汇报材料：\
-                 学校基本情况、教职工人数、班级数量、学生人数、\
-                 信息化设备数量及覆盖范围、网络建设情况、\
-                 云课件和云教案数量、教研活动次数及培训数据、\
-                 学生课堂参与度及点评数据、\
-                 特色应用案例和成果、获奖情况"
-            )
-        } else {
-            data_query
+        let query_text = {
+            let raw = if data_query.is_empty() {
+                format!(
+                    "查询{resolved_school}的以下数据用于撰写「{topic}」汇报材料：\
+                     学校基本情况、教职工人数、班级数量、学生人数、\
+                     信息化设备数量及覆盖范围、网络建设情况、\
+                     云课件和云教案数量、教研活动次数及培训数据、\
+                     学生课堂参与度及点评数据、\
+                     特色应用案例和成果、获奖情况"
+                )
+            } else {
+                data_query
+            };
+            format!("以下查询仅限{school_scope}的数据：{raw}")
         };
 
         let work_dir = self.workspace_dir.join(".local/sw-report-tmp");
