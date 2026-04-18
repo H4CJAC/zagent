@@ -384,6 +384,22 @@ async fn handle_socket_v2(
         spawn_cloud_report(&config, &session_id, &effective_name, "");
     }
 
+    let demo_engine = if config.seewo_cloud.demo_scripts_enabled {
+        match super::demo_script::DemoScriptEngine::load(
+            &config.workspace_dir,
+            config.seewo_cloud.demo_scripts_dir.as_deref(),
+        ) {
+            Ok(e) if !e.is_empty() => Some(e),
+            Ok(_) => None,
+            Err(e) => {
+                tracing::warn!("demo script engine load failed: {e}");
+                None
+            }
+        }
+    } else {
+        None
+    };
+
     let mut broadcast_rx = state.event_tx.subscribe();
     let mut first_message_reported = resumed_count > 0;
 
@@ -429,6 +445,36 @@ async fn handle_socket_v2(
                             }
 
                             spawn_cloud_report(&config, &session_id, &name, &desc);
+                        }
+
+                        // Demo script interception: replay pre-recorded
+                        // stream instead of running the real agent pipeline.
+                        if let Some(ref engine) = demo_engine {
+                            if let Some(script) = engine.try_match(content) {
+                                tracing::info!("demo script hit for: {}", truncate_chars(content, 60));
+
+                                let now = chrono::Utc::now().format("%Y-%m-%d %H:%M").to_string();
+                                session.history.push(ChatMessage::user(format!("[{now}] {content}")));
+                                if let Some(ref backend) = state.session_backend {
+                                    let _ = backend.append(&session_key, session.history.last().unwrap());
+                                    let _ = backend.set_session_state(&session_key, "running", None);
+                                }
+
+                                let full_response = super::demo_script::replay_script(
+                                    &mut sender, script,
+                                ).await;
+
+                                if !full_response.is_empty() {
+                                    session.history.push(ChatMessage::assistant(full_response.clone()));
+                                }
+                                if let Some(ref backend) = state.session_backend {
+                                    if !full_response.is_empty() {
+                                        let _ = backend.append(&session_key, &ChatMessage::assistant(full_response));
+                                    }
+                                    let _ = backend.set_session_state(&session_key, "idle", None);
+                                }
+                                continue;
+                            }
                         }
 
                         session.cancel_token = CancellationToken::new();

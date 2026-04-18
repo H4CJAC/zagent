@@ -16,6 +16,7 @@ pub mod api_webauthn;
 pub mod auth_rate_limit;
 pub mod canvas;
 pub mod cloud_report;
+pub mod demo_script;
 pub mod nodes;
 pub mod session_queue;
 pub mod sse;

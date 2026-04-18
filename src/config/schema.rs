@@ -569,6 +569,17 @@ pub struct SeewoCloudConfig {
     /// Default: 20.
     #[serde(default = "default_cache_semantic_max_candidates")]
     pub cache_semantic_max_candidates: usize,
+    /// Enable demo script replay mode for ws_v2. When enabled, incoming
+    /// messages are matched against regex patterns in script files; on hit
+    /// the pre-recorded message stream is replayed instead of running the
+    /// real agent pipeline.
+    #[serde(default)]
+    pub demo_scripts_enabled: bool,
+    /// Directory containing demo script JSON files.
+    /// Relative paths are resolved against the workspace root.
+    /// Default: ".local/demo-scripts".
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub demo_scripts_dir: Option<String>,
 }
 
 fn default_cache_semantic_max_candidates() -> usize {
