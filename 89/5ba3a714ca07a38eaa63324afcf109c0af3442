@@ -1,0 +1,55 @@
+src/channels/session_backend.rs
+  dd9a7ab298799cca 41-55
+src/gateway/ws_v2.rs
+  dd9a7ab298799cca 79-80,251-252,351,360,363-367,577-605,617-650,652-656,658-681,683,686,688,691-709,713-721,724-728,732-735,737,740-749,751,754-775,778,783-794
+src/channels/session_sqlite.rs
+  dd9a7ab298799cca 190-219
+src/config/schema.rs
+  dd9a7ab298799cca 2303-2308,2348-2351,2377,13166
+src/agent/context_compressor.rs
+  h_f38e4123063fc1 5
+  dd9a7ab298799cca 79-82,106,431,434
+src/config/presets/seewo.toml
+  dd9a7ab298799cca 368
+  h_f38e4123063fc1 237
+src/channels/mod.rs
+  dd9a7ab298799cca 1234,1305-1335
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.3",
+  "base_commit_sha": "895ba3a714ca07a38eaa63324afcf109c0af3442",
+  "prompts": {
+    "dd9a7ab298799cca": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "49f768fd-534d-460d-bfe8-417620332917",
+        "model": "claude-4.6-opus-high-thinking"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 304,
+      "total_deletions": 141,
+      "accepted_lines": 295,
+      "overriden_lines": 1
+    },
+    "fbd0a7434a0e56c7": {
+      "agent_id": {
+        "tool": "known_human",
+        "id": "known_human_session",
+        "model": "unknown"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 3,
+      "total_deletions": 9,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_f38e4123063fc1": {
+      "author": "hac"
+    }
+  }
+}
