@@ -234,6 +234,7 @@ max_passes = 3
 summary_max_chars = 4000
 source_max_chars = 50000
 timeout_secs = 60
+summary_temperature = 1.0
 identifier_policy = "strict"
 tool_result_retrim_chars = 2000
 tool_result_trim_exempt = []
@@ -364,6 +365,7 @@ idempotency_ttl_secs = 300
 idempotency_max_keys = 10000
 session_persistence = true
 session_ttl_hours = 0
+session_max_history_load = 200
 
 [gateway.pairing_dashboard]
 code_length = 8

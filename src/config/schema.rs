@@ -2300,6 +2300,12 @@ pub struct GatewayConfig {
     #[serde(default)]
     pub session_ttl_hours: u32,
 
+    /// Maximum number of messages to load when resuming a WS session.
+    /// Limits the initial history fetch to avoid slow reconnects on long sessions.
+    /// 0 = no limit (load all). Default: 200.
+    #[serde(default = "default_session_max_history_load")]
+    pub session_max_history_load: usize,
+
     /// Pairing dashboard configuration
     #[serde(default)]
     #[nested]
@@ -2339,6 +2345,10 @@ fn default_gateway_idempotency_max_keys() -> usize {
     10_000
 }
 
+fn default_session_max_history_load() -> usize {
+    200
+}
+
 fn default_true() -> bool {
     true
 }
@@ -2364,6 +2374,7 @@ impl Default for GatewayConfig {
             idempotency_max_keys: default_gateway_idempotency_max_keys(),
             session_persistence: true,
             session_ttl_hours: 0,
+            session_max_history_load: default_session_max_history_load(),
             pairing_dashboard: PairingDashboardConfig::default(),
             tls: None,
         }
@@ -13152,6 +13163,7 @@ channel_ids = ["C123", "D456"]
             idempotency_max_keys: 4096,
             session_persistence: true,
             session_ttl_hours: 0,
+            session_max_history_load: 200,
             pairing_dashboard: PairingDashboardConfig::default(),
             tls: None,
         };

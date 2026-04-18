@@ -38,6 +38,21 @@ pub trait SessionBackend: Send + Sync {
     /// Load all messages for a session. Returns empty vec if session doesn't exist.
     fn load(&self, session_key: &str) -> Vec<ChatMessage>;
 
+    /// Load at most the `max_messages` most recent messages for a session.
+    /// Default implementation loads all then truncates; backends may override
+    /// with a more efficient query (e.g. SQL LIMIT).
+    fn load_recent(&self, session_key: &str, max_messages: usize) -> Vec<ChatMessage> {
+        if max_messages == 0 {
+            return self.load(session_key);
+        }
+        let all = self.load(session_key);
+        if all.len() <= max_messages {
+            all
+        } else {
+            all[all.len() - max_messages..].to_vec()
+        }
+    }
+
     /// Append a single message to a session.
     fn append(&self, session_key: &str, message: &ChatMessage) -> std::io::Result<()>;
 

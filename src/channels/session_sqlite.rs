@@ -187,6 +187,36 @@ impl SessionBackend for SqliteSessionBackend {
         rows.filter_map(|r| r.ok()).collect()
     }
 
+    fn load_recent(&self, session_key: &str, max_messages: usize) -> Vec<ChatMessage> {
+        if max_messages == 0 {
+            return self.load(session_key);
+        }
+        let conn = self.conn.lock();
+        #[allow(clippy::cast_possible_wrap)]
+        let limit = max_messages as i64;
+        let mut stmt = match conn.prepare(
+            "SELECT role, content FROM (
+                SELECT role, content, id FROM sessions
+                WHERE session_key = ?1 ORDER BY id DESC LIMIT ?2
+            ) ORDER BY id ASC",
+        ) {
+            Ok(s) => s,
+            Err(_) => return Vec::new(),
+        };
+
+        let rows = match stmt.query_map(params![session_key, limit], |row| {
+            Ok(ChatMessage {
+                role: row.get(0)?,
+                content: row.get(1)?,
+            })
+        }) {
+            Ok(r) => r,
+            Err(_) => return Vec::new(),
+        };
+
+        rows.filter_map(|r| r.ok()).collect()
+    }
+
     fn append(&self, session_key: &str, message: &ChatMessage) -> std::io::Result<()> {
         let conn = self.conn.lock();
         let now = Utc::now().to_rfc3339();

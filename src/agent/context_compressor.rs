@@ -2,9 +2,9 @@ use std::fmt::Write;
 use std::time::Duration;
 
 use anyhow::Result;
+use cclawcore_macros::Configurable;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use cclawcore_macros::Configurable;
 
 use std::sync::Arc;
 
@@ -76,6 +76,10 @@ pub struct ContextCompressionConfig {
     /// Override model for summarization (cheaper/faster). Default: same as main model.
     #[serde(default)]
     pub summary_model: Option<String>,
+    /// Override temperature for summarization LLM call. Default: `0.1`.
+    /// Some models (e.g. Kimi) require a specific temperature value.
+    #[serde(default)]
+    pub summary_temperature: Option<f64>,
     /// Identifier preservation policy: `"strict"` or `"off"`. Default: `"strict"`.
     #[serde(default = "default_identifier_policy")]
     pub identifier_policy: String,
@@ -99,6 +103,7 @@ impl Default for ContextCompressionConfig {
             source_max_chars: default_source_max_chars(),
             timeout_secs: default_timeout_secs(),
             summary_model: None,
+            summary_temperature: None,
             identifier_policy: default_identifier_policy(),
             tool_result_retrim_chars: default_tool_result_retrim_chars(),
             tool_result_trim_exempt: Vec::new(),
@@ -423,9 +428,10 @@ impl ContextCompressor {
 
         // LLM summarization with safety timeout
         let timeout = Duration::from_secs(self.config.timeout_secs);
+        let temp = self.config.summary_temperature.unwrap_or(0.1);
         let summary_raw = match tokio::time::timeout(
             timeout,
-            provider.chat_with_system(Some(SUMMARIZER_SYSTEM), &user_prompt, summary_model, 0.1),
+            provider.chat_with_system(Some(SUMMARIZER_SYSTEM), &user_prompt, summary_model, temp),
         )
         .await
         {

@@ -1231,7 +1231,7 @@ fn append_sender_turn(ctx: &ChannelRuntimeContext, sender_key: &str, turn: ChatM
 /// messages from the current turn in the LLM history, excluding the final
 /// assistant text response.  "Current turn" = everything after the last
 /// user-role message.
-fn extract_current_turn_tool_messages(history: &[ChatMessage]) -> Vec<ChatMessage> {
+pub(crate) fn extract_current_turn_tool_messages(history: &[ChatMessage]) -> Vec<ChatMessage> {
     // Find the index of the last user message — tool messages for the
     // current turn come after it.
     let last_user_idx = history.iter().rposition(|m| m.role == "user").unwrap_or(0);
@@ -1295,6 +1295,37 @@ fn strip_old_tool_context(ctx: &ChannelRuntimeContext, sender_key: &str, keep_tu
         if dominated {
             turns.remove(i);
             // Adjust boundary since we removed an element.
+            protect_from = protect_from.saturating_sub(1);
+        } else {
+            i += 1;
+        }
+    }
+}
+
+/// Strip tool-role and intermediate assistant tool-call messages from turns
+/// older than `keep_turns` in a `Vec<ChatMessage>`. Same logic as
+/// `strip_old_tool_context` but operates on a plain `Vec` instead of the
+/// LRU-backed channel history, making it usable by ws_v2 after loading
+/// persisted history from `SessionBackend`.
+pub(crate) fn strip_old_tool_messages(history: &mut Vec<ChatMessage>, keep_turns: usize) {
+    let mut user_count = 0;
+    let mut protect_from = history.len();
+    for (i, msg) in history.iter().enumerate().rev() {
+        if msg.role == "user" {
+            user_count += 1;
+            if user_count > keep_turns {
+                protect_from = i + 1;
+                break;
+            }
+        }
+    }
+
+    let mut i = 0;
+    while i < protect_from && i < history.len() {
+        let dominated = history[i].role == "tool"
+            || (history[i].role == "assistant" && is_tool_call_content(&history[i].content));
+        if dominated {
+            history.remove(i);
             protect_from = protect_from.saturating_sub(1);
         } else {
             i += 1;

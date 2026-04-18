@@ -76,6 +76,8 @@ struct WsSession {
     dedup_exempt_tools: Vec<String>,
     auto_save: bool,
     consolidation_temperature: Option<f64>,
+    keep_tool_context_turns: usize,
+    context_compression: crate::agent::context_compressor::ContextCompressionConfig,
     cancel_token: CancellationToken,
 }
 
@@ -246,6 +248,8 @@ impl WsSession {
             dedup_exempt_tools: config.agent.tool_call_dedup_exempt.clone(),
             auto_save: config.memory.auto_save,
             consolidation_temperature: config.memory.consolidation_temperature,
+            keep_tool_context_turns: config.agent.keep_tool_context_turns,
+            context_compression: config.agent.context_compression.clone(),
             cancel_token: CancellationToken::new(),
         })
     }
@@ -344,6 +348,7 @@ async fn handle_socket_v2(
     };
 
     // Restore persisted history and session name.
+    let max_history_load = config.gateway.session_max_history_load;
     let mut effective_name = session_name.clone();
     let resumed_count = state
         .session_backend
@@ -352,9 +357,14 @@ async fn handle_socket_v2(
             // Ensure metadata row exists so set_session_state / set_session_name work on first turn.
             let _ = b.ensure_session(&session_key);
 
-            let msgs = b.load(&session_key);
+            let mut msgs = b.load_recent(&session_key, max_history_load);
             let n = msgs.len();
             if n > 0 {
+                // Strip tool messages from old turns to reduce context bloat.
+                let keep = config.agent.keep_tool_context_turns;
+                if keep > 0 {
+                    crate::channels::strip_old_tool_messages(&mut msgs, keep);
+                }
                 session.history = msgs;
             }
             if !session_name.is_empty() {
@@ -564,40 +574,35 @@ async fn process_turn(
         let _ = backend.append(session_key, session.history.last().unwrap());
     }
 
-    let (delta_tx, mut delta_rx) = tokio::sync::mpsc::channel::<DraftEvent>(64);
-    let cancel = session.cancel_token.clone();
-
-    let loop_fut = crate::agent::loop_::run_tool_call_loop(
-        session.provider.as_ref(),
-        &mut session.history,
-        &session.tools,
-        session.observer.as_ref(),
-        &session.provider_name,
-        &session.model,
-        session.temperature,
-        true,
-        Some(&session.approval),
-        "ws_v2",
-        None,
-        &session.multimodal,
-        session.max_tool_iterations,
-        Some(cancel.clone()),
-        Some(delta_tx),
-        session.hooks.as_deref(),
-        &session.excluded_tools,
-        &session.dedup_exempt_tools,
-        session.activated_tools.as_ref(),
-        None,
-        &session.pacing,
-        session.max_tool_result_chars,
-        session.context_token_budget,
-        None,
-    );
-    tokio::pin!(loop_fut);
-
-    let mut full_response = String::new();
-    let mut cancelled = false;
-    let mut client_gone = false;
+    // Proactive context compression before the LLM call.
+    {
+        let compressor = crate::agent::context_compressor::ContextCompressor::new(
+            session.context_compression.clone(),
+            session.context_token_budget,
+        )
+        .with_memory(Arc::clone(&session.memory));
+        match compressor
+            .compress_if_needed(
+                &mut session.history,
+                session.provider.as_ref(),
+                &session.model,
+            )
+            .await
+        {
+            Ok(result) if result.compressed => {
+                tracing::info!(
+                    tokens_before = result.tokens_before,
+                    tokens_after = result.tokens_after,
+                    passes = result.passes_used,
+                    "WS v2: context compression applied"
+                );
+            }
+            Err(e) => {
+                tracing::warn!("WS v2: context compression failed, proceeding: {e}");
+            }
+            _ => {}
+        }
+    }
 
     // Build output sanitizer from config.
     let replacer = {
@@ -608,130 +613,186 @@ async fn process_turn(
             crate::security::WordReplacer::new(vec![])
         }
     };
-    let mut content_sanitizer = crate::security::StreamSanitizer::new(replacer.clone());
-    let mut thinking_sanitizer = crate::security::StreamSanitizer::new(replacer.clone());
 
-    loop {
-        tokio::select! {
-            biased;
+    // Run the tool-call loop in a scoped block so the mutable borrow on
+    // session.history (held by the pinned future) is released before the
+    // post-turn persistence code that reads session.history.
+    let (full_response, cancelled) = {
+        let (delta_tx, mut delta_rx) = tokio::sync::mpsc::channel::<DraftEvent>(64);
+        let cancel = session.cancel_token.clone();
 
-            event = delta_rx.recv() => {
-                match event {
-                    Some(DraftEvent::Content(delta)) => {
-                        full_response.push_str(&delta);
-                        let safe = content_sanitizer.push(&delta);
-                        if !safe.is_empty() {
+        let loop_fut = crate::agent::loop_::run_tool_call_loop(
+            session.provider.as_ref(),
+            &mut session.history,
+            &session.tools,
+            session.observer.as_ref(),
+            &session.provider_name,
+            &session.model,
+            session.temperature,
+            true,
+            Some(&session.approval),
+            "ws_v2",
+            None,
+            &session.multimodal,
+            session.max_tool_iterations,
+            Some(cancel.clone()),
+            Some(delta_tx),
+            session.hooks.as_deref(),
+            &session.excluded_tools,
+            &session.dedup_exempt_tools,
+            session.activated_tools.as_ref(),
+            None,
+            &session.pacing,
+            session.max_tool_result_chars,
+            session.context_token_budget,
+            None,
+        );
+        tokio::pin!(loop_fut);
+
+        let mut full_response = String::new();
+        let mut cancelled = false;
+        let mut client_gone = false;
+        let mut content_sanitizer = crate::security::StreamSanitizer::new(replacer.clone());
+        let mut thinking_sanitizer = crate::security::StreamSanitizer::new(replacer.clone());
+
+        loop {
+            tokio::select! {
+                biased;
+
+                event = delta_rx.recv() => {
+                    match event {
+                        Some(DraftEvent::Content(delta)) => {
+                            full_response.push_str(&delta);
+                            let safe = content_sanitizer.push(&delta);
+                            if !safe.is_empty() {
+                                let _ = send_json(sender, serde_json::json!({
+                                    "type": "chunk", "content": safe,
+                                })).await;
+                            }
+                        }
+                        Some(DraftEvent::Thinking(delta)) => {
+                            let safe = thinking_sanitizer.push(&delta);
+                            if !safe.is_empty() {
+                                let _ = send_json(sender, serde_json::json!({
+                                    "type": "thinking", "content": safe,
+                                })).await;
+                            }
+                        }
+                        Some(DraftEvent::ToolCallStart { call_id, name, args }) => {
                             let _ = send_json(sender, serde_json::json!({
-                                "type": "chunk", "content": safe,
+                                "type": "tool_call", "call_id": call_id, "name": name, "args": args,
                             })).await;
                         }
-                    }
-                    Some(DraftEvent::Thinking(delta)) => {
-                        let safe = thinking_sanitizer.push(&delta);
-                        if !safe.is_empty() {
+                        Some(DraftEvent::ToolCallResult { call_id, name, output }) => {
                             let _ = send_json(sender, serde_json::json!({
-                                "type": "thinking", "content": safe,
+                                "type": "tool_result", "call_id": call_id, "name": name, "output": replacer.sanitize(&output),
                             })).await;
                         }
-                    }
-                    Some(DraftEvent::ToolCallStart { call_id, name, args }) => {
-                        let _ = send_json(sender, serde_json::json!({
-                            "type": "tool_call", "call_id": call_id, "name": name, "args": args,
-                        })).await;
-                    }
-                    Some(DraftEvent::ToolCallResult { call_id, name, output }) => {
-                        let _ = send_json(sender, serde_json::json!({
-                            "type": "tool_result", "call_id": call_id, "name": name, "output": replacer.sanitize(&output),
-                        })).await;
-                    }
-                    Some(DraftEvent::ToolChunk { call_id, name, content }) => {
-                        let _ = send_json(sender, serde_json::json!({
-                            "type": "tool_chunk", "call_id": call_id, "name": name, "content": replacer.sanitize(&content),
-                        })).await;
-                    }
-                    Some(DraftEvent::Progress(text)) => {
-                        let _ = send_json(sender, serde_json::json!({
-                            "type": "progress", "content": text,
-                        })).await;
-                    }
-                    Some(DraftEvent::Clear) => {
-                        content_sanitizer.reset();
-                        thinking_sanitizer.reset();
-                        full_response.clear();
-                        let _ = send_json(sender, serde_json::json!({ "type": "chunk_reset" })).await;
-                    }
-                    None => {
-                        // Channel closed — loop will finish momentarily.
+                        Some(DraftEvent::ToolChunk { call_id, name, content }) => {
+                            let _ = send_json(sender, serde_json::json!({
+                                "type": "tool_chunk", "call_id": call_id, "name": name, "content": replacer.sanitize(&content),
+                            })).await;
+                        }
+                        Some(DraftEvent::Progress(text)) => {
+                            let _ = send_json(sender, serde_json::json!({
+                                "type": "progress", "content": text,
+                            })).await;
+                        }
+                        Some(DraftEvent::Clear) => {
+                            content_sanitizer.reset();
+                            thinking_sanitizer.reset();
+                            full_response.clear();
+                            let _ = send_json(sender, serde_json::json!({ "type": "chunk_reset" })).await;
+                        }
+                        None => {
+                            // Channel closed — loop will finish momentarily.
+                        }
                     }
                 }
-            }
 
-            frame = receiver.next(), if !client_gone => {
-                match frame {
-                    Some(Ok(Message::Text(text))) => {
-                        tracing::debug!(direction = "in", "WS v2 (mid-turn) → {text}");
-                        if let Ok(v) = serde_json::from_str::<serde_json::Value>(&text) {
-                            if v["type"].as_str() == Some("cancel") {
-                                cancel.cancel();
-                                cancelled = true;
+                frame = receiver.next(), if !client_gone => {
+                    match frame {
+                        Some(Ok(Message::Text(text))) => {
+                            tracing::debug!(direction = "in", "WS v2 (mid-turn) → {text}");
+                            if let Ok(v) = serde_json::from_str::<serde_json::Value>(&text) {
+                                if v["type"].as_str() == Some("cancel") {
+                                    cancel.cancel();
+                                    cancelled = true;
+                                }
+                            }
+                        }
+                        Some(Ok(Message::Close(_)) | Err(_)) | None => {
+                            client_gone = true;
+                            tracing::info!("WS v2: client disconnected mid-turn, continuing agent execution");
+                        }
+                        _ => {}
+                    }
+                }
+
+                result = &mut loop_fut => {
+                    // Flush any remaining buffered content from stream sanitizers.
+                    let remaining_content = content_sanitizer.flush();
+                    if !remaining_content.is_empty() {
+                        let _ = send_json(sender, serde_json::json!({
+                            "type": "chunk", "content": remaining_content,
+                        })).await;
+                    }
+                    let remaining_thinking = thinking_sanitizer.flush();
+                    if !remaining_thinking.is_empty() {
+                        let _ = send_json(sender, serde_json::json!({
+                            "type": "thinking", "content": remaining_thinking,
+                        })).await;
+                    }
+                    match result {
+                        Ok(text) => {
+                            full_response = replacer.sanitize(&text);
+                            let _ = send_json(sender, serde_json::json!({ "type": "chunk_reset" })).await;
+                            let _ = send_json(sender, serde_json::json!({
+                                "type": "done", "full_response": full_response,
+                            })).await;
+                        }
+                        Err(e) => {
+                            if e.downcast_ref::<ToolLoopCancelled>().is_some() || cancelled {
+                                let _ = send_json(sender, serde_json::json!({ "type": "cancelled" })).await;
+                            } else {
+                                let sanitized = crate::providers::sanitize_api_error(&e.to_string());
+                                let sanitized = replacer.sanitize(&sanitized);
+                                let error_code = if sanitized.to_lowercase().contains("api key")
+                                    || sanitized.to_lowercase().contains("authentication")
+                                    || sanitized.to_lowercase().contains("unauthorized")
+                                {
+                                    "AUTH_ERROR"
+                                } else if sanitized.to_lowercase().contains("provider")
+                                    || sanitized.to_lowercase().contains("model")
+                                {
+                                    "PROVIDER_ERROR"
+                                } else {
+                                    "AGENT_ERROR"
+                                };
+                                let _ = send_json(sender, serde_json::json!({
+                                    "type": "error", "message": sanitized, "code": error_code,
+                                })).await;
                             }
                         }
                     }
-                    Some(Ok(Message::Close(_)) | Err(_)) | None => {
-                        client_gone = true;
-                        tracing::info!("WS v2: client disconnected mid-turn, continuing agent execution");
-                    }
-                    _ => {}
+                    break;
                 }
             }
+        }
 
-            result = &mut loop_fut => {
-                // Flush any remaining buffered content from stream sanitizers.
-                let remaining_content = content_sanitizer.flush();
-                if !remaining_content.is_empty() {
-                    let _ = send_json(sender, serde_json::json!({
-                        "type": "chunk", "content": remaining_content,
-                    })).await;
+        (full_response, cancelled)
+    };
+    let _ = cancelled;
+
+    // Persist tool messages from this turn so reconnects retain tool context.
+    if session.keep_tool_context_turns > 0 {
+        let tool_msgs =
+            crate::channels::extract_current_turn_tool_messages(&session.history);
+        if !tool_msgs.is_empty() {
+            if let Some(ref backend) = state.session_backend {
+                for msg in &tool_msgs {
+                    let _ = backend.append(session_key, msg);
                 }
-                let remaining_thinking = thinking_sanitizer.flush();
-                if !remaining_thinking.is_empty() {
-                    let _ = send_json(sender, serde_json::json!({
-                        "type": "thinking", "content": remaining_thinking,
-                    })).await;
-                }
-                match result {
-                    Ok(text) => {
-                        full_response = replacer.sanitize(&text);
-                        let _ = send_json(sender, serde_json::json!({ "type": "chunk_reset" })).await;
-                        let _ = send_json(sender, serde_json::json!({
-                            "type": "done", "full_response": full_response,
-                        })).await;
-                    }
-                    Err(e) => {
-                        if e.downcast_ref::<ToolLoopCancelled>().is_some() || cancelled {
-                            let _ = send_json(sender, serde_json::json!({ "type": "cancelled" })).await;
-                        } else {
-                            let sanitized = crate::providers::sanitize_api_error(&e.to_string());
-                            let sanitized = replacer.sanitize(&sanitized);
-                            let error_code = if sanitized.to_lowercase().contains("api key")
-                                || sanitized.to_lowercase().contains("authentication")
-                                || sanitized.to_lowercase().contains("unauthorized")
-                            {
-                                "AUTH_ERROR"
-                            } else if sanitized.to_lowercase().contains("provider")
-                                || sanitized.to_lowercase().contains("model")
-                            {
-                                "PROVIDER_ERROR"
-                            } else {
-                                "AGENT_ERROR"
-                            };
-                            let _ = send_json(sender, serde_json::json!({
-                                "type": "error", "message": sanitized, "code": error_code,
-                            })).await;
-                        }
-                    }
-                }
-                break;
             }
         }
     }
