@@ -4434,12 +4434,31 @@ pub async fn run(
                             tracing::warn!(
                                 "Context overflow in interactive loop, attempting recovery"
                             );
+                            let cc_config = config.agent.context_compression.clone();
                             let mut compressor =
                                 crate::agent::context_compressor::ContextCompressor::new(
-                                    config.agent.context_compression.clone(),
+                                    cc_config.clone(),
                                     config.agent.max_context_tokens,
                                 )
                                 .with_memory(mem.clone());
+                            if let Some(ref eb) = cc_config.summary_extra_body {
+                                let mut sopts = provider_runtime_options.clone();
+                                sopts.extra_body = Some(eb.clone());
+                                if let Ok(sp) =
+                                    providers::create_routed_provider_with_options(
+                                        &provider_name,
+                                        config.api_key.as_deref(),
+                                        config.api_url.as_deref(),
+                                        &config.reliability,
+                                        &config.model_routes,
+                                        &model_name,
+                                        &sopts,
+                                    )
+                                {
+                                    compressor =
+                                        compressor.with_summary_provider(Arc::from(sp));
+                                }
+                            }
                             let error_msg = format!("{e}");
                             match compressor
                                 .compress_on_error(
@@ -4494,11 +4513,27 @@ pub async fn run(
 
             // Context compression before hard trimming to preserve long-context signal.
             {
-                let compressor = crate::agent::context_compressor::ContextCompressor::new(
-                    config.agent.context_compression.clone(),
+                let cc_config = config.agent.context_compression.clone();
+                let mut compressor = crate::agent::context_compressor::ContextCompressor::new(
+                    cc_config.clone(),
                     config.agent.max_context_tokens,
                 )
                 .with_memory(mem.clone());
+                if let Some(ref eb) = cc_config.summary_extra_body {
+                    let mut sopts = provider_runtime_options.clone();
+                    sopts.extra_body = Some(eb.clone());
+                    if let Ok(sp) = providers::create_routed_provider_with_options(
+                        &provider_name,
+                        config.api_key.as_deref(),
+                        config.api_url.as_deref(),
+                        &config.reliability,
+                        &config.model_routes,
+                        &model_name,
+                        &sopts,
+                    ) {
+                        compressor = compressor.with_summary_provider(Arc::from(sp));
+                    }
+                }
                 match compressor
                     .compress_if_needed(&mut history, provider.as_ref(), &model_name)
                     .await

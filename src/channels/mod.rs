@@ -2815,11 +2815,31 @@ async fn process_channel_message(
     // and preserving key decisions through LLM-driven summarization.
     {
         let cc_config = ctx.prompt_config.agent.context_compression.clone();
-        let compressor = crate::agent::context_compressor::ContextCompressor::new(
-            cc_config,
+        let mut compressor = crate::agent::context_compressor::ContextCompressor::new(
+            cc_config.clone(),
             ctx.context_token_budget,
         )
         .with_memory(Arc::clone(&ctx.memory));
+        if let Some(ref eb) = cc_config.summary_extra_body {
+            let mut summary_opts = ctx.provider_runtime_options.clone();
+            summary_opts.extra_body = Some(eb.clone());
+            match create_resilient_provider_nonblocking(
+                &route.provider,
+                route.api_key.clone().or_else(|| ctx.api_key.clone()),
+                ctx.api_url.clone(),
+                ctx.reliability.as_ref().clone(),
+                summary_opts,
+            )
+            .await
+            {
+                Ok(p) => {
+                    compressor = compressor.with_summary_provider(Arc::from(p));
+                }
+                Err(e) => {
+                    tracing::warn!("Failed to create summary provider, using main: {e}");
+                }
+            }
+        }
         match compressor
             .compress_if_needed(&mut history, active_provider.as_ref(), route.model.as_str())
             .await

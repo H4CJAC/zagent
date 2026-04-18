@@ -78,6 +78,7 @@ struct WsSession {
     consolidation_temperature: Option<f64>,
     keep_tool_context_turns: usize,
     context_compression: crate::agent::context_compressor::ContextCompressionConfig,
+    summary_provider: Option<Arc<dyn Provider>>,
     cancel_token: CancellationToken,
 }
 
@@ -185,6 +186,27 @@ impl WsSession {
             &opts,
         )?;
 
+        let summary_provider: Option<Arc<dyn Provider>> = config
+            .agent
+            .context_compression
+            .summary_extra_body
+            .as_ref()
+            .map(|eb| {
+                let mut summary_opts = opts.clone();
+                summary_opts.extra_body = Some(eb.clone());
+                crate::providers::create_routed_provider_with_options(
+                    &provider_name,
+                    config.api_key.as_deref(),
+                    config.api_url.as_deref(),
+                    &config.reliability,
+                    &config.model_routes,
+                    &model,
+                    &summary_opts,
+                )
+                .map(Arc::from)
+            })
+            .transpose()?;
+
         let approval = ApprovalManager::for_non_interactive(&config.autonomy);
 
         let hooks = if config.hooks.enabled {
@@ -250,6 +272,7 @@ impl WsSession {
             consolidation_temperature: config.memory.consolidation_temperature,
             keep_tool_context_turns: config.agent.keep_tool_context_turns,
             context_compression: config.agent.context_compression.clone(),
+            summary_provider,
             cancel_token: CancellationToken::new(),
         })
     }
@@ -576,11 +599,14 @@ async fn process_turn(
 
     // Proactive context compression before the LLM call.
     {
-        let compressor = crate::agent::context_compressor::ContextCompressor::new(
+        let mut compressor = crate::agent::context_compressor::ContextCompressor::new(
             session.context_compression.clone(),
             session.context_token_budget,
         )
         .with_memory(Arc::clone(&session.memory));
+        if let Some(ref sp) = session.summary_provider {
+            compressor = compressor.with_summary_provider(Arc::clone(sp));
+        }
         match compressor
             .compress_if_needed(
                 &mut session.history,

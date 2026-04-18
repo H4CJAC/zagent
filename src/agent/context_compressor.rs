@@ -89,6 +89,10 @@ pub struct ContextCompressionConfig {
     /// Tool names exempt from result trimming. Default: `[]`.
     #[serde(default)]
     pub tool_result_trim_exempt: Vec<String>,
+    /// Override `extra_body` for the summarization LLM call.
+    /// Set to `{}` to strip the main provider's extra_body (e.g. disable thinking).
+    #[serde(default)]
+    pub summary_extra_body: Option<serde_json::Value>,
 }
 
 impl Default for ContextCompressionConfig {
@@ -107,6 +111,7 @@ impl Default for ContextCompressionConfig {
             identifier_policy: default_identifier_policy(),
             tool_result_retrim_chars: default_tool_result_retrim_chars(),
             tool_result_trim_exempt: Vec::new(),
+            summary_extra_body: None,
         }
     }
 }
@@ -224,6 +229,7 @@ pub struct ContextCompressor {
     config: ContextCompressionConfig,
     context_window: usize,
     memory: Option<Arc<dyn Memory>>,
+    summary_provider: Option<Arc<dyn Provider>>,
 }
 
 impl ContextCompressor {
@@ -232,6 +238,7 @@ impl ContextCompressor {
             config,
             context_window,
             memory: None,
+            summary_provider: None,
         }
     }
 
@@ -239,6 +246,13 @@ impl ContextCompressor {
     /// old messages are discarded. Without this, compressed facts are lost.
     pub fn with_memory(mut self, memory: Arc<dyn Memory>) -> Self {
         self.memory = Some(memory);
+        self
+    }
+
+    /// Use a dedicated provider for summarization LLM calls, bypassing
+    /// the main provider's `extra_body` (e.g. to disable thinking mode).
+    pub fn with_summary_provider(mut self, provider: Arc<dyn Provider>) -> Self {
+        self.summary_provider = Some(provider);
         self
     }
 
@@ -429,9 +443,15 @@ impl ContextCompressor {
         // LLM summarization with safety timeout
         let timeout = Duration::from_secs(self.config.timeout_secs);
         let temp = self.config.summary_temperature.unwrap_or(0.1);
+        let effective_provider = self.summary_provider.as_deref().unwrap_or(provider);
         let summary_raw = match tokio::time::timeout(
             timeout,
-            provider.chat_with_system(Some(SUMMARIZER_SYSTEM), &user_prompt, summary_model, temp),
+            effective_provider.chat_with_system(
+                Some(SUMMARIZER_SYSTEM),
+                &user_prompt,
+                summary_model,
+                temp,
+            ),
         )
         .await
         {
