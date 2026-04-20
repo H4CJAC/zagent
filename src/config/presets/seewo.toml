@@ -750,3 +750,4 @@ cache_delay_ms = 3000
 cw_cache_delay_ms = 3000
 no_thinking_temperature = 0.6
 cache_semantic_max_candidates = 50
+demo_scripts_enabled = true
