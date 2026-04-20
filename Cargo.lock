@@ -1216,6 +1216,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "cclawcore-ffi"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "cclawcorelabs",
+ "rustls 0.23.37",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "tracing-subscriber",
+]
+
+[[package]]
 name = "cclawcore-macros"
 version = "0.1.0"
 dependencies = [

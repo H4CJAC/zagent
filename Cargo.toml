@@ -1,5 +1,5 @@
 [workspace]
-members = [".", "crates/robot-kit", "crates/aardvark-sys", "crates/cclawcore-macros", "apps/tauri"]
+members = [".", "crates/robot-kit", "crates/aardvark-sys", "crates/cclawcore-macros", "crates/cclawcore-ffi", "apps/tauri"]
 resolver = "2"
 
 [package]

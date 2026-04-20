@@ -47,7 +47,7 @@ pub mod commands;
 pub mod config;
 pub(crate) mod cost;
 pub mod cron;
-pub(crate) mod daemon;
+pub mod daemon;
 pub(crate) mod doctor;
 pub mod gateway;
 pub mod hands;

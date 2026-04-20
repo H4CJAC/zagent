@@ -5,6 +5,7 @@ use std::future::Future;
 use std::path::PathBuf;
 use tokio::task::JoinHandle;
 use tokio::time::Duration;
+use tokio_util::sync::CancellationToken;
 
 const STATUS_FLUSH_SECONDS: u64 = 5;
 
@@ -45,7 +46,20 @@ async fn wait_for_shutdown_signal() -> Result<()> {
     Ok(())
 }
 
+/// CLI entry point — blocks on OS signals for shutdown.
 pub async fn run(config: Config, host: String, port: u16) -> Result<()> {
+    run_with_shutdown(config, host, port, None).await
+}
+
+/// Core daemon loop. When `cancel` is `Some`, shutdown is triggered by the
+/// token instead of (or in addition to) OS signals, enabling library callers
+/// to stop the daemon programmatically.
+pub async fn run_with_shutdown(
+    config: Config,
+    host: String,
+    port: u16,
+    cancel: Option<CancellationToken>,
+) -> Result<()> {
     let initial_backoff = config.reliability.channel_initial_backoff_secs.max(1);
     let max_backoff = config
         .reliability
@@ -163,8 +177,20 @@ pub async fn run(config: Config, host: String, port: u16) -> Result<()> {
     }
     println!("   Ctrl+C or SIGTERM to stop");
 
-    // Wait for shutdown signal (SIGINT or SIGTERM)
-    wait_for_shutdown_signal().await?;
+    match cancel {
+        Some(token) => {
+            tokio::select! {
+                _ = token.cancelled() => {
+                    tracing::info!("Received external cancel, shutting down...");
+                }
+                result = wait_for_shutdown_signal() => { result?; }
+            }
+        }
+        None => {
+            wait_for_shutdown_signal().await?;
+        }
+    }
+
     crate::health::mark_component_error("daemon", "shutdown requested");
 
     for handle in &handles {
