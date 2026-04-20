@@ -4,12 +4,64 @@
 //! ordered sequence of WebSocket frames (with per-frame delays) to send when
 //! a user message matches.  This allows deterministic, stable demo sessions
 //! that bypass the real agent pipeline entirely.
+//!
+//! Template placeholders in serialized event JSON are expanded at replay time
+//! (see [`DemoTemplateExpander`]): `{{NOW_ISO_OFFSET_SECS:N}}`, optional
+//! `{{TODAY}}` / `{{TODAY_CN}}`.
 
 use axum::extract::ws::{Message, WebSocket};
+use chrono::Datelike;
 use futures_util::SinkExt;
 use regex::Regex;
 use serde::Deserialize;
 use std::path::Path;
+use std::sync::LazyLock;
+
+/// Expands `{{NOW_ISO_OFFSET_SECS:N}}` and optional static placeholders in demo script JSON.
+///
+/// `N` is seconds added to the expander's `base` (set once per replay at construction).
+#[derive(Clone, Copy)]
+pub struct DemoTemplateExpander {
+    base: chrono::DateTime<chrono::Utc>,
+}
+
+static NOW_ISO_OFFSET_SECS: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"\{\{NOW_ISO_OFFSET_SECS:(-?\d+)\}\}").expect("valid regex"));
+
+impl DemoTemplateExpander {
+    pub fn new() -> Self {
+        Self {
+            base: chrono::Utc::now(),
+        }
+    }
+
+    #[cfg(test)]
+    fn with_base(base: chrono::DateTime<chrono::Utc>) -> Self {
+        Self { base }
+    }
+
+    /// Expand template placeholders in a serialized JSON line (or any string).
+    pub fn expand(&self, text: &str) -> String {
+        let mut s = NOW_ISO_OFFSET_SECS
+            .replace_all(text, |caps: &regex::Captures<'_>| {
+                let n: i64 = caps[1].parse().unwrap_or(0);
+                let t = self.base + chrono::Duration::seconds(n);
+                t.to_rfc3339_opts(chrono::SecondsFormat::Secs, true)
+            })
+            .into_owned();
+        s = s.replace("{{TODAY}}", &self.base.format("%Y-%m-%d").to_string());
+        s = s.replace(
+            "{{TODAY_CN}}",
+            &format!(
+                "{}年{:02}月{:02}日",
+                self.base.year(),
+                self.base.month(),
+                self.base.day()
+            ),
+        );
+        s
+    }
+}
 
 // ── Types ────────────────────────────────────────────────────────────────
 
@@ -64,12 +116,7 @@ impl DemoScriptEngine {
 
         let mut entries: Vec<_> = std::fs::read_dir(&dir)?
             .filter_map(|e| e.ok())
-            .filter(|e| {
-                e.path()
-                    .extension()
-                    .and_then(|ext| ext.to_str())
-                    == Some("json")
-            })
+            .filter(|e| e.path().extension().and_then(|ext| ext.to_str()) == Some("json"))
             .collect();
         entries.sort_by_key(|e| e.file_name());
 
@@ -128,6 +175,7 @@ pub async fn replay_script(
     sender: &mut futures_util::stream::SplitSink<WebSocket, Message>,
     script: &DemoScript,
 ) -> String {
+    let expander = DemoTemplateExpander::new();
     let mut full_response = String::new();
 
     for msg in &script.messages {
@@ -135,19 +183,60 @@ pub async fn replay_script(
             tokio::time::sleep(std::time::Duration::from_millis(msg.delay_ms)).await;
         }
 
-        if msg.event.get("type").and_then(|v| v.as_str()) == Some("done") {
-            if let Some(resp) = msg.event.get("full_response").and_then(|v| v.as_str()) {
-                full_response = resp.to_string();
+        let raw = msg.event.to_string();
+        let wire = expander.expand(&raw);
+
+        if let Ok(v) = serde_json::from_str::<serde_json::Value>(&wire) {
+            if v.get("type").and_then(|t| t.as_str()) == Some("done") {
+                if let Some(resp) = v.get("full_response").and_then(|x| x.as_str()) {
+                    full_response = resp.to_string();
+                }
             }
         }
 
-        let text = msg.event.to_string();
-        tracing::debug!(direction = "out", r#type = msg.event["type"].as_str().unwrap_or("?"), "WS v2 demo ← {text}");
-        if sender.send(Message::Text(text.into())).await.is_err() {
+        tracing::debug!(
+            direction = "out",
+            r#type = msg.event["type"].as_str().unwrap_or("?"),
+            "WS v2 demo ← {wire}"
+        );
+        if sender.send(Message::Text(wire.into())).await.is_err() {
             tracing::warn!("demo script replay: client disconnected");
             break;
         }
     }
 
     full_response
+}
+
+#[cfg(test)]
+mod template_tests {
+    use super::DemoTemplateExpander;
+    use chrono::TimeZone;
+    use chrono::Utc;
+
+    #[test]
+    fn expand_offset_iso() {
+        let base = Utc.with_ymd_and_hms(2026, 4, 24, 12, 0, 0).unwrap();
+        let ex = DemoTemplateExpander::with_base(base);
+        let s = ex.expand(r#"{"t":"<createdAt>{{NOW_ISO_OFFSET_SECS:31}}</createdAt>"}"#);
+        assert!(s.contains("2026-04-24T12:00:31Z"), "got {s}");
+        assert!(!s.contains("NOW_ISO_OFFSET"));
+    }
+
+    #[test]
+    fn expand_negative_offset() {
+        let base = Utc.with_ymd_and_hms(2026, 4, 24, 12, 0, 0).unwrap();
+        let ex = DemoTemplateExpander::with_base(base);
+        let s = ex.expand("{{NOW_ISO_OFFSET_SECS:-3600}}");
+        assert_eq!(s, "2026-04-24T11:00:00Z");
+    }
+
+    #[test]
+    fn expand_today_static() {
+        let base = Utc.with_ymd_and_hms(2026, 4, 24, 12, 0, 0).unwrap();
+        let ex = DemoTemplateExpander::with_base(base);
+        let s = ex.expand("{{TODAY}} / {{TODAY_CN}}");
+        assert!(s.contains("2026-04-24"));
+        assert!(s.contains("2026年04月24日"));
+    }
 }
