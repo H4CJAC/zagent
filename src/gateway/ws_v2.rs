@@ -350,7 +350,7 @@ async fn handle_socket_v2(
 
     let session_id = session_id.unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
     let session_key = format!("{GW_V2_SESSION_PREFIX}{session_id}");
-    let session_name = session_name.unwrap_or_else(|| "新建会话".to_string());
+    let explicit_name = session_name.filter(|n| !n.is_empty());
 
     let config = state.config.lock().clone();
     let mut session = match WsSession::from_config(&config).await {
@@ -372,7 +372,7 @@ async fn handle_socket_v2(
 
     // Restore persisted history and session name.
     let max_history_load = config.gateway.session_max_history_load;
-    let mut effective_name = session_name.clone();
+    let mut effective_name = explicit_name.clone().unwrap_or_else(|| "新建会话".to_string());
     let resumed_count = state
         .session_backend
         .as_ref()
@@ -390,8 +390,8 @@ async fn handle_socket_v2(
                 }
                 session.history = msgs;
             }
-            if !session_name.is_empty() {
-                let _ = b.set_session_name(&session_key, &session_name);
+            if let Some(ref name) = explicit_name {
+                let _ = b.set_session_name(&session_key, name);
             } else if let Ok(Some(stored)) = b.get_session_name(&session_key) {
                 effective_name = stored;
             }
