@@ -535,22 +535,19 @@ fn align_boundary_backward(messages: &[ChatMessage], idx: usize) -> usize {
 // Tool pair repair
 // ---------------------------------------------------------------------------
 
-/// Remove orphaned tool_results and add stubs for orphaned tool_calls.
+/// Repair orphaned tool_call / tool_result pairs in message history.
 ///
-/// After compression, some tool results may reference tool_calls that were
-/// summarized away, and vice versa. This function cleans up the history
-/// so every tool_result has a matching assistant message and every
-/// tool_call-bearing assistant message has results.
-fn repair_tool_pairs(messages: &mut Vec<ChatMessage>) {
-    // Heuristic: tool messages whose content references a call ID that no longer
-    // exists in any assistant message should be removed. Since ChatMessage is a
-    // simple role+content struct (no structured tool_call_id field), we use a
-    // simpler approach: remove any "tool" message that immediately follows the
-    // [CONTEXT SUMMARY] message (it's orphaned by definition).
+/// Handles three cases:
+/// 1. Orphaned tool results after a `[CONTEXT SUMMARY]` message.
+/// 2. Orphaned tool results at the very start of history.
+/// 3. Assistant messages with native `tool_calls` JSON that lack subsequent
+///    tool results — these are **degraded** to plain text (preserving the
+///    `content` field) rather than deleted, to avoid losing context.
+pub(crate) fn repair_tool_pairs(messages: &mut Vec<ChatMessage>) {
+    // Case 1: remove orphaned tool results after context summary.
     let mut i = 0;
     while i < messages.len() {
         if messages[i].content.contains("[CONTEXT SUMMARY") {
-            // Remove any immediately following orphaned tool results
             while i + 1 < messages.len() && messages[i + 1].role == "tool" {
                 messages.remove(i + 1);
             }
@@ -558,8 +555,7 @@ fn repair_tool_pairs(messages: &mut Vec<ChatMessage>) {
         i += 1;
     }
 
-    // Also check for tool results at the very start (after system prompt) that
-    // are orphaned because their assistant message was compressed.
+    // Case 2: remove orphaned tool results at the start (after system prompt).
     let start = if messages.first().map_or(false, |m| m.role == "system") {
         1
     } else {
@@ -568,6 +564,37 @@ fn repair_tool_pairs(messages: &mut Vec<ChatMessage>) {
     while start < messages.len() && messages[start].role == "tool" {
         messages.remove(start);
     }
+
+    // Case 3: degrade orphaned assistant tool_call messages to plain text.
+    for i in 0..messages.len() {
+        if messages[i].role != "assistant" {
+            continue;
+        }
+        if !is_native_tool_call_json(&messages[i].content) {
+            continue;
+        }
+        let has_tool_result = i + 1 < messages.len() && messages[i + 1].role == "tool";
+        if !has_tool_result {
+            messages[i].content = extract_text_from_tool_call_json(&messages[i].content);
+        }
+    }
+}
+
+/// Check whether content is a native tool call JSON object
+/// (e.g. `{"content":..., "tool_calls":[...]}`).
+fn is_native_tool_call_json(content: &str) -> bool {
+    let trimmed = content.trim();
+    trimmed.starts_with('{') && trimmed.contains("\"tool_calls\"")
+}
+
+/// Extract the `content` text field from a native tool call JSON,
+/// falling back to a placeholder when the field is absent or empty.
+fn extract_text_from_tool_call_json(content: &str) -> String {
+    serde_json::from_str::<serde_json::Value>(content)
+        .ok()
+        .and_then(|v| v.get("content")?.as_str().map(String::from))
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| "[tool call context removed]".to_string())
 }
 
 // ---------------------------------------------------------------------------
@@ -719,6 +746,49 @@ mod tests {
         ];
         repair_tool_pairs(&mut messages);
         assert_eq!(messages.len(), 5); // no change
+    }
+
+    #[test]
+    fn test_repair_degrades_orphaned_native_tool_call() {
+        let tool_call_json = r#"{"content":"Let me check","tool_calls":[{"id":"call_1","name":"sw_get_user_info","arguments":"{}"}]}"#;
+        let mut messages = vec![
+            msg("system", "sys"),
+            msg("user", "q"),
+            msg("assistant", tool_call_json),
+            msg("user", "next question"),
+        ];
+        repair_tool_pairs(&mut messages);
+        assert_eq!(messages.len(), 4);
+        assert_eq!(messages[2].role, "assistant");
+        assert_eq!(messages[2].content, "Let me check");
+    }
+
+    #[test]
+    fn test_repair_degrades_null_content_tool_call() {
+        let tool_call_json = r#"{"content":null,"tool_calls":[{"id":"call_1","name":"shell","arguments":"{}"}]}"#;
+        let mut messages = vec![
+            msg("system", "sys"),
+            msg("assistant", tool_call_json),
+            msg("user", "next"),
+        ];
+        repair_tool_pairs(&mut messages);
+        assert_eq!(messages[1].content, "[tool call context removed]");
+    }
+
+    #[test]
+    fn test_repair_keeps_valid_native_tool_call_pair() {
+        let tool_call_json = r#"{"content":null,"tool_calls":[{"id":"call_1","name":"shell","arguments":"{}"}]}"#;
+        let mut messages = vec![
+            msg("system", "sys"),
+            msg("user", "q"),
+            msg("assistant", tool_call_json),
+            msg("tool", "result"),
+            msg("user", "thanks"),
+        ];
+        let original_content = messages[2].content.clone();
+        repair_tool_pairs(&mut messages);
+        assert_eq!(messages.len(), 5);
+        assert_eq!(messages[2].content, original_content);
     }
 
     #[test]

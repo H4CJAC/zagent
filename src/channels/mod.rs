@@ -1340,6 +1340,7 @@ fn is_tool_call_content(content: &str) -> bool {
     trimmed.contains("<tool_call>")
         || trimmed.starts_with("{\"tool_call\"")
         || trimmed.starts_with("{\"name\"")
+        || (trimmed.starts_with('{') && trimmed.contains("\"tool_calls\""))
 }
 
 fn rollback_orphan_user_turn(

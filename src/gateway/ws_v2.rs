@@ -630,6 +630,10 @@ async fn process_turn(
         }
     }
 
+    // Final safety net: repair any orphaned tool_call/tool_result pairs
+    // before sending history to the LLM.
+    crate::agent::context_compressor::repair_tool_pairs(&mut session.history);
+
     // Build output sanitizer from config.
     let replacer = {
         let cfg = state.config.lock();
