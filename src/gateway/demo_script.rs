@@ -6,8 +6,10 @@
 //! that bypass the real agent pipeline entirely.
 //!
 //! Template placeholders in serialized event JSON are expanded at replay time
-//! (see [`DemoTemplateExpander`]): `{{NOW_ISO_OFFSET_SECS:N}}`, optional
-//! `{{TODAY}}` / `{{TODAY_CN}}`.
+//! (see [`DemoTemplateExpander`]): `{{NOW_ISO_OFFSET_SECS:N}}`,
+//! `{{CHOICE:a|b|c}}` (independent random selection per occurrence; use `\|`
+//! to escape a literal pipe inside a candidate), optional `{{TODAY}}` /
+//! `{{TODAY_CN}}`.
 
 use axum::extract::ws::{Message, WebSocket};
 use chrono::Datelike;
@@ -28,6 +30,47 @@ pub struct DemoTemplateExpander {
 static NOW_ISO_OFFSET_SECS: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"\{\{NOW_ISO_OFFSET_SECS:(-?\d+)\}\}").expect("valid regex"));
 
+static CHOICE: LazyLock<Regex> = LazyLock::new(|| {
+    // Match body allows any char except `}`, with `\x` escape (e.g. `\|`) so
+    // literal `|` can be included inside a candidate.
+    Regex::new(r"\{\{CHOICE:((?:\\.|[^}\\])+)\}\}").expect("valid regex")
+});
+
+/// Pick a random candidate string; returns `""` for an empty slice.
+fn pick_choice(candidates: &[String]) -> String {
+    use rand::RngExt;
+    if candidates.is_empty() {
+        return String::new();
+    }
+    if candidates.len() == 1 {
+        return candidates[0].clone();
+    }
+    let idx = rand::rng().random_range(0..candidates.len());
+    candidates[idx].clone()
+}
+
+/// Split a CHOICE body into candidates, honoring `\|` and `\\` escapes.
+fn split_choice_body(body: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut cur = String::new();
+    let mut chars = body.chars();
+    while let Some(c) = chars.next() {
+        match c {
+            '\\' => {
+                if let Some(next) = chars.next() {
+                    cur.push(next);
+                }
+            }
+            '|' => {
+                out.push(std::mem::take(&mut cur));
+            }
+            other => cur.push(other),
+        }
+    }
+    out.push(cur);
+    out
+}
+
 impl DemoTemplateExpander {
     pub fn new() -> Self {
         Self {
@@ -47,6 +90,12 @@ impl DemoTemplateExpander {
                 let n: i64 = caps[1].parse().unwrap_or(0);
                 let t = self.base + chrono::Duration::seconds(n);
                 t.to_rfc3339_opts(chrono::SecondsFormat::Secs, true)
+            })
+            .into_owned();
+        s = CHOICE
+            .replace_all(&s, |caps: &regex::Captures<'_>| {
+                let candidates = split_choice_body(&caps[1]);
+                pick_choice(&candidates)
             })
             .into_owned();
         s = s.replace("{{TODAY}}", &self.base.format("%Y-%m-%d").to_string());
@@ -238,5 +287,45 @@ mod template_tests {
         let s = ex.expand("{{TODAY}} / {{TODAY_CN}}");
         assert!(s.contains("2026-04-24"));
         assert!(s.contains("2026年04月24日"));
+    }
+
+    #[test]
+    fn split_choice_simple() {
+        let v = super::split_choice_body("让我|我来|现在我");
+        assert_eq!(
+            v,
+            vec!["让我".to_string(), "我来".to_string(), "现在我".to_string()]
+        );
+    }
+
+    #[test]
+    fn split_choice_with_escape() {
+        let v = super::split_choice_body(r"a\|b|c");
+        assert_eq!(v, vec!["a|b".to_string(), "c".to_string()]);
+    }
+
+    #[test]
+    fn choice_replaces_to_one_candidate() {
+        let base = Utc.with_ymd_and_hms(2026, 4, 24, 12, 0, 0).unwrap();
+        let ex = DemoTemplateExpander::with_base(base);
+        let candidates = ["让我", "我来", "现在我"];
+        for _ in 0..20 {
+            let s = ex.expand("{{CHOICE:让我|我来|现在我}}调用工具");
+            assert!(!s.contains("{{CHOICE"), "residual template: {s}");
+            let stripped = s.trim_end_matches("调用工具");
+            assert!(
+                candidates.contains(&stripped),
+                "unexpected candidate: {stripped:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn choice_and_offset_coexist() {
+        let base = Utc.with_ymd_and_hms(2026, 4, 24, 12, 0, 0).unwrap();
+        let ex = DemoTemplateExpander::with_base(base);
+        let s = ex.expand("{{CHOICE:A|B}} at {{NOW_ISO_OFFSET_SECS:0}}");
+        assert!(s.contains("2026-04-24T12:00:00Z"));
+        assert!(s.starts_with('A') || s.starts_with('B'));
     }
 }
