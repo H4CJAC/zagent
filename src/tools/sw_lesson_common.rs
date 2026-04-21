@@ -714,7 +714,7 @@ pub async fn extract_structured_fields(
 const DEFAULT_SEMANTIC_CANDIDATES: usize = 50;
 
 const SEMANTIC_MATCH_PROMPT: &str = "\
-判断新查询与哪个已缓存查询在语义上等价（查询结果可能会相同）。
+判断新查询与哪个已缓存查询在语义上等价（即会产生相同的查询结果）。
 
 输出规则（严格遵守，违反视为无效）：
 - 只输出一个阿拉伯数字
