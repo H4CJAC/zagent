@@ -18,11 +18,11 @@ const OUTPUT_PATH = path.resolve(
 );
 const DRAFT_OUTPUT_PATH = path.resolve(
   process.env.SEEWO_CLAW_DRAFT_OUTPUT ||
-    shared.deriveDraftOutputPath(OUTPUT_PATH),
+  shared.deriveDraftOutputPath(OUTPUT_PATH),
 );
 const PAGE_TIMEOUT_MS = shared.parsePositiveInt(
   process.env.SEEWO_CLAW_PAGE_TIMEOUT_MS,
-  15000,
+  30000,
 );
 const RESULT_TIMEOUT_MS = shared.parsePositiveInt(
   process.env.SEEWO_CLAW_RESULT_TIMEOUT_MS,
@@ -148,7 +148,7 @@ async function waitForFinalResult() {
 
   throw new Error(
     "等待 window.coursewareResult 超时。" +
-      " 如果这是长任务，请增大 SEEWO_CLAW_RESULT_TIMEOUT_MS。",
+    " 如果这是长任务，请增大 SEEWO_CLAW_RESULT_TIMEOUT_MS。",
   );
 }
 

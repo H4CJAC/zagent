@@ -22,7 +22,7 @@ const OUTPUT_PATH = path.resolve(
 );
 const DRAFT_OUTPUT_PATH = path.resolve(
   process.env.SEEWO_CLAW_DRAFT_OUTPUT ||
-    shared.deriveDraftOutputPath(OUTPUT_PATH),
+  shared.deriveDraftOutputPath(OUTPUT_PATH),
 );
 const COURSEWARE_CONTEXTS = parseContextInputs(
   process.env.SEEWO_CLAW_CONTEXT_FILE,
@@ -36,7 +36,7 @@ const SESSION_NAME =
   `seewo-claw-${Math.random().toString(36).slice(2, 8)}`;
 const PAGE_TIMEOUT_MS = shared.parsePositiveInt(
   process.env.SEEWO_CLAW_PAGE_TIMEOUT_MS,
-  15000,
+  30000,
 );
 const DRAFT_TIMEOUT_MS = shared.parsePositiveInt(
   process.env.SEEWO_CLAW_DRAFT_TIMEOUT_MS,
@@ -221,9 +221,9 @@ async function waitForDraftResult() {
   const debugState = await readResultDebugState();
   throw new Error(
     "等待 window.coursewareDraftResult 超时。" +
-      " 如果这是长任务，请增大 SEEWO_CLAW_DRAFT_TIMEOUT_MS。" +
-      " 页面状态: " +
-      JSON.stringify(debugState),
+    " 如果这是长任务，请增大 SEEWO_CLAW_DRAFT_TIMEOUT_MS。" +
+    " 页面状态: " +
+    JSON.stringify(debugState),
   );
 }
 
@@ -591,7 +591,7 @@ function extractComparablePath(rawUrl) {
 function hasUsefulPageState(pageState) {
   return Boolean(
     pageState &&
-      (pageState.href || pageState.title || pageState.bodyTextPreview),
+    (pageState.href || pageState.title || pageState.bodyTextPreview),
   );
 }
 
