@@ -6,9 +6,11 @@
 
 use crate::agent::loop_::{DraftEvent, TOOL_CALL_ID, TOOL_LIVE_TX};
 use anyhow::{Context, Result};
+use regex::Regex;
 use rust_embed::Embed;
 use serde_json::Value;
 use std::path::{Path, PathBuf};
+use std::sync::LazyLock;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::Command;
 
@@ -628,10 +630,7 @@ fn create_no_thinking_provider(
     if let Some(ref mut body) = opts.extra_body {
         if let Some(obj) = body.as_object_mut() {
             if obj.contains_key("thinking") {
-                obj.insert(
-                    "thinking".into(),
-                    serde_json::json!({"type": "disabled"}),
-                );
+                obj.insert("thinking".into(), serde_json::json!({"type": "disabled"}));
             }
         }
     }
@@ -699,7 +698,10 @@ pub async fn extract_structured_fields(
 
     match serde_json::from_str::<Value>(json_str) {
         Ok(Value::Object(map)) => {
-            tracing::info!("extract_structured_fields: extracted {:?}", map.keys().collect::<Vec<_>>());
+            tracing::info!(
+                "extract_structured_fields: extracted {:?}",
+                map.keys().collect::<Vec<_>>()
+            );
             Some(map)
         }
         _ => {
@@ -709,17 +711,54 @@ pub async fn extract_structured_fields(
     }
 }
 
-const DEFAULT_SEMANTIC_CANDIDATES: usize = 20;
+const DEFAULT_SEMANTIC_CANDIDATES: usize = 50;
 
 const SEMANTIC_MATCH_PROMPT: &str = "\
-判断以下新查询与哪个已缓存查询在语义上等价（即会产生相同的数据查询结果）。
+判断新查询与哪个已缓存查询在语义上等价（查询结果可能会相同）。
+
+输出规则（严格遵守，违反视为无效）：
+- 只输出一个阿拉伯数字
+- 有匹配 → 对应编号；无匹配 → 0
+- 禁止输出解释、标点、引号、markdown、换行以外的任何字符
+
+示例 1
+新查询：\"初一数学作业错题\"
+已缓存查询：
+1. \"初一数学作业错题统计\"
+2. \"初二物理实验记录\"
+答案：1
+
+示例 2
+新查询：\"明天天气\"
+已缓存查询：
+1. \"北京限行规则\"
+2. \"初一英语听写\"
+答案：0
+
+现在请回答：
 
 新查询：\"{query}\"
 
 已缓存查询：
 {candidates}
 
-如果有匹配，只回复对应编号（如\"1\"）。如果没有匹配，回复\"0\"。";
+答案：";
+
+/// Extract the trailing integer id from a (possibly noisy) LLM reply.
+///
+/// The prompt ends with `答案：` as an anchor, so the real answer is almost
+/// always the last digit run in the reply. A small amount of trailing
+/// punctuation / whitespace / repeated anchor text is tolerated.
+fn extract_match_id(reply: &str, max: usize) -> usize {
+    static TRAILING_DIGITS: LazyLock<Regex> =
+        LazyLock::new(|| Regex::new(r"(\d+)\D*$").expect("valid regex"));
+
+    TRAILING_DIGITS
+        .captures(reply.trim())
+        .and_then(|c| c[1].parse::<usize>().ok())
+        .filter(|n| *n <= max)
+        .unwrap_or(0)
+}
 
 /// Scan all cache entries in `cache_dir`, filter by TTL, and use LLM to find a
 /// semantically equivalent entry for `query_text`. Returns the cached result
@@ -815,8 +854,8 @@ async fn semantic_match_cached(
         }
     };
 
-    let idx: usize = reply.trim().parse().unwrap_or(0);
-    if idx == 0 || idx > candidates.len() {
+    let idx = extract_match_id(&reply, candidates.len());
+    if idx == 0 {
         tracing::debug!("sw cache semantic: no match (LLM replied \"{reply}\")");
         return None;
     }
@@ -1027,6 +1066,52 @@ pub async fn run_script(
     let stderr = stderr_handle.await.unwrap_or_default();
 
     Ok((stdout, stderr, status.success()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::extract_match_id;
+
+    #[test]
+    fn plain_digit() {
+        assert_eq!(extract_match_id("2", 5), 2);
+        assert_eq!(extract_match_id("0", 5), 0);
+    }
+
+    #[test]
+    fn trailing_punctuation() {
+        assert_eq!(extract_match_id("2。", 5), 2);
+        assert_eq!(extract_match_id("2.", 5), 2);
+        assert_eq!(extract_match_id("2\n", 5), 2);
+        assert_eq!(extract_match_id(" 2 ", 5), 2);
+    }
+
+    #[test]
+    fn anchor_repeated() {
+        assert_eq!(extract_match_id("答案：2", 5), 2);
+        assert_eq!(extract_match_id("答案: 3 ", 5), 3);
+    }
+
+    #[test]
+    fn markdown_decorated() {
+        assert_eq!(extract_match_id("**2**", 5), 2);
+    }
+
+    #[test]
+    fn out_of_range_rejected() {
+        assert_eq!(extract_match_id("18", 5), 0);
+    }
+
+    #[test]
+    fn no_digit_rejected() {
+        assert_eq!(extract_match_id("", 5), 0);
+        assert_eq!(extract_match_id("都不匹配", 5), 0);
+    }
+
+    #[test]
+    fn leading_noise_still_trailing_wins() {
+        assert_eq!(extract_match_id("候选 1 和 3 都相关，最终选 2", 5), 2);
+    }
 }
 
 async fn read_stream(
