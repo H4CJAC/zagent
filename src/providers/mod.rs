@@ -717,6 +717,11 @@ pub struct ProviderRuntimeOptions {
     /// When true, system messages are merged into the first user message before
     /// sending. Propagated from `ModelProviderConfig::merge_system_into_user`.
     pub merge_system_into_user: bool,
+    /// Optional path to a fast-path rules JSON file, propagated from
+    /// `runtime.fast_path_rules_path`. When `Some`, takes precedence over the
+    /// `CCLAWCORE_FAST_PATH_RULES` env var and the default
+    /// `./fast-path-rules.json` fallback used by `CustomWithFastpathProvider`.
+    pub fast_path_rules_path: Option<String>,
 }
 
 impl Default for ProviderRuntimeOptions {
@@ -734,6 +739,7 @@ impl Default for ProviderRuntimeOptions {
             api_path: None,
             provider_max_tokens: None,
             merge_system_into_user: false,
+            fast_path_rules_path: None,
         }
     }
 }
@@ -775,6 +781,7 @@ pub fn provider_runtime_options_from_config(
         api_path: config.api_path.clone(),
         provider_max_tokens: config.provider_max_tokens,
         merge_system_into_user,
+        fast_path_rules_path: config.runtime.fast_path_rules_path.clone(),
     }
 }
 
@@ -1767,7 +1774,10 @@ fn create_provider_with_url_and_options(
             if let Some(mt) = options.provider_max_tokens {
                 inner = inner.with_max_tokens(Some(mt));
             }
-            Ok(Box::new(CustomWithFastpathProvider::wrap(inner, None)))
+            Ok(Box::new(CustomWithFastpathProvider::wrap(
+                inner,
+                options.fast_path_rules_path.as_deref(),
+            )))
         }
 
         // ── Anthropic-compatible custom endpoints ───────────

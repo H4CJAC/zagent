@@ -10,6 +10,13 @@
 //! Unmatched requests, and any turn whose last message is not a `user`
 //! message (e.g. when `tool_result` is being fed back), pass through to the
 //! inner provider unchanged.
+//!
+//! Rules file resolution (highest priority first):
+//!   1. the `rules_path` argument to [`CustomWithFastpathProvider::wrap`]
+//!      (the provider factory wires this from `runtime.fast_path_rules_path`
+//!      in `seewo.toml`);
+//!   2. the `CCLAWCORE_FAST_PATH_RULES` environment variable;
+//!   3. `./fast-path-rules.json` in the current working directory.
 
 use std::path::Path;
 use std::sync::Arc;
@@ -80,7 +87,8 @@ fn empty_args() -> serde_json::Value {
 
 impl CustomWithFastpathProvider {
     /// Wrap an [`OpenAiCompatibleProvider`]. Rules are loaded from:
-    ///   1. the `rules_path` argument, if `Some`;
+    ///   1. the `rules_path` argument, if `Some` (the provider factory wires
+    ///      this from `runtime.fast_path_rules_path` in `seewo.toml`);
     ///   2. the `CCLAWCORE_FAST_PATH_RULES` environment variable;
     ///   3. `./fast-path-rules.json` in the current working directory.
     ///
@@ -635,6 +643,43 @@ mod tests {
         let rules = CustomWithFastpathProvider::load_rules(tmp.to_str());
         let _ = std::fs::remove_file(&tmp);
         assert!(rules.is_empty());
+    }
+
+    #[test]
+    fn load_rules_explicit_path_overrides_env() {
+        let explicit = std::env::temp_dir().join("fast-path-explicit.json");
+        let from_env = std::env::temp_dir().join("fast-path-from-env.json");
+        std::fs::write(
+            &explicit,
+            serde_json::json!([
+                {"name": "from-explicit", "pattern": "^x$", "response": "x"}
+            ])
+            .to_string(),
+        )
+        .unwrap();
+        std::fs::write(
+            &from_env,
+            serde_json::json!([
+                {"name": "from-env", "pattern": "^y$", "response": "y"}
+            ])
+            .to_string(),
+        )
+        .unwrap();
+
+        let prev = std::env::var(RULES_ENV).ok();
+        unsafe { std::env::set_var(RULES_ENV, from_env.to_str().unwrap()) };
+
+        let rules = CustomWithFastpathProvider::load_rules(explicit.to_str());
+
+        match prev {
+            Some(v) => unsafe { std::env::set_var(RULES_ENV, v) },
+            None => unsafe { std::env::remove_var(RULES_ENV) },
+        }
+        let _ = std::fs::remove_file(&explicit);
+        let _ = std::fs::remove_file(&from_env);
+
+        assert_eq!(rules.len(), 1);
+        assert_eq!(rules[0].name.as_deref(), Some("from-explicit"));
     }
 
     #[test]

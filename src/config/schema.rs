@@ -5850,6 +5850,13 @@ pub struct RuntimeConfig {
     /// Optional reasoning effort for providers that expose a level control.
     #[serde(default, deserialize_with = "deserialize_reasoning_effort_opt")]
     pub reasoning_effort: Option<String>,
+
+    /// Optional path to a JSON file of fast-path rules used by the
+    /// `custom-with-fastpath:` provider. When unset, falls back to the
+    /// `CCLAWCORE_FAST_PATH_RULES` env var, then `./fast-path-rules.json`
+    /// in the current working directory.
+    #[serde(default)]
+    pub fast_path_rules_path: Option<String>,
 }
 
 /// Docker runtime configuration (`[runtime.docker]` section).
@@ -5926,6 +5933,7 @@ impl Default for RuntimeConfig {
             docker: DockerRuntimeConfig::default(),
             reasoning_enabled: None,
             reasoning_effort: None,
+            fast_path_rules_path: None,
         }
     }
 }
