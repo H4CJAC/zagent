@@ -22,6 +22,7 @@ pub mod bedrock;
 pub mod claude_code;
 pub mod compatible;
 pub mod copilot;
+pub mod custom_with_fastpath;
 pub mod gemini;
 pub mod gemini_cli;
 pub mod kilocli;
@@ -43,6 +44,7 @@ pub use traits::{
 
 use crate::auth::AuthService;
 use compatible::{AuthStyle, OpenAiCompatibleProvider};
+use custom_with_fastpath::CustomWithFastpathProvider;
 use reliable::ReliableProvider;
 use serde::Deserialize;
 use std::path::PathBuf;
@@ -1159,7 +1161,9 @@ fn create_provider_with_url_and_options(
 
     // Pre-flight: catch obvious API-key / provider mismatches early.
     if let Some(key_value) = key {
-        let is_custom = name.starts_with("custom:") || name.starts_with("anthropic-custom:");
+        let is_custom = name.starts_with("custom:")
+            || name.starts_with("anthropic-custom:")
+            || name.starts_with("custom-with-fastpath:");
         let has_custom_url = api_url.map(str::trim).filter(|u| !u.is_empty()).is_some();
         if !is_custom && !has_custom_url {
             if let Some(likely_provider) = check_api_key_prefix(name, key_value) {
@@ -1723,6 +1727,49 @@ fn create_provider_with_url_and_options(
             Ok(compat(provider))
         }
 
+        // ── Custom OpenAI-compatible endpoint with regex fast-path ───
+        // Format: "custom-with-fastpath:https://your-api.com"
+        // Rules are loaded from the CCLAWCORE_FAST_PATH_RULES env var or
+        // ./fast-path-rules.json in the current working directory.
+        name if name.starts_with("custom-with-fastpath:") => {
+            let base_url = parse_custom_provider_url(
+                name.strip_prefix("custom-with-fastpath:").unwrap_or(""),
+                "Custom-with-fastpath provider",
+                "custom-with-fastpath:https://your-api.com",
+            )?;
+            let mut inner = OpenAiCompatibleProvider::new_with_vision(
+                "CustomWithFastpath",
+                &base_url,
+                key,
+                AuthStyle::Bearer,
+                true,
+            );
+            if options.merge_system_into_user {
+                inner = inner.with_merge_system_into_user();
+            }
+            // Apply the same common options the `compat` closure applies,
+            // but keep the provider unboxed so we can wrap it.
+            if let Some(t) = options.provider_timeout_secs {
+                inner = inner.with_timeout_secs(t);
+            }
+            if let Some(ref effort) = options.reasoning_effort {
+                inner = inner.with_reasoning_effort(Some(effort.clone()));
+            }
+            if !options.extra_headers.is_empty() {
+                inner = inner.with_extra_headers(options.extra_headers.clone());
+            }
+            if options.extra_body.is_some() {
+                inner = inner.with_extra_body(options.extra_body.clone());
+            }
+            if options.api_path.is_some() {
+                inner = inner.with_api_path(options.api_path.clone());
+            }
+            if let Some(mt) = options.provider_max_tokens {
+                inner = inner.with_max_tokens(Some(mt));
+            }
+            Ok(Box::new(CustomWithFastpathProvider::wrap(inner, None)))
+        }
+
         // ── Anthropic-compatible custom endpoints ───────────
         // Format: "anthropic-custom:https://your-api.com"
         name if name.starts_with("anthropic-custom:") => {
@@ -1740,6 +1787,7 @@ fn create_provider_with_url_and_options(
         _ => anyhow::bail!(
             "Unknown provider: {name}. Check README for supported providers or run `cclawcore onboard` to reconfigure.\n\
              Tip: Use \"custom:https://your-api.com\" for OpenAI-compatible endpoints.\n\
+             Tip: Use \"custom-with-fastpath:https://your-api.com\" for OpenAI-compatible endpoints with a regex fast-path.\n\
              Tip: Use \"anthropic-custom:https://your-api.com\" for Anthropic-compatible endpoints."
         ),
     }
@@ -1749,10 +1797,13 @@ fn create_provider_with_url_and_options(
 ///
 /// Returns `(provider_name, Some(profile))` when the entry contains a colon-
 /// delimited profile, or `(original_str, None)` otherwise.  Entries starting
-/// with `custom:` or `anthropic-custom:` are left untouched because the colon
-/// is part of the URL scheme.
+/// with `custom:`, `custom-with-fastpath:`, or `anthropic-custom:` are left
+/// untouched because the colon is part of the URL scheme.
 fn parse_provider_profile(s: &str) -> (&str, Option<&str>) {
-    if s.starts_with("custom:") || s.starts_with("anthropic-custom:") {
+    if s.starts_with("custom:")
+        || s.starts_with("anthropic-custom:")
+        || s.starts_with("custom-with-fastpath:")
+    {
         return (s, None);
     }
     match s.split_once(':') {
