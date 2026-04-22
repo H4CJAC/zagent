@@ -167,7 +167,7 @@ report_output_dir = "~/.cclawcore/security-reports"
 
 [runtime]
 kind = "native"
-fast_path_rules_path = "./fast-path-rules.json"
+fast_path_rules_path = "rules/fast-path-rules.json"
 
 [runtime.docker]
 image = "alpine:3.20"
