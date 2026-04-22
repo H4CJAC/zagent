@@ -381,13 +381,24 @@ pub struct AppState {
     pub webauthn: Option<Arc<api_webauthn::WebAuthnState>>,
 }
 
+/// Signal delivered on the first bind attempt of [`run_gateway`].
+///
+/// - `Ok(port)` — TCP listener is bound and about to start accepting.
+/// - `Err(msg)` — bind failed; the gateway task will return the same error.
+pub type GatewayReadySignal = Result<u16, String>;
+
 /// Run the HTTP gateway using axum with proper HTTP/1.1 compliance.
+///
+/// `ready_tx` lets callers (e.g. the FFI layer) block until the listener is
+/// actually bound. It is consumed on the first bind attempt, regardless of
+/// outcome. Subsequent retries by a supervisor should pass `None`.
 #[allow(clippy::too_many_lines)]
 pub async fn run_gateway(
     host: &str,
     port: u16,
     config: Config,
     external_event_tx: Option<tokio::sync::broadcast::Sender<serde_json::Value>>,
+    ready_tx: Option<tokio::sync::oneshot::Sender<GatewayReadySignal>>,
 ) -> Result<()> {
     // ── Security: warn on public bind without tunnel or explicit opt-in ──
     if is_public_bind(host) && config.tunnel.provider == "none" && !config.gateway.allow_public_bind
@@ -408,9 +419,39 @@ pub async fn run_gateway(
         None
     };
 
-    let addr: SocketAddr = format!("{host}:{port}").parse()?;
-    let listener = tokio::net::TcpListener::bind(addr).await?;
-    let actual_port = listener.local_addr()?.port();
+    let addr: SocketAddr = match format!("{host}:{port}").parse() {
+        Ok(a) => a,
+        Err(e) => {
+            let msg = format!("invalid gateway address {host}:{port}: {e}");
+            if let Some(tx) = ready_tx {
+                let _ = tx.send(Err(msg.clone()));
+            }
+            return Err(anyhow::anyhow!(msg));
+        }
+    };
+    let listener = match tokio::net::TcpListener::bind(addr).await {
+        Ok(l) => l,
+        Err(e) => {
+            let msg = format!("bind {addr}: {e}");
+            if let Some(tx) = ready_tx {
+                let _ = tx.send(Err(msg.clone()));
+            }
+            return Err(anyhow::anyhow!(msg));
+        }
+    };
+    let actual_port = match listener.local_addr() {
+        Ok(a) => a.port(),
+        Err(e) => {
+            let msg = format!("listener.local_addr failed: {e}");
+            if let Some(tx) = ready_tx {
+                let _ = tx.send(Err(msg.clone()));
+            }
+            return Err(anyhow::anyhow!(msg));
+        }
+    };
+    if let Some(tx) = ready_tx {
+        let _ = tx.send(Ok(actual_port));
+    }
     let display_addr = format!("{host}:{actual_port}");
 
     let provider: Arc<dyn Provider> = Arc::from(providers::create_resilient_provider_with_options(

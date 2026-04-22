@@ -1,8 +1,11 @@
 use crate::config::Config;
+use crate::gateway::GatewayReadySignal;
 use anyhow::Result;
 use chrono::Utc;
 use std::future::Future;
 use std::path::PathBuf;
+use std::sync::{Arc, Mutex as StdMutex};
+use tokio::sync::oneshot;
 use tokio::task::JoinHandle;
 use tokio::time::Duration;
 use tokio_util::sync::CancellationToken;
@@ -48,17 +51,22 @@ async fn wait_for_shutdown_signal() -> Result<()> {
 
 /// CLI entry point — blocks on OS signals for shutdown.
 pub async fn run(config: Config, host: String, port: u16) -> Result<()> {
-    run_with_shutdown(config, host, port, None).await
+    run_with_shutdown(config, host, port, None, None).await
 }
 
 /// Core daemon loop. When `cancel` is `Some`, shutdown is triggered by the
 /// token instead of (or in addition to) OS signals, enabling library callers
 /// to stop the daemon programmatically.
+///
+/// `gateway_ready_tx`, when provided, is forwarded to the *first* invocation
+/// of the gateway component so the caller can block until the HTTP listener
+/// is actually bound. Subsequent supervisor retries will pass `None`.
 pub async fn run_with_shutdown(
     config: Config,
     host: String,
     port: u16,
     cancel: Option<CancellationToken>,
+    gateway_ready_tx: Option<oneshot::Sender<GatewayReadySignal>>,
 ) -> Result<()> {
     let initial_backoff = config.reliability.channel_initial_backoff_secs.max(1);
     let max_backoff = config
@@ -84,6 +92,10 @@ pub async fn run_with_shutdown(
         let gateway_cfg = config.clone();
         let gateway_host = host.clone();
         let gateway_event_tx = event_tx.clone();
+        // Wrap ready_tx in a shared slot so only the first supervisor invocation
+        // consumes it; retries after a bind failure must pass None.
+        let ready_slot: Arc<StdMutex<Option<oneshot::Sender<GatewayReadySignal>>>> =
+            Arc::new(StdMutex::new(gateway_ready_tx));
         handles.push(spawn_component_supervisor(
             "gateway",
             initial_backoff,
@@ -92,8 +104,14 @@ pub async fn run_with_shutdown(
                 let cfg = gateway_cfg.clone();
                 let host = gateway_host.clone();
                 let tx = gateway_event_tx.clone();
+                let ready_slot = ready_slot.clone();
                 async move {
-                    Box::pin(crate::gateway::run_gateway(&host, port, cfg, Some(tx))).await
+                    let ready = ready_slot
+                        .lock()
+                        .unwrap_or_else(|poisoned| poisoned.into_inner())
+                        .take();
+                    Box::pin(crate::gateway::run_gateway(&host, port, cfg, Some(tx), ready))
+                        .await
                 }
             },
         ));

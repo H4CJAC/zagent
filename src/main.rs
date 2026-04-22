@@ -1219,7 +1219,7 @@ async fn main() -> Result<()> {
                     }
 
                     log_gateway_start(&host, port);
-                    Box::pin(gateway::run_gateway(&host, port, config, None)).await
+                    Box::pin(gateway::run_gateway(&host, port, config, None, None)).await
                 }
                 Some(cclawcore::GatewayCommands::GetPaircode { new }) => {
                     let port = config.gateway.port;
@@ -1272,13 +1272,13 @@ async fn main() -> Result<()> {
                 Some(cclawcore::GatewayCommands::Start { port, host }) => {
                     let (port, host) = resolve_gateway_addr(&config, port, host);
                     log_gateway_start(&host, port);
-                    Box::pin(gateway::run_gateway(&host, port, config, None)).await
+                    Box::pin(gateway::run_gateway(&host, port, config, None, None)).await
                 }
                 None => {
                     let port = config.gateway.port;
                     let host = config.gateway.host.clone();
                     log_gateway_start(&host, port);
-                    Box::pin(gateway::run_gateway(&host, port, config, None)).await
+                    Box::pin(gateway::run_gateway(&host, port, config, None, None)).await
                 }
             }
         }
