@@ -1,0 +1,36 @@
+src/main.rs
+  559467c2caf5af15 1222,1275,1281
+crates/cclawcore-ffi/Cargo.toml
+  559467c2caf5af15 21-23
+src/gateway/mod.rs
+  559467c2caf5af15 384-389,391-394,401,422-454
+crates/cclawcore-ffi/src/lib.rs
+  559467c2caf5af15 1-11,14-15,18,20,22-32,41-78,82-85,93-96,104-124,131-135,137,140-142,154-198,200-218,220-230,232-244,246-251,253,255-257,259-271,273-274,276-279,281-286,288,290-309,311,316-317,320-326,328-330
+docs/setup-guides/quick_build/03-build_to_android.md
+  559467c2caf5af15 28-29,33,38-43,46,49-59
+src/daemon/mod.rs
+  559467c2caf5af15 2,7-8,54,60-63,69,95-98,107,109-114
+docs/setup-guides/quick_build/cclawcore.h
+  559467c2caf5af15 8-19,33,35-39,42-47,58-59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.9",
+  "base_commit_sha": "2654838a7e103a2cfada1692ec497224365543b2",
+  "prompts": {
+    "559467c2caf5af15": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "e3df0fc7-f036-4614-b3bb-26c6c17724c1",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "hacyou",
+      "messages": [],
+      "total_additions": 384,
+      "total_deletions": 96,
+      "accepted_lines": 382,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/78f92eeb515e53961ca084c40378ba699067b61ceb73c9ac1672028f24c758b9"
+    }
+  }
+}
