@@ -1,0 +1,28 @@
+src/config/schema.rs
+  dd9a7ab298799cca 9195-9209,9211-9226,14307-14385
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.9",
+  "base_commit_sha": "fcbaee7769279fa22ff0942242546ebbde866239",
+  "prompts": {
+    "dd9a7ab298799cca": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "49f768fd-534d-460d-bfe8-417620332917",
+        "model": "claude-opus-4-7-thinking-high"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 110,
+      "total_deletions": 0,
+      "accepted_lines": 110,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_f38e4123063fc1": {
+      "author": "hac"
+    }
+  }
+}
