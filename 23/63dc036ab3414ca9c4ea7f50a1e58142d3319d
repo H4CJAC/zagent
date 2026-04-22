@@ -1,0 +1,47 @@
+src/providers/mod.rs
+  dd9a7ab298799cca 723-724,726-729,748,791,1786
+src/providers/openai_codex.rs
+  dd9a7ab298799cca 1138
+src/config/presets/seewo.toml
+  h_f38e4123063fc1 1-2,170,184-186,188,545-546
+src/providers/custom_with_fastpath.rs
+  dd9a7ab298799cca 19-24,93-109,115,117-119,123-128,142,147-148,666,674,703,717-758,768
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.9",
+  "base_commit_sha": "2363dc036ab3414ca9c4ea7f50a1e58142d3319d",
+  "prompts": {
+    "dd9a7ab298799cca": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "49f768fd-534d-460d-bfe8-417620332917",
+        "model": "claude-opus-4-7-thinking-high"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 98,
+      "total_deletions": 12,
+      "accepted_lines": 94,
+      "overriden_lines": 1
+    },
+    "fbd0a7434a0e56c7": {
+      "agent_id": {
+        "tool": "known_human",
+        "id": "known_human_session",
+        "model": "unknown"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 29,
+      "total_deletions": 23,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_f38e4123063fc1": {
+      "author": "hac"
+    }
+  }
+}
