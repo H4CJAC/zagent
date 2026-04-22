@@ -1,0 +1,34 @@
+src/providers/custom_with_fastpath.rs
+  dd9a7ab298799cca 13-19,90-91,649-684
+src/config/schema.rs
+  dd9a7ab298799cca 5853-5859,5936
+src/providers/mod.rs
+  dd9a7ab298799cca 720-724,742,784,1777-1780
+src/providers/openai_codex.rs
+  dd9a7ab298799cca 1137
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.9",
+  "base_commit_sha": "3a195024b0078329ff398e2841a476311b334231",
+  "prompts": {
+    "dd9a7ab298799cca": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "49f768fd-534d-460d-bfe8-417620332917",
+        "model": "claude-opus-4-7-thinking-high"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 66,
+      "total_deletions": 2,
+      "accepted_lines": 66,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_f38e4123063fc1": {
+      "author": "hac"
+    }
+  }
+}
