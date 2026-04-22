@@ -1,0 +1,44 @@
+src/providers/custom_with_fastpath.rs
+  dd9a7ab298799cca 25-69,91-108,134-145,155-160,198-207,256,267-277,279,341,350-355,550-553,561,563,573,575,582,585,587,596,602,604,636-646,648-649,654-673,817-822,828-833,862-867,903-910,918-975
+assets/rules/fast-path-rules.json
+  dd9a7ab298799cca 1,4-389
+  h_f38e4123063fc1 2-3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.9",
+  "base_commit_sha": "098ee4e6bd78f0ff0fbaeb28456ebee6b430a2e8",
+  "prompts": {
+    "dd9a7ab298799cca": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "49f768fd-534d-460d-bfe8-417620332917",
+        "model": "claude-opus-4-7-thinking-high"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 491,
+      "total_deletions": 48,
+      "accepted_lines": 629,
+      "overriden_lines": 0
+    },
+    "fbd0a7434a0e56c7": {
+      "agent_id": {
+        "tool": "known_human",
+        "id": "known_human_session",
+        "model": "unknown"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 395,
+      "total_deletions": 248,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_f38e4123063fc1": {
+      "author": "hac"
+    }
+  }
+}
