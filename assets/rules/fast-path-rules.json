@@ -1,0 +1,389 @@
+{
+    "anchor_prefix": "^[\\s，,。!！?？]*(?:(?:请|麻烦|帮我|帮忙|能不能|可以|可否|请问|给我|让|来|我想)\\s*)*(?:",
+    "anchor_suffix": ")\\s*[\\s，,。!！?？一下呗啊吧]*$",
+    "rules": [
+        {
+            "name": "get_volume",
+            "pattern": "(获取音量|设备音量|当前音量|音量多少|音量多大|声音多大|声音多少)",
+            "tool_calls": [
+                {
+                    "name": "getVolume",
+                    "arguments": {}
+                }
+            ]
+        },
+        {
+            "name": "volume_up",
+            "pattern": "(音量大一点|声音大一点|调大音量|音量调高|大声一点|声音太小|调高音量|增大音量|声音调大|音量大点|声音大点)",
+            "tool_calls": [
+                {
+                    "name": "changeVolume",
+                    "arguments": {
+                        "mode": "RELATIVE",
+                        "value": 10
+                    }
+                }
+            ]
+        },
+        {
+            "name": "volume_down",
+            "pattern": "(音量小一点|声音小一点|调小音量|音量调低|小声一点|声音太大|调低音量|减小音量|声音调小|音量小点|声音小点)",
+            "tool_calls": [
+                {
+                    "name": "changeVolume",
+                    "arguments": {
+                        "mode": "RELATIVE",
+                        "value": -10
+                    }
+                }
+            ]
+        },
+        {
+            "name": "mic_on",
+            "pattern": "(打开麦克风|开启麦克风|开启话筒|取消麦克风静音|启用麦克风|打开话筒)",
+            "tool_calls": [
+                {
+                    "name": "setMicMute",
+                    "arguments": {
+                        "isMute": false
+                    }
+                }
+            ]
+        },
+        {
+            "name": "mic_off",
+            "pattern": "(关闭麦克风|麦克风静音|关闭话筒|把话筒关了|禁用麦克风|话筒静音)",
+            "tool_calls": [
+                {
+                    "name": "setMicMute",
+                    "arguments": {
+                        "isMute": true
+                    }
+                }
+            ]
+        },
+        {
+            "name": "unmute",
+            "pattern": "(取消静音|打开声音|恢复声音|开启声音)",
+            "tool_calls": [
+                {
+                    "name": "setMute",
+                    "arguments": {
+                        "isMute": false
+                    }
+                }
+            ]
+        },
+        {
+            "name": "mute",
+            "pattern": "(把声音关了|关闭声音|关声音|静音)",
+            "tool_calls": [
+                {
+                    "name": "setMute",
+                    "arguments": {
+                        "isMute": true
+                    }
+                }
+            ]
+        },
+        {
+            "name": "get_brightness",
+            "pattern": "(获取亮度|当前亮度|亮度多少|亮度多大|背光多少)",
+            "tool_calls": [
+                {
+                    "name": "getBrightness",
+                    "arguments": {}
+                }
+            ]
+        },
+        {
+            "name": "brightness_up",
+            "pattern": "(亮度调高|亮度调大|亮度大一点|调大亮度|增大亮度|屏幕太暗|亮一点|调亮)",
+            "tool_calls": [
+                {
+                    "name": "changeBrightness",
+                    "arguments": {
+                        "mode": "RELATIVE",
+                        "value": 10
+                    }
+                }
+            ]
+        },
+        {
+            "name": "brightness_down",
+            "pattern": "(亮度调低|亮度调小|亮度小一点|调小亮度|减小亮度|屏幕太亮|暗一点|调暗)",
+            "tool_calls": [
+                {
+                    "name": "changeBrightness",
+                    "arguments": {
+                        "mode": "RELATIVE",
+                        "value": -10
+                    }
+                }
+            ]
+        },
+        {
+            "name": "get_mic_status",
+            "pattern": "(麦克风状态|话筒状态|麦克风开了没|麦克风开没开|话筒开了没)",
+            "tool_calls": [
+                {
+                    "name": "getMicStatus",
+                    "arguments": {}
+                }
+            ]
+        },
+        {
+            "name": "get_camera_status",
+            "pattern": "(摄像头状态|摄像头开了没|相机状态|镜头状态)",
+            "tool_calls": [
+                {
+                    "name": "getCameraStatus",
+                    "arguments": {}
+                }
+            ]
+        },
+        {
+            "name": "camera_on",
+            "pattern": "(打开摄像头|开启摄像头|开启相机|启用摄像头|打开相机|打开镜头)",
+            "tool_calls": [
+                {
+                    "name": "setCameraEnable",
+                    "arguments": {
+                        "enable": true
+                    }
+                }
+            ]
+        },
+        {
+            "name": "camera_off",
+            "pattern": "(关闭摄像头|关闭相机|把摄像头关了|禁用摄像头|关闭镜头)",
+            "tool_calls": [
+                {
+                    "name": "setCameraEnable",
+                    "arguments": {
+                        "enable": false
+                    }
+                }
+            ]
+        },
+        {
+            "name": "hide_dialog",
+            "pattern": "(关闭弹窗|关闭悬浮|关闭卡片)",
+            "tool_calls": [
+                {
+                    "name": "hideRichTextDialog",
+                    "arguments": {}
+                }
+            ]
+        },
+        {
+            "name": "get_devices",
+            "pattern": "(连接设备|已连接设备|设备列表|在线设备|当前连接)",
+            "tool_calls": [
+                {
+                    "name": "maxhub_os_get_connected_devices",
+                    "arguments": {}
+                }
+            ]
+        },
+        {
+            "name": "get_foreground",
+            "pattern": "(前台应用|当前应用|正在运行的应用|当前程序|前台程序)",
+            "tool_calls": [
+                {
+                    "name": "maxhub_os_get_foreground_app",
+                    "arguments": {}
+                }
+            ]
+        },
+        {
+            "name": "press_home",
+            "pattern": "(回到主页|返回桌面|回主页|回首页|返回首页)",
+            "tool_calls": [
+                {
+                    "name": "maxhub_os_press_key",
+                    "arguments": {
+                        "keyCode": 3
+                    }
+                }
+            ]
+        },
+        {
+            "name": "press_back",
+            "pattern": "(返回上一页|返回上一级|返回上级|按返回)",
+            "tool_calls": [
+                {
+                    "name": "maxhub_os_press_key",
+                    "arguments": {
+                        "keyCode": 4
+                    }
+                }
+            ]
+        },
+        {
+            "name": "check_meeting",
+            "pattern": "(会议是否可加入|能否入会|能不能入会|会议能入么)",
+            "tool_calls": [
+                {
+                    "name": "checkMeetingJoinable",
+                    "arguments": {}
+                }
+            ]
+        },
+        {
+            "name": "enter_meeting_mode",
+            "pattern": "(会议模式|会议准备|开会前检查|检查会议设备)",
+            "tool_calls": [
+                {
+                    "name": "maxhub_android_enter_meeting_mode",
+                    "arguments": {}
+                }
+            ]
+        },
+        {
+            "name": "release_meeting_room",
+            "pattern": "(释放会议室|会议室释放)",
+            "tool_calls": [
+                {
+                    "name": "maxhub_android_release_meeting_room",
+                    "arguments": {}
+                }
+            ]
+        },
+        {
+            "name": "show_meeting_minutes",
+            "pattern": "(会议纪要|会记二维码|显示会记|会议记录|展示会记)",
+            "tool_calls": [
+                {
+                    "name": "maxhub_android_show_meeting_minutes",
+                    "arguments": {}
+                }
+            ]
+        },
+        {
+            "name": "start_meeting_record",
+            "pattern": "(开始会议录制|启动会议录制|录制会议|开始录制|启动录制|开始录音)",
+            "tool_calls": [
+                {
+                    "name": "meetingrecord_start_meeting",
+                    "arguments": {}
+                }
+            ]
+        },
+        {
+            "name": "stop_meeting_record",
+            "pattern": "(结束会议录制|停止会议录制|结束录制|停止录制|停止录音|结束录音)",
+            "tool_calls": [
+                {
+                    "name": "meetingrecord_finish_meeting",
+                    "arguments": {
+                        "includeShareUrl": true
+                    }
+                }
+            ]
+        },
+        {
+            "name": "send_meeting_email",
+            "pattern": "(发送会议邮件|发送纪要邮件|邮件发送会记|邮件纪要)",
+            "tool_calls": [
+                {
+                    "name": "meetingrecord_send_summary_email",
+                    "arguments": {}
+                }
+            ]
+        },
+        {
+            "name": "take_photo",
+            "pattern": "(拍张合影|来张合影|拍张照|自拍|拍照)",
+            "tool_calls": [
+                {
+                    "name": "takePhoto",
+                    "arguments": {
+                        "delaySeconds": 3
+                    }
+                }
+            ]
+        },
+        {
+            "name": "turbo_clean",
+            "pattern": "(性能清理|清理内存|释放内存|回收内存|清理存储)",
+            "tool_calls": [
+                {
+                    "name": "maxhub_android_turbo_clean",
+                    "arguments": {
+                        "targetMemoryMb": 512
+                    }
+                }
+            ]
+        },
+        {
+            "name": "viewpoint_summary",
+            "pattern": "(总结观点|观点总结|会议观点|查看观点|总结会议|会议总结|归纳观点|汇总意见|概括观点)",
+            "tool_calls": [
+                {
+                    "name": "preProcessAction",
+                    "arguments": {
+                        "action": "viewpoint_summary",
+                        "params": ""
+                    }
+                }
+            ]
+        },
+        {
+            "name": "expand_summary",
+            "pattern": "(扩展观点|扩展内容|拓展观点|拓展内容|展开观点|展开内容|详细说明|观点详情)",
+            "tool_calls": [
+                {
+                    "name": "expandSummary",
+                    "arguments": {}
+                }
+            ]
+        },
+        {
+            "name": "join_meeting",
+            "pattern": "(加入会议|快速入会|启动会议|参加会议|进入会议|参与会议|连入会议)",
+            "tool_calls": [
+                {
+                    "name": "preProcessAction",
+                    "arguments": {
+                        "action": "join_meeting",
+                        "params": ""
+                    }
+                }
+            ]
+        },
+        {
+            "name": "leave_meeting",
+            "pattern": "(结束会议|退出会议|离开会议|关闭会议)",
+            "tool_calls": [
+                {
+                    "name": "preProcessAction",
+                    "arguments": {
+                        "action": "leave_meeting",
+                        "params": ""
+                    }
+                }
+            ]
+        },
+        {
+            "name": "pause_timer",
+            "pattern": "(暂停倒计时|暂停计时|暂停定时|先暂停)",
+            "tool_calls": [
+                {
+                    "name": "pauseTimer",
+                    "arguments": {}
+                }
+            ]
+        },
+        {
+            "name": "resume_timer",
+            "pattern": "(继续倒计时|继续计时|继续定时|恢复计时|取消暂停)",
+            "tool_calls": [
+                {
+                    "name": "resumeTimer",
+                    "arguments": {}
+                }
+            ]
+        }
+    ]
+}

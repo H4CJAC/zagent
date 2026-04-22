@@ -22,6 +22,51 @@
 //! `workspace_dir` (mirrors `demo_scripts_dir` in `DemoScriptEngine::load`);
 //! absolute paths are used as-is. When `workspace_dir` is `None`, relative
 //! paths fall back to the current working directory.
+//!
+//! # JSON file layout
+//!
+//! The rules file is an object (top-level arrays are rejected):
+//!
+//! ```json
+//! {
+//!   "anchor_prefix": "...optional...",
+//!   "anchor_suffix": "...optional...",
+//!   "rules": [
+//!     { "name": "volume_up", "pattern": "(调大音量|音量大一点)", "tool_calls": [...] },
+//!     { "name": "greeting",  "pattern": "^(?i)(你好|hi)[。!！.]?$",
+//!       "anchored": false, "response": "..." }
+//!   ]
+//! }
+//! ```
+//!
+//! # Anchoring
+//!
+//! Each rule's `pattern` is compiled as
+//! `{anchor_prefix}{pattern}{anchor_suffix}` by default, so rules match
+//! whole-utterance commands rather than arbitrary substrings. Missing
+//! `anchor_prefix` / `anchor_suffix` fall back to the built-in defaults
+//! ([`DEFAULT_ANCHOR_PREFIX`] / [`DEFAULT_ANCHOR_SUFFIX`]).
+//!
+//! Set `"anchored": false` on a specific rule to skip wrapping and use its
+//! pattern verbatim — useful when the rule already owns its own `^...$`
+//! anchoring or intentionally wants substring semantics.
+//!
+//! # Implicit negation protection
+//!
+//! Rust `regex` has no lookaround, so negation protection is encoded via
+//! the whitelist tightness of the default anchors:
+//!
+//! - The prefix only consumes whitespace / Chinese punctuation / an optional
+//!   polite opener (`请/麻烦/帮我/...`). Any negation word
+//!   (`不要/别/取消/不用/不想/先不/...`) fails to fit this whitelist, so the
+//!   overall anchored regex cannot consume characters before the command
+//!   phrase → no match.
+//! - The suffix only consumes whitespace / a small set of trailing tone
+//!   characters (`一下/呗/啊/吧`). Again, `不/别/取消` are absent, so
+//!   `"调大音量不行"`-style inputs cannot match.
+//!
+//! Rules with `anchored: false` opt out of this protection and own their
+//! own semantics.
 
 use std::path::Path;
 use std::sync::Arc;
@@ -42,6 +87,24 @@ use crate::tools::ToolSpec;
 const DEFAULT_RULES_PATH: &str = "fast-path-rules.json";
 /// Environment variable overriding the rules file path.
 const RULES_ENV: &str = "CCLAWCORE_FAST_PATH_RULES";
+
+/// Default opening fragment wrapped around each anchored rule pattern.
+///
+/// Allows leading whitespace / Chinese punctuation and zero or more
+/// chained polite openers (so "请帮我" works as well as "请" alone), then
+/// opens a non-capturing group that the rule pattern is spliced into.
+/// Any negation / non-polite token before the command phrase fails this
+/// whitelist and causes the rule to not match.
+pub const DEFAULT_ANCHOR_PREFIX: &str =
+    r"^[\s，,。!！?？]*(?:(?:请|麻烦|帮我|帮忙|能不能|可以|可否|请问|给我|让|来|我想)\s*)*(?:";
+
+/// Default closing fragment wrapped around each anchored rule pattern.
+///
+/// Closes the non-capturing group opened by [`DEFAULT_ANCHOR_PREFIX`] and
+/// tolerates trailing whitespace / punctuation / a small set of Chinese
+/// tone characters. Negation characters are intentionally absent from the
+/// trailing whitelist.
+pub const DEFAULT_ANCHOR_SUFFIX: &str = r")\s*[\s，,。!！?？一下呗啊吧]*$";
 
 pub struct CustomWithFastpathProvider {
     inner: OpenAiCompatibleProvider,
@@ -68,6 +131,18 @@ pub struct FastpathToolCall {
     pub arguments: serde_json::Value,
 }
 
+/// Top-level schema for the fast-path rules JSON file. Only the object
+/// form is accepted; legacy top-level arrays are treated as invalid JSON.
+#[derive(Debug, Default, Deserialize)]
+struct RulesFileSpec {
+    #[serde(default)]
+    anchor_prefix: Option<String>,
+    #[serde(default)]
+    anchor_suffix: Option<String>,
+    #[serde(default)]
+    rules: Vec<RuleSpec>,
+}
+
 #[derive(Debug, Deserialize)]
 struct RuleSpec {
     #[serde(default)]
@@ -77,6 +152,12 @@ struct RuleSpec {
     response: Option<String>,
     #[serde(default)]
     tool_calls: Vec<ToolCallSpec>,
+    /// When `None` or `Some(true)`, the rule's pattern is wrapped by the
+    /// bundle's `anchor_prefix` / `anchor_suffix` (or the built-in
+    /// defaults). When `Some(false)`, the pattern is used verbatim — the
+    /// rule author takes full responsibility for anchoring.
+    #[serde(default)]
+    anchored: Option<bool>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -113,6 +194,16 @@ impl CustomWithFastpathProvider {
     ///      this from `runtime.fast_path_rules_path` in `seewo.toml`);
     ///   2. the `CCLAWCORE_FAST_PATH_RULES` environment variable;
     ///   3. `fast-path-rules.json` in the workspace root.
+    ///
+    /// The rules file must deserialize as an object with shape
+    /// `{ "anchor_prefix"?: string, "anchor_suffix"?: string, "rules": [...] }`.
+    /// Top-level arrays are rejected (treated as invalid JSON).
+    ///
+    /// Each rule's pattern is wrapped by
+    /// `anchor_prefix + pattern + anchor_suffix` unless the rule sets
+    /// `"anchored": false`. When the bundle omits `anchor_prefix` /
+    /// `anchor_suffix`, [`DEFAULT_ANCHOR_PREFIX`] and
+    /// [`DEFAULT_ANCHOR_SUFFIX`] are used.
     ///
     /// Relative paths from any source are resolved against `workspace_dir`
     /// (absolute paths are used as-is). When `workspace_dir` is `None`,
@@ -162,7 +253,7 @@ impl CustomWithFastpathProvider {
             }
         };
 
-        let specs: Vec<RuleSpec> = match serde_json::from_str(&text) {
+        let bundle: RulesFileSpec = match serde_json::from_str(&text) {
             Ok(v) => v,
             Err(e) => {
                 tracing::warn!(
@@ -173,9 +264,19 @@ impl CustomWithFastpathProvider {
             }
         };
 
-        specs
+        let prefix = bundle
+            .anchor_prefix
+            .as_deref()
+            .unwrap_or(DEFAULT_ANCHOR_PREFIX);
+        let suffix = bundle
+            .anchor_suffix
+            .as_deref()
+            .unwrap_or(DEFAULT_ANCHOR_SUFFIX);
+
+        bundle
+            .rules
             .into_iter()
-            .filter_map(|spec| match compile_rule(spec) {
+            .filter_map(|spec| match compile_rule(spec, prefix, suffix) {
                 Ok(rule) => Some(rule),
                 Err(e) => {
                     tracing::warn!("Fast-path rule skipped: {e}");
@@ -237,7 +338,7 @@ impl CustomWithFastpathProvider {
     }
 }
 
-fn compile_rule(spec: RuleSpec) -> Result<FastpathRule, String> {
+fn compile_rule(spec: RuleSpec, prefix: &str, suffix: &str) -> Result<FastpathRule, String> {
     let has_response = spec.response.as_deref().is_some_and(|s| !s.is_empty());
     let has_tool_calls = !spec.tool_calls.is_empty();
     if !has_response && !has_tool_calls {
@@ -246,7 +347,12 @@ fn compile_rule(spec: RuleSpec) -> Result<FastpathRule, String> {
             spec.name.as_deref().unwrap_or("<unnamed>")
         ));
     }
-    let pattern = Regex::new(&spec.pattern).map_err(|e| {
+    let effective_pattern = if spec.anchored.unwrap_or(true) {
+        format!("{prefix}{}{suffix}", spec.pattern)
+    } else {
+        spec.pattern.clone()
+    };
+    let pattern = Regex::new(&effective_pattern).map_err(|e| {
         format!(
             "rule '{}' has invalid pattern: {e}",
             spec.name.as_deref().unwrap_or("<unnamed>")
@@ -441,6 +547,10 @@ mod tests {
         }
     }
 
+    fn compile_with_defaults(spec: RuleSpec) -> Result<FastpathRule, String> {
+        compile_rule(spec, DEFAULT_ANCHOR_PREFIX, DEFAULT_ANCHOR_SUFFIX)
+    }
+
     #[test]
     fn compile_rule_rejects_empty_outputs() {
         let spec = RuleSpec {
@@ -448,8 +558,9 @@ mod tests {
             pattern: ".*".into(),
             response: None,
             tool_calls: vec![],
+            anchored: None,
         };
-        assert!(compile_rule(spec).is_err());
+        assert!(compile_with_defaults(spec).is_err());
     }
 
     #[test]
@@ -459,19 +570,21 @@ mod tests {
             pattern: "(".into(),
             response: Some("x".into()),
             tool_calls: vec![],
+            anchored: None,
         };
-        assert!(compile_rule(spec).is_err());
+        assert!(compile_with_defaults(spec).is_err());
     }
 
     #[test]
     fn compile_rule_accepts_response_only() {
         let spec = RuleSpec {
             name: Some("text".into()),
-            pattern: "hi".into(),
+            pattern: "(hi)".into(),
             response: Some("hello".into()),
             tool_calls: vec![],
+            anchored: None,
         };
-        let rule = compile_rule(spec).expect("compiles");
+        let rule = compile_with_defaults(spec).expect("compiles");
         assert_eq!(rule.response.as_deref(), Some("hello"));
         assert!(rule.tool_calls.is_empty());
     }
@@ -480,14 +593,15 @@ mod tests {
     fn compile_rule_accepts_tool_calls_only() {
         let spec = RuleSpec {
             name: Some("t".into()),
-            pattern: "go".into(),
+            pattern: "(go)".into(),
             response: None,
             tool_calls: vec![ToolCallSpec {
                 name: "sw_do_it".into(),
                 arguments: serde_json::json!({"x": 1}),
             }],
+            anchored: None,
         };
-        let rule = compile_rule(spec).expect("compiles");
+        let rule = compile_with_defaults(spec).expect("compiles");
         assert_eq!(rule.tool_calls.len(), 1);
     }
 
@@ -519,26 +633,44 @@ mod tests {
 
     #[test]
     fn match_rule_hits_on_user_last() {
-        let provider = provider_with(vec![make_rule(
-            Some("hi"),
-            "(?i)hello",
-            Some("hi there"),
-            vec![],
-        )]);
+        // Go through compile_rule with anchored:false so we exercise the
+        // explicit opt-out path (substring semantics).
+        let rule = compile_with_defaults(RuleSpec {
+            name: Some("hi".into()),
+            pattern: "(?i)hello".into(),
+            response: Some("hi there".into()),
+            tool_calls: vec![],
+            anchored: Some(false),
+        })
+        .expect("compiles");
+        let provider = provider_with(vec![rule]);
         let msgs = vec![ChatMessage::user("Hello, world")];
-        let rule = provider.match_rule(&msgs).expect("should match");
-        assert_eq!(rule.name.as_deref(), Some("hi"));
+        let hit = provider.match_rule(&msgs).expect("should match");
+        assert_eq!(hit.name.as_deref(), Some("hi"));
     }
 
     #[test]
     fn match_rule_first_rule_wins() {
-        let provider = provider_with(vec![
-            make_rule(Some("a"), "foo", Some("A"), vec![]),
-            make_rule(Some("b"), "foo", Some("B"), vec![]),
-        ]);
-        let msgs = vec![ChatMessage::user("foo bar")];
-        let rule = provider.match_rule(&msgs).expect("should match");
-        assert_eq!(rule.name.as_deref(), Some("a"));
+        let a = compile_with_defaults(RuleSpec {
+            name: Some("a".into()),
+            pattern: "foo".into(),
+            response: Some("A".into()),
+            tool_calls: vec![],
+            anchored: Some(false),
+        })
+        .expect("compiles");
+        let b = compile_with_defaults(RuleSpec {
+            name: Some("b".into()),
+            pattern: "foo".into(),
+            response: Some("B".into()),
+            tool_calls: vec![],
+            anchored: Some(false),
+        })
+        .expect("compiles");
+        let provider = provider_with(vec![a, b]);
+        let msgs = vec![ChatMessage::user("foo")];
+        let hit = provider.match_rule(&msgs).expect("should match");
+        assert_eq!(hit.name.as_deref(), Some("a"));
     }
 
     #[test]
@@ -682,17 +814,23 @@ mod tests {
         let from_env = std::env::temp_dir().join("fast-path-from-env.json");
         std::fs::write(
             &explicit,
-            serde_json::json!([
-                {"name": "from-explicit", "pattern": "^x$", "response": "x"}
-            ])
+            serde_json::json!({
+                "rules": [
+                    {"name": "from-explicit", "pattern": "^x$", "response": "x",
+                     "anchored": false}
+                ]
+            })
             .to_string(),
         )
         .unwrap();
         std::fs::write(
             &from_env,
-            serde_json::json!([
-                {"name": "from-env", "pattern": "^y$", "response": "y"}
-            ])
+            serde_json::json!({
+                "rules": [
+                    {"name": "from-env", "pattern": "^y$", "response": "y",
+                     "anchored": false}
+                ]
+            })
             .to_string(),
         )
         .unwrap();
@@ -721,9 +859,12 @@ mod tests {
         let rules_file = workspace.join("rules.json");
         std::fs::write(
             &rules_file,
-            serde_json::json!([
-                {"name": "ws-hit", "pattern": "^z$", "response": "z"}
-            ])
+            serde_json::json!({
+                "rules": [
+                    {"name": "ws-hit", "pattern": "^z$", "response": "z",
+                     "anchored": false}
+                ]
+            })
             .to_string(),
         )
         .unwrap();
@@ -759,16 +900,77 @@ mod tests {
     #[test]
     fn load_rules_filters_invalid_entries() {
         let tmp = std::env::temp_dir().join("fast-path-mixed.json");
-        let payload = serde_json::json!([
-            {"name": "good", "pattern": "(?i)hello", "response": "hi"},
-            {"name": "bad-regex", "pattern": "(", "response": "x"},
-            {"name": "empty", "pattern": ".*"}
-        ]);
+        let payload = serde_json::json!({
+            "rules": [
+                {"name": "good", "pattern": "(?i)hello", "response": "hi",
+                 "anchored": false},
+                {"name": "bad-regex", "pattern": "(", "response": "x"},
+                {"name": "empty", "pattern": ".*"}
+            ]
+        });
         std::fs::write(&tmp, payload.to_string()).unwrap();
         let rules = CustomWithFastpathProvider::load_rules(None, tmp.to_str());
         let _ = std::fs::remove_file(&tmp);
         assert_eq!(rules.len(), 1);
         assert_eq!(rules[0].name.as_deref(), Some("good"));
+    }
+
+    #[test]
+    fn load_rules_parses_bundle_with_custom_anchors() {
+        let tmp = std::env::temp_dir().join("fast-path-custom-anchors.json");
+        let payload = serde_json::json!({
+            "anchor_prefix": "^",
+            "anchor_suffix": "$",
+            "rules": [
+                {"name": "literal-foo", "pattern": "foo", "response": "ok"}
+            ]
+        });
+        std::fs::write(&tmp, payload.to_string()).unwrap();
+        let rules = CustomWithFastpathProvider::load_rules(None, tmp.to_str());
+        let _ = std::fs::remove_file(&tmp);
+        assert_eq!(rules.len(), 1);
+        let rule = &rules[0];
+        assert!(rule.pattern.is_match("foo"), "exact literal should hit");
+        assert!(
+            !rule.pattern.is_match("foo bar"),
+            "trailing text should not hit under custom ^$ anchors"
+        );
+    }
+
+    #[test]
+    fn compile_rule_anchored_rejects_composite_input() {
+        let spec = RuleSpec {
+            name: Some("volume-up".into()),
+            pattern: "(调大音量)".into(),
+            response: Some("ok".into()),
+            tool_calls: vec![],
+            anchored: None, // default = true
+        };
+        let rule = compile_with_defaults(spec).expect("compiles");
+        assert!(
+            !rule.pattern.is_match("先调大音量再关摄像头"),
+            "composite sentence must not match default-anchored rule"
+        );
+        assert!(
+            rule.pattern.is_match("请帮我调大音量一下"),
+            "polite prefix + tone suffix must match under default anchors"
+        );
+    }
+
+    #[test]
+    fn compile_rule_anchored_false_keeps_substring_semantics() {
+        let spec = RuleSpec {
+            name: Some("volume-up-loose".into()),
+            pattern: "(调大音量)".into(),
+            response: Some("ok".into()),
+            tool_calls: vec![],
+            anchored: Some(false),
+        };
+        let rule = compile_with_defaults(spec).expect("compiles");
+        assert!(
+            rule.pattern.is_match("先调大音量再关摄像头"),
+            "anchored:false escape hatch must keep substring semantics"
+        );
     }
 
     #[tokio::test]
