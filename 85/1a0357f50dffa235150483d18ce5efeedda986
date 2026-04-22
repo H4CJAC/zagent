@@ -1,0 +1,24 @@
+docs/setup-guides/quick_build/cclawcore.h
+  559467c2caf5af15 1-48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.8",
+  "base_commit_sha": "851a0357f50dffa235150483d18ce5efeedda986",
+  "prompts": {
+    "559467c2caf5af15": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "e3df0fc7-f036-4614-b3bb-26c6c17724c1",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "hacyou",
+      "messages": [],
+      "total_additions": 48,
+      "total_deletions": 0,
+      "accepted_lines": 48,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/10fb43b9b444d23b25bf0c5958d68ca9691971852df3f70be9c852ac2abec3e7"
+    }
+  }
+}
