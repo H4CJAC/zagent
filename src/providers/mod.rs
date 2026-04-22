@@ -720,8 +720,13 @@ pub struct ProviderRuntimeOptions {
     /// Optional path to a fast-path rules JSON file, propagated from
     /// `runtime.fast_path_rules_path`. When `Some`, takes precedence over the
     /// `CCLAWCORE_FAST_PATH_RULES` env var and the default
-    /// `./fast-path-rules.json` fallback used by `CustomWithFastpathProvider`.
+    /// `fast-path-rules.json` fallback used by `CustomWithFastpathProvider`.
+    /// Relative paths are resolved against `workspace_dir` (see below).
     pub fast_path_rules_path: Option<String>,
+    /// Workspace root directory, used as the base for resolving relative
+    /// operator-provided paths (e.g. `fast_path_rules_path`). Mirrors
+    /// `demo_scripts_dir` semantics in `DemoScriptEngine::load`.
+    pub workspace_dir: Option<PathBuf>,
 }
 
 impl Default for ProviderRuntimeOptions {
@@ -740,6 +745,7 @@ impl Default for ProviderRuntimeOptions {
             provider_max_tokens: None,
             merge_system_into_user: false,
             fast_path_rules_path: None,
+            workspace_dir: None,
         }
     }
 }
@@ -782,6 +788,7 @@ pub fn provider_runtime_options_from_config(
         provider_max_tokens: config.provider_max_tokens,
         merge_system_into_user,
         fast_path_rules_path: config.runtime.fast_path_rules_path.clone(),
+        workspace_dir: Some(config.workspace_dir.clone()),
     }
 }
 
@@ -1776,6 +1783,7 @@ fn create_provider_with_url_and_options(
             }
             Ok(Box::new(CustomWithFastpathProvider::wrap(
                 inner,
+                options.workspace_dir.as_deref(),
                 options.fast_path_rules_path.as_deref(),
             )))
         }

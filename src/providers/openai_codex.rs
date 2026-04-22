@@ -1135,6 +1135,7 @@ data: [DONE]
             provider_max_tokens: None,
             merge_system_into_user: false,
             fast_path_rules_path: None,
+            workspace_dir: None,
         };
         let provider =
             OpenAiCodexProvider::new(&options, None).expect("provider should initialize");

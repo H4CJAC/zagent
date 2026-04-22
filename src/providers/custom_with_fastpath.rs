@@ -16,7 +16,12 @@
 //!      (the provider factory wires this from `runtime.fast_path_rules_path`
 //!      in `seewo.toml`);
 //!   2. the `CCLAWCORE_FAST_PATH_RULES` environment variable;
-//!   3. `./fast-path-rules.json` in the current working directory.
+//!   3. `fast-path-rules.json` in the workspace root.
+//!
+//! Relative paths from any of the three sources are resolved against
+//! `workspace_dir` (mirrors `demo_scripts_dir` in `DemoScriptEngine::load`);
+//! absolute paths are used as-is. When `workspace_dir` is `None`, relative
+//! paths fall back to the current working directory.
 
 use std::path::Path;
 use std::sync::Arc;
@@ -85,17 +90,42 @@ fn empty_args() -> serde_json::Value {
     serde_json::Value::Object(serde_json::Map::new())
 }
 
+/// Resolve a rules path string:
+/// - absolute paths are used as-is;
+/// - relative paths join `workspace_dir` when provided, else CWD-relative.
+/// Mirrors the semantics used by `DemoScriptEngine::load` for
+/// `demo_scripts_dir`.
+fn resolve_rules_path(workspace_dir: Option<&Path>, raw: &str) -> std::path::PathBuf {
+    let p = Path::new(raw);
+    if p.is_absolute() {
+        p.to_path_buf()
+    } else {
+        match workspace_dir {
+            Some(root) => root.join(p),
+            None => p.to_path_buf(),
+        }
+    }
+}
+
 impl CustomWithFastpathProvider {
     /// Wrap an [`OpenAiCompatibleProvider`]. Rules are loaded from:
     ///   1. the `rules_path` argument, if `Some` (the provider factory wires
     ///      this from `runtime.fast_path_rules_path` in `seewo.toml`);
     ///   2. the `CCLAWCORE_FAST_PATH_RULES` environment variable;
-    ///   3. `./fast-path-rules.json` in the current working directory.
+    ///   3. `fast-path-rules.json` in the workspace root.
+    ///
+    /// Relative paths from any source are resolved against `workspace_dir`
+    /// (absolute paths are used as-is). When `workspace_dir` is `None`,
+    /// relative paths fall back to the process working directory.
     ///
     /// Any failure (missing file, invalid JSON, invalid regex, empty rule)
     /// is logged as a warning and ignored; the wrapper remains transparent.
-    pub fn wrap(inner: OpenAiCompatibleProvider, rules_path: Option<&str>) -> Self {
-        let rules = Self::load_rules(rules_path);
+    pub fn wrap(
+        inner: OpenAiCompatibleProvider,
+        workspace_dir: Option<&Path>,
+        rules_path: Option<&str>,
+    ) -> Self {
+        let rules = Self::load_rules(workspace_dir, rules_path);
         if !rules.is_empty() {
             tracing::info!(
                 count = rules.len(),
@@ -108,13 +138,14 @@ impl CustomWithFastpathProvider {
         }
     }
 
-    fn load_rules(explicit_path: Option<&str>) -> Vec<FastpathRule> {
-        let path = explicit_path
+    fn load_rules(workspace_dir: Option<&Path>, explicit_path: Option<&str>) -> Vec<FastpathRule> {
+        let raw = explicit_path
             .map(ToString::to_string)
             .or_else(|| std::env::var(RULES_ENV).ok())
             .unwrap_or_else(|| DEFAULT_RULES_PATH.to_string());
 
-        let path = Path::new(&path);
+        let path_buf = resolve_rules_path(workspace_dir, &raw);
+        let path = path_buf.as_path();
         if !path.exists() {
             // Quiet by design: fast-path is opt-in, absence is normal.
             return Vec::new();
@@ -632,7 +663,7 @@ mod tests {
     #[test]
     fn load_rules_returns_empty_when_file_missing() {
         let missing = "/nonexistent/path/fast-path-rules-abc.json";
-        let rules = CustomWithFastpathProvider::load_rules(Some(missing));
+        let rules = CustomWithFastpathProvider::load_rules(None, Some(missing));
         assert!(rules.is_empty());
     }
 
@@ -640,7 +671,7 @@ mod tests {
     fn load_rules_returns_empty_on_invalid_json() {
         let tmp = std::env::temp_dir().join("fast-path-invalid.json");
         std::fs::write(&tmp, "not-json").unwrap();
-        let rules = CustomWithFastpathProvider::load_rules(tmp.to_str());
+        let rules = CustomWithFastpathProvider::load_rules(None, tmp.to_str());
         let _ = std::fs::remove_file(&tmp);
         assert!(rules.is_empty());
     }
@@ -669,7 +700,7 @@ mod tests {
         let prev = std::env::var(RULES_ENV).ok();
         unsafe { std::env::set_var(RULES_ENV, from_env.to_str().unwrap()) };
 
-        let rules = CustomWithFastpathProvider::load_rules(explicit.to_str());
+        let rules = CustomWithFastpathProvider::load_rules(None, explicit.to_str());
 
         match prev {
             Some(v) => unsafe { std::env::set_var(RULES_ENV, v) },
@@ -683,6 +714,49 @@ mod tests {
     }
 
     #[test]
+    fn load_rules_resolves_relative_against_workspace_dir() {
+        // Unique workspace root under tmp to avoid collisions across tests.
+        let workspace = std::env::temp_dir().join("fast-path-ws-reldir");
+        std::fs::create_dir_all(&workspace).unwrap();
+        let rules_file = workspace.join("rules.json");
+        std::fs::write(
+            &rules_file,
+            serde_json::json!([
+                {"name": "ws-hit", "pattern": "^z$", "response": "z"}
+            ])
+            .to_string(),
+        )
+        .unwrap();
+
+        // Relative path "rules.json" should resolve under workspace.
+        let rules = CustomWithFastpathProvider::load_rules(Some(&workspace), Some("rules.json"));
+
+        let _ = std::fs::remove_file(&rules_file);
+        let _ = std::fs::remove_dir(&workspace);
+
+        assert_eq!(rules.len(), 1);
+        assert_eq!(rules[0].name.as_deref(), Some("ws-hit"));
+    }
+
+    #[test]
+    fn resolve_rules_path_keeps_absolute() {
+        let abs = if cfg!(windows) {
+            "C:/tmp/rules.json"
+        } else {
+            "/tmp/rules.json"
+        };
+        let ws = Path::new("/tmp/workspace");
+        let p = resolve_rules_path(Some(ws), abs);
+        assert_eq!(p, Path::new(abs));
+    }
+
+    #[test]
+    fn resolve_rules_path_relative_without_workspace_keeps_as_is() {
+        let p = resolve_rules_path(None, "rules.json");
+        assert_eq!(p, Path::new("rules.json"));
+    }
+
+    #[test]
     fn load_rules_filters_invalid_entries() {
         let tmp = std::env::temp_dir().join("fast-path-mixed.json");
         let payload = serde_json::json!([
@@ -691,7 +765,7 @@ mod tests {
             {"name": "empty", "pattern": ".*"}
         ]);
         std::fs::write(&tmp, payload.to_string()).unwrap();
-        let rules = CustomWithFastpathProvider::load_rules(tmp.to_str());
+        let rules = CustomWithFastpathProvider::load_rules(None, tmp.to_str());
         let _ = std::fs::remove_file(&tmp);
         assert_eq!(rules.len(), 1);
         assert_eq!(rules[0].name.as_deref(), Some("good"));

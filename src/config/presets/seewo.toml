@@ -1,4 +1,5 @@
-default_provider = "custom:http://ai-open.seewo.com/openai/deployments/ALI_KIMI_SPECIAL_K2_5"
+# default_provider = "custom:http://ai-open.seewo.com/openai/deployments/ALI_KIMI_SPECIAL_K2_5"
+default_provider = "custom-with-fastpath:http://ai-open.seewo.com/openai/deployments/ALI_KIMI_SPECIAL_K2_5"
 default_model = "kimi-k2.5"
 # default_provider = "moonshot"
 # api_key = "sk-I9N1F7HoSQOxBKSvtdF98vryrvnkcntZzkSrFBaUtA9V859Y"
@@ -166,6 +167,7 @@ report_output_dir = "~/.cclawcore/security-reports"
 
 [runtime]
 kind = "native"
+fast_path_rules_path = "./fast-path-rules.json"
 
 [runtime.docker]
 image = "alpine:3.20"
@@ -179,8 +181,11 @@ allowed_workspace_roots = []
 [reliability]
 provider_retries = 2
 provider_backoff_ms = 500
+# fallback_providers = [
+#     "custom:http://ai-open.seewo.com/openai/deployments/ALI_KIMI_K2_5"
+# ]
 fallback_providers = [
-    "custom:http://ai-open.seewo.com/openai/deployments/ALI_KIMI_K2_5"
+    "custom-with-fastpath:http://ai-open.seewo.com/openai/deployments/ALI_KIMI_K2_5"
 ]
 api_keys = []
 # api_keys = ["sk-3vVztAWMM4UD5MI0QOJJeoPX13FoNMs6xl4VPojbdYEx9slp"]
@@ -537,7 +542,8 @@ timeout_secs = 120
 agentic_timeout_secs = 300
 
 [agents.skill_worker]
-provider = "custom:http://ai-open.seewo.com/openai/deployments/ALI_KIMI_SPECIAL_K2_5"
+# provider = "custom:http://ai-open.seewo.com/openai/deployments/ALI_KIMI_SPECIAL_K2_5"
+provider = "custom-with-fastpath:http://ai-open.seewo.com/openai/deployments/ALI_KIMI_SPECIAL_K2_5"
 model = "kimi-k2.5"
 agentic = true
 timeout_secs = 1200
