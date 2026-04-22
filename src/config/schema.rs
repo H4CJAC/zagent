@@ -9192,7 +9192,38 @@ impl Config {
     }
 }
 
+/// Compute the default `(cclawcore_dir, workspace_dir)` pair used as a
+/// fallback for [`resolve_runtime_config_dirs`].
+///
+/// Precedence (first non-empty wins):
+///   1. `CCLAWCORE_CONFIG_DIR` — lets embedders (notably the Android FFI,
+///      where `HOME` is not set) supply an app-scoped directory before
+///      `HOME` / `UserDirs` is consulted.
+///   2. `CCLAWCORE_WORKSPACE` — derive the config dir from the requested
+///      workspace via [`resolve_config_dir_for_workspace`].
+///   3. [`default_config_dir`] — `HOME` / `UserDirs`-based lookup.
+///
+/// Keeping this precedence aligned with [`resolve_runtime_config_dirs`]
+/// means the two layers agree on the effective paths even before the
+/// runtime override step runs — if `CCLAWCORE_CONFIG_DIR` is set, both
+/// layers pick it and produce the same result.
 fn default_config_and_workspace_dirs() -> Result<(PathBuf, PathBuf)> {
+    if let Ok(custom_config_dir) = std::env::var("CCLAWCORE_CONFIG_DIR") {
+        let trimmed = custom_config_dir.trim();
+        if !trimmed.is_empty() {
+            let dir = expand_tilde_path(trimmed);
+            return Ok((dir.clone(), dir.join("workspace")));
+        }
+    }
+
+    if let Ok(custom_workspace) = std::env::var("CCLAWCORE_WORKSPACE") {
+        let trimmed = custom_workspace.trim();
+        if !trimmed.is_empty() {
+            let expanded = expand_tilde_path(trimmed);
+            return Ok(resolve_config_dir_for_workspace(&expanded));
+        }
+    }
+
     let config_dir = default_config_dir()?;
     Ok((config_dir.clone(), config_dir.join("workspace")))
 }
@@ -14271,6 +14302,85 @@ default_model = "legacy-model"
             unsafe { std::env::remove_var("HOME") };
         }
         let _ = fs::remove_dir_all(temp_home).await;
+    }
+
+    /// Android FFI scenario: the app process has no `HOME`, but the
+    /// embedder sets `CCLAWCORE_CONFIG_DIR` to a sandbox path. The default
+    /// computation must honor the env var instead of bailing on the
+    /// missing home directory.
+    #[test]
+    async fn default_dirs_honor_cclawcore_config_dir_without_home() {
+        let _env_guard = env_override_lock().await;
+        let sandbox = std::env::temp_dir()
+            .join(format!("cclawcore_android_sim_{}", uuid::Uuid::new_v4()));
+
+        let original_home = std::env::var("HOME").ok();
+        let original_cfg = std::env::var("CCLAWCORE_CONFIG_DIR").ok();
+        let original_ws = std::env::var("CCLAWCORE_WORKSPACE").ok();
+
+        // SAFETY: test-only, single-threaded test runner.
+        unsafe { std::env::remove_var("HOME") };
+        unsafe { std::env::remove_var("CCLAWCORE_WORKSPACE") };
+        unsafe { std::env::set_var("CCLAWCORE_CONFIG_DIR", &sandbox) };
+
+        let result = default_config_and_workspace_dirs();
+
+        // Restore env before asserting, so test cleanup runs even on panic.
+        // SAFETY: test-only, single-threaded test runner.
+        unsafe { std::env::remove_var("CCLAWCORE_CONFIG_DIR") };
+        if let Some(v) = original_cfg {
+            unsafe { std::env::set_var("CCLAWCORE_CONFIG_DIR", v) };
+        }
+        if let Some(v) = original_ws {
+            unsafe { std::env::set_var("CCLAWCORE_WORKSPACE", v) };
+        }
+        if let Some(home) = original_home {
+            unsafe { std::env::set_var("HOME", home) };
+        }
+
+        let (config_dir, workspace_dir) = result.expect("must not bail when env var is set");
+        assert_eq!(config_dir, sandbox);
+        assert_eq!(workspace_dir, sandbox.join("workspace"));
+    }
+
+    /// `CCLAWCORE_WORKSPACE` alone also satisfies the default computation,
+    /// even without `HOME`. Mirrors [`resolve_runtime_config_dirs`] so both
+    /// layers agree on the effective paths.
+    #[test]
+    async fn default_dirs_honor_cclawcore_workspace_without_home() {
+        let _env_guard = env_override_lock().await;
+        let ws_path = std::env::temp_dir()
+            .join(format!("cclawcore_ws_override_{}", uuid::Uuid::new_v4()));
+
+        let original_home = std::env::var("HOME").ok();
+        let original_cfg = std::env::var("CCLAWCORE_CONFIG_DIR").ok();
+        let original_ws = std::env::var("CCLAWCORE_WORKSPACE").ok();
+
+        // SAFETY: test-only, single-threaded test runner.
+        unsafe { std::env::remove_var("HOME") };
+        unsafe { std::env::remove_var("CCLAWCORE_CONFIG_DIR") };
+        unsafe { std::env::set_var("CCLAWCORE_WORKSPACE", &ws_path) };
+
+        let result = default_config_and_workspace_dirs();
+
+        // SAFETY: test-only, single-threaded test runner.
+        unsafe { std::env::remove_var("CCLAWCORE_WORKSPACE") };
+        if let Some(v) = original_cfg {
+            unsafe { std::env::set_var("CCLAWCORE_CONFIG_DIR", v) };
+        }
+        if let Some(v) = original_ws {
+            unsafe { std::env::set_var("CCLAWCORE_WORKSPACE", v) };
+        }
+        if let Some(home) = original_home {
+            unsafe { std::env::set_var("HOME", home) };
+        }
+
+        let (config_dir, workspace_dir) =
+            result.expect("must not bail when CCLAWCORE_WORKSPACE is set");
+        // resolve_config_dir_for_workspace falls back to workspace_dir itself
+        // when no config.toml is present and the path isn't named "workspace".
+        assert_eq!(config_dir, ws_path);
+        assert_eq!(workspace_dir, ws_path.join("workspace"));
     }
 
     #[test]
