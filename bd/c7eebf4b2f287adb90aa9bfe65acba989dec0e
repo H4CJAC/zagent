@@ -1,0 +1,30 @@
+src/providers/mod.rs
+  dd9a7ab298799cca 25,47,1164-1166,1730-1772,1790,1800-1801,1803-1806
+src/providers/custom_with_fastpath.rs
+  dd9a7ab298799cca 1-696
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.8",
+  "base_commit_sha": "bdc7eebf4b2f287adb90aa9bfe65acba989dec0e",
+  "prompts": {
+    "dd9a7ab298799cca": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "49f768fd-534d-460d-bfe8-417620332917",
+        "model": "claude-opus-4-7-thinking-high"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 767,
+      "total_deletions": 13,
+      "accepted_lines": 751,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_f38e4123063fc1": {
+      "author": "hac"
+    }
+  }
+}
