@@ -14311,8 +14311,8 @@ default_model = "legacy-model"
     #[test]
     async fn default_dirs_honor_cclawcore_config_dir_without_home() {
         let _env_guard = env_override_lock().await;
-        let sandbox = std::env::temp_dir()
-            .join(format!("cclawcore_android_sim_{}", uuid::Uuid::new_v4()));
+        let sandbox =
+            std::env::temp_dir().join(format!("cclawcore_android_sim_{}", uuid::Uuid::new_v4()));
 
         let original_home = std::env::var("HOME").ok();
         let original_cfg = std::env::var("CCLAWCORE_CONFIG_DIR").ok();
@@ -14349,8 +14349,8 @@ default_model = "legacy-model"
     #[test]
     async fn default_dirs_honor_cclawcore_workspace_without_home() {
         let _env_guard = env_override_lock().await;
-        let ws_path = std::env::temp_dir()
-            .join(format!("cclawcore_ws_override_{}", uuid::Uuid::new_v4()));
+        let ws_path =
+            std::env::temp_dir().join(format!("cclawcore_ws_override_{}", uuid::Uuid::new_v4()));
 
         let original_home = std::env::var("HOME").ok();
         let original_cfg = std::env::var("CCLAWCORE_CONFIG_DIR").ok();
