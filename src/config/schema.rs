@@ -3869,13 +3869,33 @@ impl Default for ImageGenConfig {
 /// Vision tool configuration (`[vision]`).
 ///
 /// When enabled, registers an `image_read` tool that delegates image
-/// understanding to a configured OpenAI-compatible vision model and
-/// returns a text description to the main agent.
+/// understanding to a configured vision model and returns a text
+/// description to the main agent.
 ///
 /// The tool reads an image (workspace path or URL), base64-encodes it,
-/// and issues an isolated `chat_with_system` call through a dedicated
-/// `OpenAiCompatibleProvider` instance — the main agent therefore does
-/// not need multimodal capability itself.
+/// wraps the payload in the `[IMAGE:...]` marker protocol, and issues an
+/// isolated `chat_with_system` call through a dedicated provider instance
+/// built from the standard `providers::create_provider_with_options`
+/// factory — so the *main* agent never has to be multimodal itself.
+///
+/// The `provider` field controls which provider type is used. It accepts
+/// any value understood by the provider factory:
+///
+/// * Built-in names: `"openai"`, `"anthropic"`, `"gemini"`, `"ollama"`,
+///   `"seewo"`, ... — authentication and wire format are picked
+///   automatically. The `api_url` field, when set, overrides the
+///   provider's default base URL.
+/// * URL-prefixed forms: `"custom:https://…"` (OpenAI-compatible),
+///   `"anthropic:https://…"`, ... — the URL is embedded in the provider
+///   name itself; `api_url` is ignored for these forms.
+/// * Shorthand `"custom"` — shorthand for `custom:${api_url}`. Requires
+///   `api_url` to be set. This is the default for backwards compatibility
+///   with the initial OpenAI-compatible-only release.
+///
+/// The `[IMAGE:]` marker protocol is only actively translated into native
+/// multimodal payloads by OpenAI-compatible providers (OpenAI / Ollama /
+/// Seewo / Custom). Other providers may receive the marker as plain text
+/// and fail to see the image — use them at your own risk.
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Configurable)]
 #[prefix = "vision"]
 pub struct VisionConfig {
@@ -3883,8 +3903,17 @@ pub struct VisionConfig {
     #[serde(default)]
     pub enabled: bool,
 
-    /// Base URL of the OpenAI-compatible vision endpoint
-    /// (e.g. `https://api.openai.com/v1`).
+    /// Provider identifier passed to the provider factory. Accepts any
+    /// built-in name (`"openai"`, `"anthropic"`, `"gemini"`, `"ollama"`,
+    /// `"seewo"`, ...), a URL-prefixed form (`"custom:https://…"`,
+    /// `"anthropic:https://…"`, ...), or the shorthand `"custom"` which is
+    /// expanded to `custom:${api_url}` at runtime.
+    #[serde(default = "default_vision_provider")]
+    pub provider: String,
+
+    /// Base URL override for the vision endpoint (e.g.
+    /// `https://api.openai.com/v1`). Only consumed when `provider` is a
+    /// bare name; ignored for URL-prefixed `provider` forms.
     #[serde(default = "default_vision_api_url")]
     pub api_url: String,
 
@@ -3914,6 +3943,10 @@ pub struct VisionConfig {
     pub system_prompt: Option<String>,
 }
 
+fn default_vision_provider() -> String {
+    "custom".into()
+}
+
 fn default_vision_api_url() -> String {
     "https://api.openai.com/v1".into()
 }
@@ -3938,6 +3971,7 @@ impl Default for VisionConfig {
     fn default() -> Self {
         Self {
             enabled: false,
+            provider: default_vision_provider(),
             api_url: default_vision_api_url(),
             api_key_env: default_vision_api_key_env(),
             default_model: default_vision_model(),

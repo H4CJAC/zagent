@@ -689,12 +689,16 @@ api_key_env = "FAL_API_KEY"
 
 [vision]
 enabled = false
-api_url = "https://api.openai.com/v1"
-api_key_env = "VISION_API_KEY"
-default_model = "gpt-4o-mini"
-timeout_secs = 60
+
+provider = "custom-with-fastpath:http://ai-open.seewo.com/openai/deployments/ALI_KIMI_SPECIAL_K2_5"
+default_model = "kimi-k2.5"
+api_url = ""
+api_key_env = "2mVsX6jKnP9wRtHbZc3fLaQeYg7uNdWi"
+default_temperature = 1
+
+timeout_secs = 300
 max_image_bytes = 5242880
-allow_url = false
+allow_url = true
 
 [plugins]
 enabled = false

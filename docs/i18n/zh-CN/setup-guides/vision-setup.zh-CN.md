@@ -1,8 +1,10 @@
 # 视觉工具（`image_read`）配置
 
 CclawCore 提供可选的 **`image_read`** 工具：将图像理解任务委托给可配置的
-OpenAI 兼容视觉模型，并把**文字结果**返回给主 agent。这样即便主模型是纯
-文本的，也能让 agent 回答"这张截图里是什么"之类的问题。
+视觉模型，并把**文字结果**返回给主 agent。这样即便主模型是纯文本的，
+也能让 agent 回答"这张截图里是什么"之类的问题。工具走标准的 provider
+工厂，因此可以用任意内置 provider（`openai`、`anthropic`、`gemini`、
+`ollama`、`seewo` …）或自定义 OpenAI 兼容端点。
 
 ## 适用场景
 
@@ -19,6 +21,7 @@ OpenAI 兼容视觉模型，并把**文字结果**返回给主 agent。这样即
 ```toml
 [vision]
 enabled = true
+provider = "custom"              # 见下方"Provider 选型"
 api_url = "https://api.openai.com/v1"
 api_key_env = "VISION_API_KEY"   # 环境变量名，不是密钥本身
 default_model = "gpt-4o-mini"
@@ -39,13 +42,46 @@ export VISION_API_KEY="sk-..."
 | 字段 | 类型 | 默认 | 说明 |
 |------|------|------|------|
 | `enabled` | bool | `false` | 是否注册 `image_read` 工具 |
-| `api_url` | string | `https://api.openai.com/v1` | OpenAI 兼容端点 base URL |
+| `provider` | string | `custom` | Provider 标识（见下方） |
+| `api_url` | string | `https://api.openai.com/v1` | Base URL 覆盖；仅在 `provider` 为裸 name 或 `custom` 简写时生效 |
 | `api_key_env` | string | `VISION_API_KEY` | 存放密钥的环境变量名 |
 | `default_model` | string | `gpt-4o-mini` | 默认视觉模型 id（可单次覆写） |
 | `timeout_secs` | u64 | `60` | 单次请求超时（秒） |
 | `max_image_bytes` | u64 | `5242880` | 超出则拒绝 |
 | `allow_url` | bool | `false` | 是否允许 `url` 参数（默认仅本地路径） |
 | `system_prompt` | string? | `None` | 覆盖内置的 system prompt |
+
+### Provider 选型
+
+`provider` 接受任何 provider 工厂（`providers::create_provider_with_options`）认识的值：
+
+| `provider` | 是否使用 `api_url` | 说明 |
+|-----------|--------------------|------|
+| `custom`（默认） | 是，必填 | 简写 —— 运行时展开为 `custom:${api_url}`。任何 OpenAI 兼容端点首选。 |
+| `custom:https://…` | 忽略 | URL 内嵌在 provider 名里，不再读 `api_url`。 |
+| `openai` | 是（覆盖默认） | 走 OpenAI 线协议 + Bearer 鉴权。 |
+| `ollama` | 是 | 本地 Ollama，设置 `api_url = "http://localhost:11434/v1"`。 |
+| `seewo` | 是 | 希沃自定义端点。 |
+| `anthropic` / `anthropic:https://…` | 是 / 忽略 | **不推荐** —— 见下方兼容性说明。 |
+| `gemini` | 是 | **不推荐**。 |
+
+### `[IMAGE]` 标记兼容性
+
+工具通过 `[IMAGE:data:...;base64,...]` 标记把图像塞进消息。下列 provider
+会把标记还原为各自的原生多模态载荷：
+
+- `custom` / `custom:URL` / `openai` —— OpenAI `image_url` content part ✓
+- `ollama` —— OpenAI 兼容，原生支持 ✓
+- `seewo` —— 原生支持 ✓
+
+**未实现**标记转换的 provider（当前为 Anthropic 和 Gemini）会把标记当成
+纯文本透传，基本看不到图：
+
+- `anthropic` —— 期望 Anthropic `image` content block，不认 OpenAI 标记 ✗
+- `gemini` —— 期望 `inline_data` part ✗
+
+若确实要用 Anthropic/Gemini 做视觉，建议前面挂一层 OpenAI 兼容代理
+（例如 LiteLLM），配置 `provider = "custom:https://your-proxy/v1"`。
 
 ## 工具参数
 

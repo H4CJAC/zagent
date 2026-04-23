@@ -1,10 +1,12 @@
 # Vision (`image_read`) Setup
 
 CclawCore ships with an optional **`image_read`** tool that delegates image
-understanding to a configured OpenAI-compatible vision model and returns a
-plain-text answer to the main agent. This lets a text-only agent answer
-questions about images (screenshots, diagrams, photos, OCR targets)
-without needing multimodal capability itself.
+understanding to a configured vision model and returns a plain-text answer
+to the main agent. This lets a text-only agent answer questions about
+images (screenshots, diagrams, photos, OCR targets) without needing
+multimodal capability itself. The tool goes through the standard provider
+factory, so you can use any built-in provider (`openai`, `anthropic`,
+`gemini`, `ollama`, `seewo`, …) or a custom OpenAI-compatible endpoint.
 
 ## When to enable this
 
@@ -22,6 +24,7 @@ Add a `[vision]` section to your `config.toml`:
 ```toml
 [vision]
 enabled = true
+provider = "custom"              # see "Choosing a provider" below
 api_url = "https://api.openai.com/v1"
 api_key_env = "VISION_API_KEY"   # env var name, not the key itself
 default_model = "gpt-4o-mini"
@@ -42,13 +45,48 @@ export VISION_API_KEY="sk-..."
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | `enabled` | bool | `false` | Register the `image_read` tool |
-| `api_url` | string | `https://api.openai.com/v1` | OpenAI-compatible base URL |
+| `provider` | string | `custom` | Provider identifier (see below) |
+| `api_url` | string | `https://api.openai.com/v1` | Base URL override; only consumed for bare `provider` names or the `custom` shorthand |
 | `api_key_env` | string | `VISION_API_KEY` | Name of env var holding the key |
 | `default_model` | string | `gpt-4o-mini` | Vision model id (overridable per-call) |
 | `timeout_secs` | u64 | `60` | Per-request timeout |
 | `max_image_bytes` | u64 | `5242880` | Reject images larger than this |
 | `allow_url` | bool | `false` | Permit `url` argument in addition to `path` |
 | `system_prompt` | string? | `None` | Override the built-in system prompt |
+
+### Choosing a provider
+
+`provider` accepts any value understood by the standard provider factory
+(`providers::create_provider_with_options`):
+
+| `provider` | `api_url` used? | Notes |
+|------------|-----------------|-------|
+| `custom` (default) | yes, required | Shorthand — expanded to `custom:${api_url}` at runtime. Best for any OpenAI-compatible endpoint. |
+| `custom:https://…` | ignored | URL is embedded in the provider name; `api_url` is not needed. |
+| `openai` | yes (optional override) | Uses the OpenAI wire format and Bearer auth. |
+| `ollama` | yes | Local Ollama server; set `api_url = "http://localhost:11434/v1"`. |
+| `seewo` | yes | Seewo's custom endpoint. |
+| `anthropic` / `anthropic:https://…` | yes / ignored | **Not recommended** — see [IMAGE marker compatibility](#image-marker-compatibility). |
+| `gemini` | yes | **Not recommended** — see below. |
+
+### `[IMAGE]` marker compatibility
+
+The tool transmits images via the `[IMAGE:data:...;base64,...]` marker
+protocol. The marker is translated into native multimodal payloads by:
+
+- `custom` / `custom:URL` / `openai` — OpenAI `image_url` content parts ✓
+- `ollama` — OpenAI-compatible, honors the marker ✓
+- `seewo` — honors the marker ✓
+
+Providers **without** marker translation will currently receive the marker
+as plain text and almost certainly fail to see the image:
+
+- `anthropic` — expects Anthropic `image` content blocks, not OpenAI markers ✗
+- `gemini` — expects `inline_data` parts ✗
+
+If you need vision through Anthropic/Gemini today, front them with an
+OpenAI-compatible proxy (e.g. LiteLLM) and set
+`provider = "custom:https://your-proxy/v1"`.
 
 ## Tool schema
 

@@ -2,19 +2,22 @@
 //!
 //! The tool receives a workspace path (or optionally an HTTP(S) URL), reads
 //! the image, base64-encodes it into a `data:` URI, and issues an isolated
-//! `chat_with_system` call through a dedicated `OpenAiCompatibleProvider`
-//! instance. The vision model's textual answer is returned as the tool
-//! output, so the *main* agent never has to be multimodal itself.
+//! `chat_with_system` call through a dedicated provider instance built by
+//! the standard `providers::create_provider_with_options` factory. The
+//! vision model's textual answer is returned as the tool output, so the
+//! *main* agent never has to be multimodal itself.
 //!
 //! The image is transmitted via the existing `[IMAGE:data:...;base64,...]`
 //! marker protocol (see `crate::multimodal`). Provider implementations that
 //! honour the marker (OpenAI, Seewo, Ollama …) will unpack it into native
 //! multimodal parts automatically — no new wire format is introduced.
+//! Providers that do not implement marker translation (currently Anthropic
+//! and Gemini) may receive the payload as plain text and fail to see the
+//! image — see `docs/setup-guides/vision-setup.md` for details.
 
 use super::traits::{Tool, ToolResult};
 use crate::config::VisionConfig;
-use crate::providers::compatible::{AuthStyle, OpenAiCompatibleProvider};
-use crate::providers::Provider;
+use crate::providers::{create_provider_with_options, Provider, ProviderRuntimeOptions};
 use crate::security::SecurityPolicy;
 use async_trait::async_trait;
 use serde_json::{json, Value};
@@ -46,10 +49,13 @@ pub struct ImageReadTool {
     provider_factory: ProviderFactory,
 }
 
-/// Factory for the vision provider. Defaults to constructing an
-/// `OpenAiCompatibleProvider` from `VisionConfig`; unit tests override it
-/// with a mock provider to avoid network I/O.
-type ProviderFactory = Arc<dyn Fn(&VisionConfig) -> Arc<dyn Provider> + Send + Sync>;
+/// Factory for the vision provider. Defaults to delegating to the shared
+/// `providers::create_provider_with_options` factory so the tool supports
+/// any built-in provider (openai, anthropic, gemini, ollama, seewo, …) or
+/// URL-prefixed form (`custom:…`, `anthropic:…`, …). Unit tests override
+/// it with a mock provider to avoid network I/O.
+type ProviderFactory =
+    Arc<dyn Fn(&VisionConfig) -> anyhow::Result<Arc<dyn Provider>> + Send + Sync>;
 
 impl ImageReadTool {
     pub fn new(security: Arc<SecurityPolicy>, cfg: VisionConfig) -> Self {
@@ -70,7 +76,7 @@ impl ImageReadTool {
         factory: F,
     ) -> Self
     where
-        F: Fn(&VisionConfig) -> Arc<dyn Provider> + Send + Sync + 'static,
+        F: Fn(&VisionConfig) -> anyhow::Result<Arc<dyn Provider>> + Send + Sync + 'static,
     {
         Self {
             security,
@@ -144,7 +150,10 @@ impl ImageReadTool {
         let _ = api_key;
 
         let user_message = compose_user_message(&inputs.question, &data_uri);
-        let provider = (self.provider_factory)(&self.cfg);
+        let provider = match (self.provider_factory)(&self.cfg) {
+            Ok(p) => p,
+            Err(e) => return err(format!("Vision provider init failed: {e}")),
+        };
 
         match provider
             .chat_with_system(Some(&system_prompt), &user_message, &model, 0.2)
@@ -328,20 +337,50 @@ fn err(msg: impl Into<String>) -> ToolResult {
     }
 }
 
-/// Production factory: build an `OpenAiCompatibleProvider` that supports
-/// vision, with the configured timeout. Reads the API key from the
-/// `api_key_env` environment variable.
-fn default_provider_factory(cfg: &VisionConfig) -> Arc<dyn Provider> {
+/// Production factory: delegate to the shared `create_provider_with_options`
+/// so `[vision].provider` can name any built-in provider or URL-prefixed
+/// form. Reads the API key from the configured environment variable and
+/// applies `timeout_secs` via `ProviderRuntimeOptions`.
+fn default_provider_factory(cfg: &VisionConfig) -> anyhow::Result<Arc<dyn Provider>> {
     let credential = std::env::var(&cfg.api_key_env).ok();
-    let provider = OpenAiCompatibleProvider::new_with_vision(
-        "Vision",
-        &cfg.api_url,
-        credential.as_deref(),
-        AuthStyle::Bearer,
-        true,
-    )
-    .with_timeout_secs(cfg.timeout_secs);
-    Arc::new(provider)
+    let name = resolve_provider_name(cfg)?;
+    let options = ProviderRuntimeOptions {
+        provider_api_url: if cfg.api_url.trim().is_empty() {
+            None
+        } else {
+            Some(cfg.api_url.clone())
+        },
+        provider_timeout_secs: Some(cfg.timeout_secs),
+        ..ProviderRuntimeOptions::default()
+    };
+    let boxed = create_provider_with_options(&name, credential.as_deref(), &options)?;
+    Ok(Arc::from(boxed))
+}
+
+/// Resolve `[vision].provider` into a concrete name accepted by the
+/// provider factory. The bare shorthand `"custom"` is expanded to
+/// `custom:${api_url}`; other values (built-in names, URL-prefixed forms)
+/// are passed through unchanged.
+fn resolve_provider_name(cfg: &VisionConfig) -> anyhow::Result<String> {
+    let raw = cfg.provider.trim();
+    if raw.is_empty() {
+        anyhow::bail!(
+            "[vision].provider is empty; set it to a provider name (e.g. \"openai\", \
+             \"anthropic\", \"gemini\", \"ollama\") or a URL-prefixed form \
+             (e.g. \"custom:https://api.example.com/v1\")"
+        );
+    }
+    if raw.eq_ignore_ascii_case("custom") {
+        let url = cfg.api_url.trim();
+        if url.is_empty() {
+            anyhow::bail!(
+                "[vision].provider = \"custom\" requires [vision].api_url to be set \
+                 (e.g. \"https://api.openai.com/v1\")"
+            );
+        }
+        return Ok(format!("custom:{url}"));
+    }
+    Ok(raw.to_string())
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────
@@ -611,7 +650,7 @@ mod tests {
         let recorder = RecordingProvider::new("A diagram with two boxes.");
         let recorder_for_factory = recorder.clone();
         let tool = ImageReadTool::with_provider_factory(test_security(), cfg, move |_cfg| {
-            recorder_for_factory.clone()
+            Ok(recorder_for_factory.clone() as Arc<dyn Provider>)
         });
 
         let result = tool
@@ -660,7 +699,7 @@ mod tests {
         let recorder = RecordingProvider::new("ok");
         let recorder_for_factory = recorder.clone();
         let tool = ImageReadTool::with_provider_factory(test_security(), cfg, move |_cfg| {
-            recorder_for_factory.clone()
+            Ok(recorder_for_factory.clone() as Arc<dyn Provider>)
         });
 
         let result = tool
@@ -728,5 +767,63 @@ mod tests {
     fn parse_inputs_uses_custom_question() {
         let i = parse_inputs(&json!({"path": "/a", "question": "q"})).unwrap();
         assert_eq!(i.question, "q");
+    }
+
+    // ── resolve_provider_name ────────────────────────────────────
+
+    #[test]
+    fn resolve_provider_shorthand_custom_expands_with_api_url() {
+        let cfg = VisionConfig {
+            provider: "custom".into(),
+            api_url: "https://api.openai.com/v1".into(),
+            ..VisionConfig::default()
+        };
+        assert_eq!(
+            resolve_provider_name(&cfg).unwrap(),
+            "custom:https://api.openai.com/v1"
+        );
+    }
+
+    #[test]
+    fn resolve_provider_shorthand_custom_requires_api_url() {
+        let cfg = VisionConfig {
+            provider: "custom".into(),
+            api_url: "".into(),
+            ..VisionConfig::default()
+        };
+        let err = resolve_provider_name(&cfg).unwrap_err().to_string();
+        assert!(err.contains("api_url"));
+    }
+
+    #[test]
+    fn resolve_provider_passthrough_for_builtin_name() {
+        let cfg = VisionConfig {
+            provider: "anthropic".into(),
+            ..VisionConfig::default()
+        };
+        assert_eq!(resolve_provider_name(&cfg).unwrap(), "anthropic");
+    }
+
+    #[test]
+    fn resolve_provider_passthrough_for_url_prefixed_form() {
+        let cfg = VisionConfig {
+            provider: "custom:https://vendor.example.com/v1".into(),
+            api_url: "".into(),
+            ..VisionConfig::default()
+        };
+        assert_eq!(
+            resolve_provider_name(&cfg).unwrap(),
+            "custom:https://vendor.example.com/v1"
+        );
+    }
+
+    #[test]
+    fn resolve_provider_rejects_empty() {
+        let cfg = VisionConfig {
+            provider: "   ".into(),
+            ..VisionConfig::default()
+        };
+        let err = resolve_provider_name(&cfg).unwrap_err().to_string();
+        assert!(err.contains("empty"));
     }
 }
