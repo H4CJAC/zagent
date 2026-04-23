@@ -23,7 +23,9 @@ CclawCore 提供可选的 **`image_read`** 工具：将图像理解任务委托�
 enabled = true
 provider = "custom"              # 见下方"Provider 选型"
 api_url = "https://api.openai.com/v1"
-api_key_env = "VISION_API_KEY"   # 环境变量名，不是密钥本身
+# 密钥 —— 两种写法二选一：
+api_key = "sk-..."               # 字面值；非空时优先于 api_key_env
+api_key_env = "VISION_API_KEY"   # 备用：环境变量名
 default_model = "gpt-4o-mini"
 default_temperature = 0.2        # 可通过工具参数 temperature 单次覆盖
 timeout_secs = 60
@@ -32,11 +34,20 @@ allow_url = false                # 只允许工作区本地路径
 # system_prompt = "自定义提示词..." # 可选覆盖
 ```
 
-启动 daemon 前导出密钥：
+### 密钥配置
 
-```bash
-export VISION_API_KEY="sk-..."
-```
+支持两种方式（同时设置时 `api_key` 胜出）：
+
+- **配置里直写**：`api_key = "sk-..."`，最省事，和主 provider 顶层的
+  `api_key` 字段语义一致。使用时**请把配置文件当作敏感文件**，不要
+  提交到代码仓库。
+- **走环境变量**：`api_key` 留空，设置 `api_key_env = "VISION_API_KEY"`，
+  然后导出：
+  ```bash
+  export VISION_API_KEY="sk-..."
+  ```
+
+两者都没给出非空值时，工具会快速失败，错误信息同时提示配置和环境变量。
 
 ### 字段说明
 
@@ -45,7 +56,8 @@ export VISION_API_KEY="sk-..."
 | `enabled` | bool | `false` | 是否注册 `image_read` 工具 |
 | `provider` | string | `custom` | Provider 标识（见下方） |
 | `api_url` | string | `https://api.openai.com/v1` | Base URL 覆盖；仅在 `provider` 为裸 name 或 `custom` 简写时生效 |
-| `api_key_env` | string | `VISION_API_KEY` | 存放密钥的环境变量名 |
+| `api_key` | string? | `None` | 字面 API key；非空时优先于 `api_key_env` |
+| `api_key_env` | string | `VISION_API_KEY` | 环境变量名；`api_key` 未设置时 fallback |
 | `default_model` | string | `gpt-4o-mini` | 默认视觉模型 id（可单次覆写） |
 | `default_temperature` | f64 | `0.2` | 默认采样温度（可通过工具参数 `temperature` 单次覆盖） |
 | `timeout_secs` | u64 | `60` | 单次请求超时（秒） |
@@ -136,7 +148,9 @@ export VISION_API_KEY="sk-..."
 - 仅接受 `image/png`、`image/jpeg`、`image/webp`、`image/gif`、
   `image/bmp`；未知魔数直接拒绝。
 - 文件超过 `max_image_bytes` 会在发起任何网络请求前被拒绝。
-- `VISION_API_KEY`（或自定义 env 名）缺失时返回可读错误而不是崩溃。
+- `api_key` 和 `api_key_env` 都没提供非空值时返回可读错误而不是崩溃。
+- 如果要提交共享配置，建议只写 `api_key_env` —— `api_key` 是敏感数据，
+  一旦写入 toml 请把文件按机密处理。
 
 ## 为什么不直接把图注入主对话？
 

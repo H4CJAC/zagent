@@ -123,15 +123,12 @@ impl ImageReadTool {
             Source::Url(url) => url.clone(), // forwarded as-is; provider layer fetches it.
         };
 
-        // Resolve API key.
-        let api_key = match std::env::var(&self.cfg.api_key_env) {
-            Ok(v) if !v.trim().is_empty() => v,
-            _ => {
-                return err(format!(
-                    "Missing vision API key: set the {} environment variable",
-                    self.cfg.api_key_env
-                ));
-            }
+        // Resolve API key. Literal `[vision].api_key` wins over
+        // `api_key_env`; this mirrors the top-level provider `api_key`
+        // contract so users can put everything in the config file.
+        let api_key = match resolve_api_key(&self.cfg) {
+            Ok(v) => v,
+            Err(e) => return err(e),
         };
 
         // Resolve overrides.
@@ -354,10 +351,11 @@ fn err(msg: impl Into<String>) -> ToolResult {
 
 /// Production factory: delegate to the shared `create_provider_with_options`
 /// so `[vision].provider` can name any built-in provider or URL-prefixed
-/// form. Reads the API key from the configured environment variable and
-/// applies `timeout_secs` via `ProviderRuntimeOptions`.
+/// form. Resolves the API key via `resolve_api_key` (literal `api_key`
+/// wins over `api_key_env`) and applies `timeout_secs` via
+/// `ProviderRuntimeOptions`.
 fn default_provider_factory(cfg: &VisionConfig) -> anyhow::Result<Arc<dyn Provider>> {
-    let credential = std::env::var(&cfg.api_key_env).ok();
+    let credential = resolve_api_key(cfg).ok();
     let name = resolve_provider_name(cfg)?;
     let options = ProviderRuntimeOptions {
         provider_api_url: if cfg.api_url.trim().is_empty() {
@@ -370,6 +368,27 @@ fn default_provider_factory(cfg: &VisionConfig) -> anyhow::Result<Arc<dyn Provid
     };
     let boxed = create_provider_with_options(&name, credential.as_deref(), &options)?;
     Ok(Arc::from(boxed))
+}
+
+/// Resolve the vision API key. Literal `[vision].api_key` wins when set
+/// and non-empty; otherwise falls back to the environment variable named
+/// by `[vision].api_key_env`. Returns a human-readable error when neither
+/// source provides a non-empty value.
+fn resolve_api_key(cfg: &VisionConfig) -> Result<String, String> {
+    if let Some(literal) = cfg.api_key.as_deref() {
+        let trimmed = literal.trim();
+        if !trimmed.is_empty() {
+            return Ok(trimmed.to_string());
+        }
+    }
+    match std::env::var(&cfg.api_key_env) {
+        Ok(v) if !v.trim().is_empty() => Ok(v),
+        _ => Err(format!(
+            "Missing vision API key: set [vision].api_key in config, \
+             or export the {} environment variable",
+            cfg.api_key_env
+        )),
+    }
 }
 
 /// Resolve `[vision].provider` into a concrete name accepted by the
@@ -923,5 +942,90 @@ mod tests {
         };
         let err = resolve_provider_name(&cfg).unwrap_err().to_string();
         assert!(err.contains("empty"));
+    }
+
+    // ── resolve_api_key ──────────────────────────────────────────
+
+    #[test]
+    fn resolve_api_key_prefers_literal_over_env() {
+        let env_key = "VISION_API_KEY_RESOLVE_PREFER_TEST";
+        unsafe {
+            std::env::set_var(env_key, "from-env");
+        }
+        let cfg = VisionConfig {
+            api_key: Some("from-config".into()),
+            api_key_env: env_key.into(),
+            ..VisionConfig::default()
+        };
+        assert_eq!(resolve_api_key(&cfg).unwrap(), "from-config");
+        unsafe {
+            std::env::remove_var(env_key);
+        }
+    }
+
+    #[test]
+    fn resolve_api_key_falls_back_to_env_when_literal_blank() {
+        let env_key = "VISION_API_KEY_RESOLVE_FALLBACK_TEST";
+        unsafe {
+            std::env::set_var(env_key, "env-value");
+        }
+        let cfg = VisionConfig {
+            api_key: Some("   ".into()),
+            api_key_env: env_key.into(),
+            ..VisionConfig::default()
+        };
+        assert_eq!(resolve_api_key(&cfg).unwrap(), "env-value");
+        unsafe {
+            std::env::remove_var(env_key);
+        }
+    }
+
+    #[test]
+    fn resolve_api_key_errors_when_both_unset() {
+        let env_key = "VISION_API_KEY_RESOLVE_MISSING_TEST";
+        unsafe {
+            std::env::remove_var(env_key);
+        }
+        let cfg = VisionConfig {
+            api_key: None,
+            api_key_env: env_key.into(),
+            ..VisionConfig::default()
+        };
+        let err = resolve_api_key(&cfg).unwrap_err();
+        assert!(err.contains("[vision].api_key"));
+        assert!(err.contains(env_key));
+    }
+
+    #[tokio::test]
+    async fn literal_api_key_bypasses_env() {
+        let temp = tempfile::tempdir().unwrap();
+        let image_path = temp.path().join("k.png");
+        std::fs::write(
+            &image_path,
+            [0x89, b'P', b'N', b'G', b'\r', b'\n', 0x1a, b'\n'],
+        )
+        .unwrap();
+
+        let env_key = "VISION_API_KEY_LITERAL_BYPASS_TEST";
+        unsafe {
+            std::env::remove_var(env_key);
+        }
+
+        let cfg = VisionConfig {
+            api_key: Some("inline-key".into()),
+            api_key_env: env_key.into(),
+            ..VisionConfig::default()
+        };
+
+        let recorder = RecordingProvider::new("ok");
+        let recorder_for_factory = recorder.clone();
+        let tool = ImageReadTool::with_provider_factory(test_security(), cfg, move |_cfg| {
+            Ok(recorder_for_factory.clone() as Arc<dyn Provider>)
+        });
+
+        let result = tool
+            .run(json!({"path": image_path.to_str().unwrap()}))
+            .await;
+        assert!(result.success, "error = {:?}", result.error);
     }
 }

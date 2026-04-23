@@ -3917,7 +3917,18 @@ pub struct VisionConfig {
     #[serde(default = "default_vision_api_url")]
     pub api_url: String,
 
-    /// Environment variable name holding the vision API key.
+    /// Vision API key (literal, stored in config). When set and non-empty,
+    /// takes precedence over `api_key_env`. This mirrors the top-level
+    /// provider `api_key` field so users don't have to juggle env vars.
+    ///
+    /// **Security**: treat your config file as secret when this is set.
+    /// Prefer `api_key_env` in shared/committed configs.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[secret]
+    pub api_key: Option<String>,
+
+    /// Environment variable name holding the vision API key. Used as a
+    /// fallback when `api_key` is unset or empty.
     #[serde(default = "default_vision_api_key_env")]
     pub api_key_env: String,
 
@@ -3985,6 +3996,7 @@ impl Default for VisionConfig {
             enabled: false,
             provider: default_vision_provider(),
             api_url: default_vision_api_url(),
+            api_key: None,
             api_key_env: default_vision_api_key_env(),
             default_model: default_vision_model(),
             timeout_secs: default_vision_timeout_secs(),

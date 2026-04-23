@@ -26,7 +26,9 @@ Add a `[vision]` section to your `config.toml`:
 enabled = true
 provider = "custom"              # see "Choosing a provider" below
 api_url = "https://api.openai.com/v1"
-api_key_env = "VISION_API_KEY"   # env var name, not the key itself
+# API key — pick ONE of the two styles below:
+api_key = "sk-..."               # literal; wins when set and non-empty
+api_key_env = "VISION_API_KEY"   # fallback: env var name to read from
 default_model = "gpt-4o-mini"
 default_temperature = 0.2        # per-call override via tool arg `temperature`
 timeout_secs = 60
@@ -35,11 +37,21 @@ allow_url = false                # only allow workspace-local paths
 # system_prompt = "自定义提示词..." # optional override
 ```
 
-Then export the key in your shell before starting the daemon:
+### Credentials
 
-```bash
-export VISION_API_KEY="sk-..."
-```
+Two styles are supported (`api_key` wins when both are set):
+
+- **Literal in config** — `api_key = "sk-..."`. Simplest, mirrors the
+  top-level provider `api_key` field. Treat the config file as secret
+  when you use this; do **not** commit it.
+- **Environment variable** — leave `api_key` unset and set
+  `api_key_env = "VISION_API_KEY"`, then export the value:
+  ```bash
+  export VISION_API_KEY="sk-..."
+  ```
+
+If neither source yields a non-empty value the tool fails fast with a
+readable error that points at both config and env.
 
 ### Fields
 
@@ -48,7 +60,8 @@ export VISION_API_KEY="sk-..."
 | `enabled` | bool | `false` | Register the `image_read` tool |
 | `provider` | string | `custom` | Provider identifier (see below) |
 | `api_url` | string | `https://api.openai.com/v1` | Base URL override; only consumed for bare `provider` names or the `custom` shorthand |
-| `api_key_env` | string | `VISION_API_KEY` | Name of env var holding the key |
+| `api_key` | string? | `None` | Literal API key; wins over `api_key_env` when non-empty |
+| `api_key_env` | string | `VISION_API_KEY` | Env var name; fallback when `api_key` is unset |
 | `default_model` | string | `gpt-4o-mini` | Vision model id (overridable per-call) |
 | `default_temperature` | f64 | `0.2` | Sampling temperature (overridable per-call via `temperature` arg) |
 | `timeout_secs` | u64 | `60` | Per-request timeout |
@@ -142,8 +155,10 @@ Remote URL (requires `allow_url = true`):
 - Only `image/png`, `image/jpeg`, `image/webp`, `image/gif`, `image/bmp`
   are accepted. Unknown magic bytes are rejected.
 - Files exceeding `max_image_bytes` are rejected before any network call.
-- If `VISION_API_KEY` (or the configured env var) is missing, the tool
-  returns a readable error instead of crashing.
+- If neither `api_key` nor the `api_key_env` variable yields a non-empty
+  value, the tool returns a readable error instead of crashing.
+- Prefer `api_key_env` in shared/committed configs — `api_key` is a
+  secret and the config file must be treated accordingly when set.
 
 ## Why not inject the image into the main chat?
 
