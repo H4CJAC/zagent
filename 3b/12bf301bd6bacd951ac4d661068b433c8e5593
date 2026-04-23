@@ -1,0 +1,49 @@
+src/config/schema.rs
+  dd9a7ab298799cca 3932-3939,3974-3977,3991
+src/tools/image_read.rs
+  dd9a7ab298799cca 141,160,202-205,229,270-277,282,437,447,468,473,700-723,725,727-752,844-869
+docs/setup-guides/vision-setup.md
+  dd9a7ab298799cca 31,53,97-101
+src/config/presets/seewo.toml
+  h_f38e4123063fc1 691
+docs/i18n/zh-CN/setup-guides/vision-setup.zh-CN.md
+  dd9a7ab298799cca 28,50,92-96
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.10",
+  "base_commit_sha": "3b12bf301bd6bacd951ac4d661068b433c8e5593",
+  "prompts": {
+    "dd9a7ab298799cca": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "49f768fd-534d-460d-bfe8-417620332917",
+        "model": "claude-opus-4-7-thinking-high"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 134,
+      "total_deletions": 16,
+      "accepted_lines": 125,
+      "overriden_lines": 2
+    },
+    "fbd0a7434a0e56c7": {
+      "agent_id": {
+        "tool": "known_human",
+        "id": "known_human_session",
+        "model": "unknown"
+      },
+      "human_author": "hac",
+      "messages": [],
+      "total_additions": 1,
+      "total_deletions": 3,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_f38e4123063fc1": {
+      "author": "hac"
+    }
+  }
+}
