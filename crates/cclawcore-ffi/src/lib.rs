@@ -22,10 +22,7 @@ use tokio::time::Duration;
 use tokio_util::sync::CancellationToken;
 use tracing_appender::non_blocking::WorkerGuard;
 use tracing_subscriber::{
-    EnvFilter, Layer, Registry, fmt,
-    layer::SubscriberExt,
-    reload,
-    util::SubscriberInitExt,
+    EnvFilter, Layer, Registry, fmt, layer::SubscriberExt, reload, util::SubscriberInitExt,
 };
 
 use cclawcore::config::schema::LoggingConfig;
@@ -57,8 +54,7 @@ static SUBSCRIBER_INIT: Once = Once::new();
 
 /// Hot-swap handle used to install (or replace) the file logging layer after
 /// the configuration has been loaded. `None` until `install_subscriber` runs.
-static FILE_RELOAD_HANDLE: OnceLock<reload::Handle<Option<BoxedLayer>, Registry>> =
-    OnceLock::new();
+static FILE_RELOAD_HANDLE: OnceLock<reload::Handle<Option<BoxedLayer>, Registry>> = OnceLock::new();
 
 /// Keeps the `tracing_appender::non_blocking` worker guard alive for as long
 /// as the file layer is installed. Dropping the guard flushes any buffered
@@ -75,9 +71,8 @@ static LOG_GUARD: Mutex<Option<WorkerGuard>> = Mutex::new(None);
 /// `info,cclawcorelabs=debug,cclawcore_ffi=debug`.
 fn install_subscriber() {
     SUBSCRIBER_INIT.call_once(|| {
-        let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| {
-            EnvFilter::new("info,cclawcorelabs=debug,cclawcore_ffi=debug")
-        });
+        let filter = EnvFilter::try_from_default_env()
+            .unwrap_or_else(|_| EnvFilter::new("debug,cclawcorelabs=debug,cclawcore_ffi=debug"));
 
         let (file_slot, file_handle) = reload::Layer::new(None::<BoxedLayer>);
         let _ = FILE_RELOAD_HANDLE.set(file_handle);
@@ -211,12 +206,7 @@ pub extern "C" fn cclawcore_start(
     }
 }
 
-fn start_inner(
-    config_dir: *const c_char,
-    host: *const c_char,
-    port: u16,
-    sw_preset: bool,
-) -> i32 {
+fn start_inner(config_dir: *const c_char, host: *const c_char, port: u16, sw_preset: bool) -> i32 {
     let mut guard = DAEMON
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner());
@@ -260,7 +250,8 @@ fn start_inner(
         ready_tx,
     ));
 
-    let outcome = runtime.block_on(async move { tokio::time::timeout(READY_TIMEOUT, ready_rx).await });
+    let outcome =
+        runtime.block_on(async move { tokio::time::timeout(READY_TIMEOUT, ready_rx).await });
 
     match outcome {
         Ok(Ok(Ok(actual_port))) => {
@@ -342,10 +333,7 @@ async fn daemon_lifecycle(
 ) -> anyhow::Result<()> {
     let mut ready_slot: Option<oneshot::Sender<GatewayReadySignal>> = Some(ready_tx);
 
-    fn signal_err(
-        slot: &mut Option<oneshot::Sender<GatewayReadySignal>>,
-        msg: String,
-    ) {
+    fn signal_err(slot: &mut Option<oneshot::Sender<GatewayReadySignal>>, msg: String) {
         if let Some(tx) = slot.take() {
             let _ = tx.send(Err(msg));
         }
@@ -366,7 +354,10 @@ async fn daemon_lifecycle(
     let mut config = match Box::pin(cclawcore::Config::load_or_init()).await {
         Ok(c) => c,
         Err(e) => {
-            signal_err(&mut ready_slot, format!("Config::load_or_init failed: {e:#}"));
+            signal_err(
+                &mut ready_slot,
+                format!("Config::load_or_init failed: {e:#}"),
+            );
             return Err(e);
         }
     };
