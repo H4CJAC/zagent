@@ -1,0 +1,26 @@
+crates/cclawcore-ffi/Cargo.toml
+  559467c2caf5af15 19
+crates/cclawcore-ffi/src/lib.rs
+  559467c2caf5af15 15-16,23-29,31,34-39,58-67,81-84,86-89,91,114-175,328,375-376,449-450
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.9",
+  "base_commit_sha": "c14b03e74c89e49ad549f43a73567896f525bff3",
+  "prompts": {
+    "559467c2caf5af15": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "e3df0fc7-f036-4614-b3bb-26c6c17724c1",
+        "model": "claude-opus-4-7"
+      },
+      "human_author": "hacyou",
+      "messages": [],
+      "total_additions": 107,
+      "total_deletions": 3,
+      "accepted_lines": 107,
+      "overriden_lines": 0,
+      "messages_url": "https://gitai.gz.cvte.cn/cas/9b9ce7e2bd81e53d6ec3767676e056b5c5beb7ec2a43aade443933b3968ef774"
+    }
+  }
+}
