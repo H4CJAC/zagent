@@ -25,6 +25,7 @@ provider = "custom"              # 见下方"Provider 选型"
 api_url = "https://api.openai.com/v1"
 api_key_env = "VISION_API_KEY"   # 环境变量名，不是密钥本身
 default_model = "gpt-4o-mini"
+default_temperature = 0.2        # 可通过工具参数 temperature 单次覆盖
 timeout_secs = 60
 max_image_bytes = 5242880        # 5 MB
 allow_url = false                # 只允许工作区本地路径
@@ -46,6 +47,7 @@ export VISION_API_KEY="sk-..."
 | `api_url` | string | `https://api.openai.com/v1` | Base URL 覆盖；仅在 `provider` 为裸 name 或 `custom` 简写时生效 |
 | `api_key_env` | string | `VISION_API_KEY` | 存放密钥的环境变量名 |
 | `default_model` | string | `gpt-4o-mini` | 默认视觉模型 id（可单次覆写） |
+| `default_temperature` | f64 | `0.2` | 默认采样温度（可通过工具参数 `temperature` 单次覆盖） |
 | `timeout_secs` | u64 | `60` | 单次请求超时（秒） |
 | `max_image_bytes` | u64 | `5242880` | 超出则拒绝 |
 | `allow_url` | bool | `false` | 是否允许 `url` 参数（默认仅本地路径） |
@@ -87,10 +89,11 @@ export VISION_API_KEY="sk-..."
 
 ```jsonc
 {
-  "path":     "string — 工作区路径（与 url 互斥）",
-  "url":     "string — http(s) URL（需 allow_url=true）",
-  "question": "string，可选 — 想让视觉模型回答什么",
-  "model":    "string，可选 — 单次覆盖 default_model"
+  "path":        "string — 工作区路径（与 url 互斥）",
+  "url":         "string — http(s) URL（需 allow_url=true）",
+  "question":    "string，可选 — 想让视觉模型回答什么",
+  "model":       "string，可选 — 单次覆盖 default_model",
+  "temperature": "number，可选 — 单次覆盖 default_temperature"
 }
 ```
 

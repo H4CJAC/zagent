@@ -138,6 +138,7 @@ impl ImageReadTool {
         let model = inputs
             .model
             .unwrap_or_else(|| self.cfg.default_model.clone());
+        let temperature = inputs.temperature.unwrap_or(self.cfg.default_temperature);
         let system_prompt = self
             .cfg
             .system_prompt
@@ -156,7 +157,7 @@ impl ImageReadTool {
         };
 
         match provider
-            .chat_with_system(Some(&system_prompt), &user_message, &model, 0.2)
+            .chat_with_system(Some(&system_prompt), &user_message, &model, temperature)
             .await
         {
             Ok(text) => ToolResult {
@@ -198,6 +199,10 @@ impl Tool for ImageReadTool {
                 "model": {
                     "type": "string",
                     "description": "Override the default vision model identifier. Optional."
+                },
+                "temperature": {
+                    "type": "number",
+                    "description": "Override [vision].default_temperature for this call (typical range 0.0–1.0). Optional."
                 }
             }
         })
@@ -221,6 +226,7 @@ struct Inputs {
     source: Source,
     question: String,
     model: Option<String>,
+    temperature: Option<f64>,
 }
 
 fn parse_inputs(args: &Value) -> Result<Inputs, String> {
@@ -261,10 +267,19 @@ fn parse_inputs(args: &Value) -> Result<Inputs, String> {
         .filter(|s| !s.is_empty())
         .map(str::to_string);
 
+    let temperature = match args.get("temperature") {
+        None | Some(Value::Null) => None,
+        Some(v) => match v.as_f64() {
+            Some(n) if n.is_finite() => Some(n),
+            _ => return Err("`temperature` must be a finite number".into()),
+        },
+    };
+
     Ok(Inputs {
         source,
         question,
         model,
+        temperature,
     })
 }
 
@@ -419,6 +434,7 @@ mod tests {
         system: Mutex<Option<String>>,
         message: Mutex<Option<String>>,
         model: Mutex<Option<String>>,
+        temperature: Mutex<Option<f64>>,
         reply: String,
     }
 
@@ -428,6 +444,7 @@ mod tests {
                 system: Mutex::new(None),
                 message: Mutex::new(None),
                 model: Mutex::new(None),
+                temperature: Mutex::new(None),
                 reply: reply.into(),
             })
         }
@@ -448,11 +465,12 @@ mod tests {
             system_prompt: Option<&str>,
             message: &str,
             model: &str,
-            _temperature: f64,
+            temperature: f64,
         ) -> anyhow::Result<String> {
             *self.system.lock().unwrap() = system_prompt.map(ToString::to_string);
             *self.message.lock().unwrap() = Some(message.to_string());
             *self.model.lock().unwrap() = Some(model.to_string());
+            *self.temperature.lock().unwrap() = Some(temperature);
             Ok(self.reply.clone())
         }
 
@@ -679,6 +697,60 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn honours_temperature_override_and_falls_back_to_config_default() {
+        let temp = tempfile::tempdir().unwrap();
+        let image_path = temp.path().join("t.png");
+        std::fs::write(
+            &image_path,
+            [0x89, b'P', b'N', b'G', b'\r', b'\n', 0x1a, b'\n'],
+        )
+        .unwrap();
+
+        let env_key = "VISION_API_KEY_TEMP_TEST";
+        unsafe {
+            std::env::set_var(env_key, "k");
+        }
+
+        let cfg = VisionConfig {
+            api_key_env: env_key.into(),
+            default_temperature: 0.9,
+            ..VisionConfig::default()
+        };
+
+        // Case 1: no override → config default is forwarded.
+        let recorder = RecordingProvider::new("ok");
+        let recorder_for_factory = recorder.clone();
+        let tool =
+            ImageReadTool::with_provider_factory(test_security(), cfg.clone(), move |_cfg| {
+                Ok(recorder_for_factory.clone() as Arc<dyn Provider>)
+            });
+        let result = tool
+            .run(json!({"path": image_path.to_str().unwrap()}))
+            .await;
+        assert!(result.success, "error = {:?}", result.error);
+        assert_eq!(*recorder.temperature.lock().unwrap(), Some(0.9));
+
+        // Case 2: explicit override wins.
+        let recorder2 = RecordingProvider::new("ok");
+        let recorder2_for_factory = recorder2.clone();
+        let tool2 = ImageReadTool::with_provider_factory(test_security(), cfg, move |_cfg| {
+            Ok(recorder2_for_factory.clone() as Arc<dyn Provider>)
+        });
+        let result = tool2
+            .run(json!({
+                "path": image_path.to_str().unwrap(),
+                "temperature": 0.1,
+            }))
+            .await;
+        assert!(result.success, "error = {:?}", result.error);
+        assert_eq!(*recorder2.temperature.lock().unwrap(), Some(0.1));
+
+        unsafe {
+            std::env::remove_var(env_key);
+        }
+    }
+
+    #[tokio::test]
     async fn honours_model_override_and_custom_system_prompt() {
         let temp = tempfile::tempdir().unwrap();
         let image_path = temp.path().join("ok.jpg");
@@ -767,6 +839,32 @@ mod tests {
     fn parse_inputs_uses_custom_question() {
         let i = parse_inputs(&json!({"path": "/a", "question": "q"})).unwrap();
         assert_eq!(i.question, "q");
+    }
+
+    #[test]
+    fn parse_inputs_accepts_temperature_number() {
+        let i = parse_inputs(&json!({"path": "/a", "temperature": 0.7})).unwrap();
+        assert_eq!(i.temperature, Some(0.7));
+    }
+
+    #[test]
+    fn parse_inputs_accepts_temperature_integer() {
+        let i = parse_inputs(&json!({"path": "/a", "temperature": 1})).unwrap();
+        assert_eq!(i.temperature, Some(1.0));
+    }
+
+    #[test]
+    fn parse_inputs_omits_temperature_when_absent_or_null() {
+        let i = parse_inputs(&json!({"path": "/a"})).unwrap();
+        assert_eq!(i.temperature, None);
+        let i = parse_inputs(&json!({"path": "/a", "temperature": null})).unwrap();
+        assert_eq!(i.temperature, None);
+    }
+
+    #[test]
+    fn parse_inputs_rejects_non_finite_temperature() {
+        let err = parse_inputs(&json!({"path": "/a", "temperature": "hot"})).unwrap_err();
+        assert!(err.contains("temperature"));
     }
 
     // ── resolve_provider_name ────────────────────────────────────

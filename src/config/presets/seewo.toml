@@ -688,14 +688,12 @@ default_model = "fal-ai/flux/schnell"
 api_key_env = "FAL_API_KEY"
 
 [vision]
-enabled = false
-
+enabled = true
 provider = "custom-with-fastpath:http://ai-open.seewo.com/openai/deployments/ALI_KIMI_SPECIAL_K2_5"
 default_model = "kimi-k2.5"
 api_url = ""
 api_key_env = "2mVsX6jKnP9wRtHbZc3fLaQeYg7uNdWi"
 default_temperature = 1
-
 timeout_secs = 300
 max_image_bytes = 5242880
 allow_url = true

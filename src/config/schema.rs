@@ -3929,6 +3929,14 @@ pub struct VisionConfig {
     #[serde(default = "default_vision_timeout_secs")]
     pub timeout_secs: u64,
 
+    /// Default sampling temperature for the vision call. Lower values
+    /// (e.g. 0.1–0.3) make the model more deterministic and are preferred
+    /// for OCR / factual description; higher values produce more creative
+    /// narration. Overridable per-call via the tool's `temperature`
+    /// argument.
+    #[serde(default = "default_vision_temperature")]
+    pub default_temperature: f64,
+
     /// Maximum image file size in bytes that the tool will accept.
     #[serde(default = "default_vision_max_image_bytes")]
     pub max_image_bytes: u64,
@@ -3963,6 +3971,10 @@ fn default_vision_timeout_secs() -> u64 {
     60
 }
 
+fn default_vision_temperature() -> f64 {
+    0.2
+}
+
 fn default_vision_max_image_bytes() -> u64 {
     5 * 1024 * 1024
 }
@@ -3976,6 +3988,7 @@ impl Default for VisionConfig {
             api_key_env: default_vision_api_key_env(),
             default_model: default_vision_model(),
             timeout_secs: default_vision_timeout_secs(),
+            default_temperature: default_vision_temperature(),
             max_image_bytes: default_vision_max_image_bytes(),
             allow_url: false,
             system_prompt: None,

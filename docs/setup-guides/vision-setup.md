@@ -28,6 +28,7 @@ provider = "custom"              # see "Choosing a provider" below
 api_url = "https://api.openai.com/v1"
 api_key_env = "VISION_API_KEY"   # env var name, not the key itself
 default_model = "gpt-4o-mini"
+default_temperature = 0.2        # per-call override via tool arg `temperature`
 timeout_secs = 60
 max_image_bytes = 5242880        # 5 MB
 allow_url = false                # only allow workspace-local paths
@@ -49,6 +50,7 @@ export VISION_API_KEY="sk-..."
 | `api_url` | string | `https://api.openai.com/v1` | Base URL override; only consumed for bare `provider` names or the `custom` shorthand |
 | `api_key_env` | string | `VISION_API_KEY` | Name of env var holding the key |
 | `default_model` | string | `gpt-4o-mini` | Vision model id (overridable per-call) |
+| `default_temperature` | f64 | `0.2` | Sampling temperature (overridable per-call via `temperature` arg) |
 | `timeout_secs` | u64 | `60` | Per-request timeout |
 | `max_image_bytes` | u64 | `5242880` | Reject images larger than this |
 | `allow_url` | bool | `false` | Permit `url` argument in addition to `path` |
@@ -92,10 +94,11 @@ OpenAI-compatible proxy (e.g. LiteLLM) and set
 
 ```jsonc
 {
-  "path":     "string — workspace path (xor with `url`)",
-  "url":     "string — http(s) URL (requires allow_url = true)",
-  "question": "string, optional — what to ask about the image",
-  "model":    "string, optional — override default_model for this call"
+  "path":        "string — workspace path (xor with `url`)",
+  "url":         "string — http(s) URL (requires allow_url = true)",
+  "question":    "string, optional — what to ask about the image",
+  "model":       "string, optional — override default_model for this call",
+  "temperature": "number, optional — override default_temperature for this call"
 }
 ```
 
