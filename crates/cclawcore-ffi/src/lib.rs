@@ -12,16 +12,31 @@
 use std::ffi::CStr;
 use std::os::raw::c_char;
 use std::panic::AssertUnwindSafe;
-use std::sync::{Mutex, Once};
+use std::path::{Path, PathBuf};
+use std::sync::{Mutex, Once, OnceLock};
 
 use tokio::runtime::Runtime;
 use tokio::sync::oneshot;
 use tokio::task::JoinHandle;
 use tokio::time::Duration;
 use tokio_util::sync::CancellationToken;
-use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt};
+use tracing_appender::non_blocking::WorkerGuard;
+use tracing_subscriber::{
+    EnvFilter, Layer, Registry, fmt,
+    layer::SubscriberExt,
+    reload,
+    util::SubscriberInitExt,
+};
 
+use cclawcore::config::schema::LoggingConfig;
 use cclawcore::gateway::GatewayReadySignal;
+
+/// Boxed layer type used as the payload of the hot-reloadable file layer slot.
+///
+/// `Option<BoxedLayer>` starts out as `None` (no file logging) and is replaced
+/// with `Some(...)` once the configuration has been loaded and the target log
+/// directory is known.
+type BoxedLayer = Box<dyn Layer<Registry> + Send + Sync + 'static>;
 
 /// How long the synchronous part of [`cclawcore_start`] blocks waiting for
 /// the gateway to finish binding before returning `-2`.
@@ -40,6 +55,16 @@ struct DaemonHandle {
 static DAEMON: Mutex<Option<DaemonHandle>> = Mutex::new(None);
 static SUBSCRIBER_INIT: Once = Once::new();
 
+/// Hot-swap handle used to install (or replace) the file logging layer after
+/// the configuration has been loaded. `None` until `install_subscriber` runs.
+static FILE_RELOAD_HANDLE: OnceLock<reload::Handle<Option<BoxedLayer>, Registry>> =
+    OnceLock::new();
+
+/// Keeps the `tracing_appender::non_blocking` worker guard alive for as long
+/// as the file layer is installed. Dropping the guard flushes any buffered
+/// lines, which is why we clear it on stop / teardown paths.
+static LOG_GUARD: Mutex<Option<WorkerGuard>> = Mutex::new(None);
+
 /// Install a global `tracing` subscriber exactly once per process.
 ///
 /// - Android: `logcat` via `tracing-android` (tag `"cclawcore"`) plus a
@@ -53,8 +78,17 @@ fn install_subscriber() {
         let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| {
             EnvFilter::new("info,cclawcorelabs=debug,cclawcore_ffi=debug")
         });
+
+        let (file_slot, file_handle) = reload::Layer::new(None::<BoxedLayer>);
+        let _ = FILE_RELOAD_HANDLE.set(file_handle);
+
         let stderr_layer = fmt::layer().with_writer(std::io::stderr).with_ansi(false);
+        // `reload::Layer<L, S>` only implements `Layer<S>`, so the file slot
+        // must be attached first (its `S` = `Registry`). `EnvFilter` and
+        // `fmt::Layer` are `Layer<S>` for any `S`, so they stack on top
+        // without constraining the reload-slot type.
         let registry = tracing_subscriber::registry()
+            .with(file_slot)
             .with(filter)
             .with(stderr_layer);
 
@@ -75,6 +109,70 @@ fn install_subscriber() {
             let _ = registry.try_init();
         }
     });
+}
+
+/// Build a rolling file layer from `cfg` and hot-swap it into the subscriber.
+///
+/// Called from `daemon_lifecycle` once the effective configuration is known.
+/// Failures are logged at `warn!` level and left non-fatal: stderr / logcat
+/// logging remains functional, so the daemon can still report errors.
+fn attach_file_logger(cfg: &LoggingConfig, workspace_dir: &Path) {
+    let Some(dir) = cfg.log_dir.as_deref().filter(|s| !s.is_empty()) else {
+        return;
+    };
+    let dir_path = if Path::new(dir).is_absolute() {
+        PathBuf::from(dir)
+    } else {
+        workspace_dir.join(dir)
+    };
+    if let Err(e) = std::fs::create_dir_all(&dir_path) {
+        tracing::warn!(
+            "cclawcore-ffi: cannot create log dir {}: {e}",
+            dir_path.display()
+        );
+        return;
+    }
+
+    let appender = match cfg.rotation.as_str() {
+        "hourly" => tracing_appender::rolling::hourly(&dir_path, "cclawcore.log"),
+        "never" => tracing_appender::rolling::never(&dir_path, "cclawcore.log"),
+        _ => tracing_appender::rolling::daily(&dir_path, "cclawcore.log"),
+    };
+    let (non_blocking, guard) = tracing_appender::non_blocking(appender);
+    let file_layer: BoxedLayer = Box::new(
+        fmt::layer()
+            .with_ansi(false)
+            .with_writer(non_blocking)
+            .with_filter(EnvFilter::new(&cfg.file_level)),
+    );
+
+    let Some(handle) = FILE_RELOAD_HANDLE.get() else {
+        tracing::warn!("cclawcore-ffi: file reload handle missing; subscriber not installed?");
+        return;
+    };
+    if let Err(e) = handle.reload(Some(file_layer)) {
+        tracing::warn!("cclawcore-ffi: failed to install file log layer: {e}");
+        return;
+    }
+
+    *LOG_GUARD
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(guard);
+    tracing::info!(
+        "cclawcore-ffi: file logging enabled at {}",
+        dir_path.display()
+    );
+}
+
+/// Drop the currently held non-blocking worker guard (if any). Dropping the
+/// guard flushes any buffered lines to disk. Safe to call on every shutdown
+/// path — it is a no-op when file logging was never activated.
+fn shutdown_file_logger() {
+    let guard = LOG_GUARD
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+        .take();
+    drop(guard);
 }
 
 /// Start the CclawCore daemon in a background tokio runtime.
@@ -227,6 +325,7 @@ fn teardown_failed_runtime(
     cancel.cancel();
     let _ = runtime.block_on(async { tokio::time::timeout(TEARDOWN_WAIT, join).await });
     runtime.shutdown_timeout(TEARDOWN_WAIT);
+    shutdown_file_logger();
 }
 
 /// Fully-async lifecycle of the daemon task. Guarantees that `ready_tx`
@@ -272,6 +371,8 @@ async fn daemon_lifecycle(
         }
     };
     config.apply_env_overrides();
+
+    attach_file_logger(&config.logging, &config.workspace_dir);
 
     cclawcore::observability::runtime_trace::init_from_config(
         &config.observability,
@@ -345,4 +446,6 @@ fn stop_inner() {
             Err(e) => tracing::warn!("cclawcore-ffi: daemon task panicked: {e}"),
         }
     });
+
+    shutdown_file_logger();
 }

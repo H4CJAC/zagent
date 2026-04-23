@@ -16,6 +16,7 @@ tokio = { version = "1.50", features = ["rt-multi-thread", "macros", "sync"] }
 tokio-util = { version = "0.7" }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["fmt", "ansi", "env-filter"] }
+tracing-appender = "0.2"
 anyhow = "1.0"
 rustls = "0.23"
 
