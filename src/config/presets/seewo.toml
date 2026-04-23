@@ -687,6 +687,15 @@ enabled = false
 default_model = "fal-ai/flux/schnell"
 api_key_env = "FAL_API_KEY"
 
+[vision]
+enabled = false
+api_url = "https://api.openai.com/v1"
+api_key_env = "VISION_API_KEY"
+default_model = "gpt-4o-mini"
+timeout_secs = 60
+max_image_bytes = 5242880
+allow_url = false
+
 [plugins]
 enabled = false
 plugins_dir = "~/.cclawcore/plugins"

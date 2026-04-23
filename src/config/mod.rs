@@ -30,7 +30,7 @@ pub use schema::{
     SkillsPromptInjectionMode, SlackConfig, SopConfig, StorageConfig, StorageProviderConfig,
     StorageProviderSection, StreamMode, SwarmConfig, SwarmStrategy, TelegramConfig,
     TextBrowserConfig, ToolFilterGroup, ToolFilterGroupMode, TranscriptionConfig, TtsConfig,
-    TunnelConfig, VerifiableIntentConfig, WebFetchConfig, WebSearchConfig, WebhookConfig,
+    TunnelConfig, VerifiableIntentConfig, VisionConfig, WebFetchConfig, WebSearchConfig, WebhookConfig,
     WhatsAppChatPolicy, WhatsAppWebMode, WorkspaceConfig, apply_channel_proxy_to_builder,
     apply_runtime_proxy_to_builder, build_channel_proxy_client,
     build_channel_proxy_client_with_timeouts, build_runtime_proxy_client,

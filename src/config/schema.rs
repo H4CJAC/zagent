@@ -452,6 +452,11 @@ pub struct Config {
     #[nested]
     pub image_gen: ImageGenConfig,
 
+    /// Vision (image understanding) tool configuration (`[vision]`).
+    #[serde(default)]
+    #[nested]
+    pub vision: VisionConfig,
+
     /// Plugin system configuration (`[plugins]`).
     #[serde(default)]
     #[nested]
@@ -3855,6 +3860,91 @@ impl Default for ImageGenConfig {
             enabled: false,
             default_model: default_image_gen_model(),
             api_key_env: default_image_gen_api_key_env(),
+        }
+    }
+}
+
+// ── Vision (Image Understanding) ────────────────────────────────
+
+/// Vision tool configuration (`[vision]`).
+///
+/// When enabled, registers an `image_read` tool that delegates image
+/// understanding to a configured OpenAI-compatible vision model and
+/// returns a text description to the main agent.
+///
+/// The tool reads an image (workspace path or URL), base64-encodes it,
+/// and issues an isolated `chat_with_system` call through a dedicated
+/// `OpenAiCompatibleProvider` instance — the main agent therefore does
+/// not need multimodal capability itself.
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, Configurable)]
+#[prefix = "vision"]
+pub struct VisionConfig {
+    /// Enable the `image_read` tool. Default: false.
+    #[serde(default)]
+    pub enabled: bool,
+
+    /// Base URL of the OpenAI-compatible vision endpoint
+    /// (e.g. `https://api.openai.com/v1`).
+    #[serde(default = "default_vision_api_url")]
+    pub api_url: String,
+
+    /// Environment variable name holding the vision API key.
+    #[serde(default = "default_vision_api_key_env")]
+    pub api_key_env: String,
+
+    /// Default vision model identifier (overridable per-call).
+    #[serde(default = "default_vision_model")]
+    pub default_model: String,
+
+    /// Per-request timeout in seconds.
+    #[serde(default = "default_vision_timeout_secs")]
+    pub timeout_secs: u64,
+
+    /// Maximum image file size in bytes that the tool will accept.
+    #[serde(default = "default_vision_max_image_bytes")]
+    pub max_image_bytes: u64,
+
+    /// Allow `url` input in addition to workspace paths. Default: false.
+    #[serde(default)]
+    pub allow_url: bool,
+
+    /// Optional system prompt override. When `None`, a built-in prompt
+    /// that asks for objective, concise description is used.
+    #[serde(default)]
+    pub system_prompt: Option<String>,
+}
+
+fn default_vision_api_url() -> String {
+    "https://api.openai.com/v1".into()
+}
+
+fn default_vision_api_key_env() -> String {
+    "VISION_API_KEY".into()
+}
+
+fn default_vision_model() -> String {
+    "gpt-4o-mini".into()
+}
+
+fn default_vision_timeout_secs() -> u64 {
+    60
+}
+
+fn default_vision_max_image_bytes() -> u64 {
+    5 * 1024 * 1024
+}
+
+impl Default for VisionConfig {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            api_url: default_vision_api_url(),
+            api_key_env: default_vision_api_key_env(),
+            default_model: default_vision_model(),
+            timeout_secs: default_vision_timeout_secs(),
+            max_image_bytes: default_vision_max_image_bytes(),
+            allow_url: false,
+            system_prompt: None,
         }
     }
 }
@@ -9166,6 +9256,7 @@ impl Default for Config {
             knowledge: KnowledgeConfig::default(),
             linkedin: LinkedInConfig::default(),
             image_gen: ImageGenConfig::default(),
+            vision: VisionConfig::default(),
             plugins: PluginsConfig::default(),
             locale: None,
             verifiable_intent: VerifiableIntentConfig::default(),
@@ -11714,6 +11805,7 @@ auto_save = true
             knowledge: KnowledgeConfig::default(),
             linkedin: LinkedInConfig::default(),
             image_gen: ImageGenConfig::default(),
+            vision: VisionConfig::default(),
             plugins: PluginsConfig::default(),
             locale: None,
             verifiable_intent: VerifiableIntentConfig::default(),
@@ -12248,6 +12340,7 @@ default_temperature = 0.7
             knowledge: KnowledgeConfig::default(),
             linkedin: LinkedInConfig::default(),
             image_gen: ImageGenConfig::default(),
+            vision: VisionConfig::default(),
             plugins: PluginsConfig::default(),
             locale: None,
             verifiable_intent: VerifiableIntentConfig::default(),

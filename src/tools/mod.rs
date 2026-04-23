@@ -56,6 +56,7 @@ pub mod hardware_memory_read;
 pub mod http_request;
 pub mod image_gen;
 pub mod image_info;
+pub mod image_read;
 pub mod jira_tool;
 pub mod knowledge_tool;
 pub mod linkedin;
@@ -169,6 +170,7 @@ pub use hardware_memory_read::HardwareMemoryReadTool;
 pub use http_request::HttpRequestTool;
 pub use image_gen::ImageGenTool;
 pub use image_info::ImageInfoTool;
+pub use image_read::ImageReadTool;
 pub use jira_tool::JiraTool;
 pub use knowledge_tool::KnowledgeTool;
 pub use linkedin::LinkedInTool;
@@ -891,6 +893,16 @@ pub fn all_tools_with_runtime(
             workspace_dir.to_path_buf(),
             root_config.image_gen.default_model.clone(),
             root_config.image_gen.api_key_env.clone(),
+        )));
+    }
+
+    // Image understanding tool (config-gated). Delegates vision to a
+    // configured OpenAI-compatible model so the main agent can stay
+    // text-only.
+    if root_config.vision.enabled {
+        tool_arcs.push(Arc::new(ImageReadTool::new(
+            security.clone(),
+            root_config.vision.clone(),
         )));
     }
 

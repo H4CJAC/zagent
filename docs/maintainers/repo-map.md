@@ -107,7 +107,7 @@ Tool categories:
 - **Delegation**: `delegate` (sub-agent spawning), `composio` (OAuth integrations)
 - **Hardware**: `hardware_board_info`, `hardware_memory_map`, `hardware_memory_read`
 - **SOP**: `sop_execute`, `sop_advance`, `sop_approve`, `sop_list`, `sop_status`
-- **Utility**: `git_operations`, `image_info`, `pdf_read`, `screenshot`, `pushover`, `model_routing_config`, `proxy_config`, `cli_discovery`, `schema`
+- **Utility**: `git_operations`, `image_info`, `image_read`, `pdf_read`, `screenshot`, `pushover`, `model_routing_config`, `proxy_config`, `cli_discovery`, `schema`
 
 ### Memory
 
