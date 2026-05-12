@@ -7,9 +7,19 @@
 //! intents. The wrapped tools are still executed by the agent loop — this is
 //! a fast *path*, not a mock.
 //!
+//! # Direct response (default)
+//!
+//! By default (`direct_response: true`), when the agent loop feeds back
+//! tool results from a fast-path rule, the provider intercepts the second
+//! call and returns the tool output as a plain-text final answer — saving
+//! **two** model round-trips total. The provider recognises its own results
+//! via the `fpd-` prefix on `tool_call_id`. Set `"direct_response": false`
+//! on a rule if the tool output still needs LLM post-processing.
+//!
 //! Unmatched requests, and any turn whose last message is not a `user`
 //! message (e.g. when `tool_result` is being fed back), pass through to the
-//! inner provider unchanged.
+//! inner provider unchanged — unless the trailing tool results carry the
+//! `fpd-` direct-response marker.
 //!
 //! Rules file resolution (highest priority first):
 //!   1. the `rules_path` argument to [`CustomWithFastpathProvider::wrap`]
@@ -123,6 +133,11 @@ pub struct FastpathRule {
     pub response: Option<String>,
     /// Optional native tool calls to return.
     pub tool_calls: Vec<FastpathToolCall>,
+    /// When true (the default), the provider intercepts the second-hop call
+    /// after tool execution and returns the tool output directly as the final
+    /// response, skipping the follow-up LLM call. Tool-call IDs use the
+    /// `fpd-` prefix so the provider can recognise its own results.
+    pub direct_response: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -158,6 +173,11 @@ struct RuleSpec {
     /// rule author takes full responsibility for anchoring.
     #[serde(default)]
     anchored: Option<bool>,
+    /// When `None` or `Some(true)`, tool results from this rule are returned
+    /// directly to the user without an additional LLM round-trip. Set to
+    /// `Some(false)` if the tool output needs LLM post-processing.
+    #[serde(default)]
+    direct_response: Option<bool>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -286,6 +306,34 @@ impl CustomWithFastpathProvider {
             .collect()
     }
 
+    /// Check whether the trailing messages are tool results from a
+    /// direct-response fast-path rule (identified by the `fpd-` prefix on
+    /// `tool_call_id`). When they are, the tool output is returned as a
+    /// plain text response so the agent loop treats it as the final answer
+    /// without an extra LLM round-trip.
+    fn extract_direct_tool_results(messages: &[ChatMessage]) -> Option<String> {
+        let trailing_tools: Vec<&ChatMessage> = messages
+            .iter()
+            .rev()
+            .take_while(|m| m.role == "tool")
+            .collect();
+        if trailing_tools.is_empty() {
+            return None;
+        }
+        let mut contents = Vec::new();
+        for msg in trailing_tools.iter().rev() {
+            let parsed: serde_json::Value = serde_json::from_str(msg.content.as_str()).ok()?;
+            let id = parsed.get("tool_call_id")?.as_str()?;
+            if !id.starts_with(DIRECT_ID_PREFIX) {
+                return None;
+            }
+            if let Some(c) = parsed.get("content").and_then(|v| v.as_str()) {
+                contents.push(c.to_string());
+            }
+        }
+        Some(contents.join("\n"))
+    }
+
     /// Test the request's last message against the configured rules.
     ///
     /// Only `role == "user"` messages can trigger a match — this guarantees
@@ -301,12 +349,13 @@ impl CustomWithFastpathProvider {
     }
 
     fn build_response(rule: &FastpathRule) -> ChatResponse {
+        let direct = rule.direct_response;
         let tool_calls = rule
             .tool_calls
             .iter()
             .enumerate()
             .map(|(i, tc)| ToolCall {
-                id: fastpath_tool_call_id(rule.name.as_deref(), i),
+                id: fastpath_tool_call_id(rule.name.as_deref(), i, direct),
                 name: tc.name.clone(),
                 arguments: tc.arguments.to_string(),
             })
@@ -320,6 +369,7 @@ impl CustomWithFastpathProvider {
     }
 
     fn build_stream_events(rule: &FastpathRule) -> Vec<StreamResult<StreamEvent>> {
+        let direct = rule.direct_response;
         let mut events: Vec<StreamResult<StreamEvent>> = Vec::new();
         if let Some(text) = rule.response.as_deref() {
             if !text.is_empty() {
@@ -328,7 +378,7 @@ impl CustomWithFastpathProvider {
         }
         for (i, tc) in rule.tool_calls.iter().enumerate() {
             events.push(Ok(StreamEvent::ToolCall(ToolCall {
-                id: fastpath_tool_call_id(rule.name.as_deref(), i),
+                id: fastpath_tool_call_id(rule.name.as_deref(), i, direct),
                 name: tc.name.clone(),
                 arguments: tc.arguments.to_string(),
             })));
@@ -371,13 +421,23 @@ fn compile_rule(spec: RuleSpec, prefix: &str, suffix: &str) -> Result<FastpathRu
         pattern,
         response: spec.response,
         tool_calls,
+        direct_response: spec.direct_response.unwrap_or(true),
     })
 }
 
-/// Generate a stable, OpenAI-schema-compatible tool_call_id of the form
-/// `fp-<sanitized_rule_name>-<index>`. The sanitizer keeps ASCII
-/// alphanumerics, `-`, and `_`, replacing everything else with `_`.
-fn fastpath_tool_call_id(rule_name: Option<&str>, index: usize) -> String {
+/// Prefix on tool-call IDs for direct-response fast-path rules.
+/// The provider recognises this prefix on the second hop to short-circuit
+/// the LLM call and return tool output directly.
+const DIRECT_ID_PREFIX: &str = "fpd-";
+
+/// Generate a stable, OpenAI-schema-compatible tool_call_id.
+///
+/// * `direct == true`  → `fpd-<sanitized_rule_name>-<index>`
+/// * `direct == false` → `fp-<sanitized_rule_name>-<index>`
+///
+/// The sanitizer keeps ASCII alphanumerics, `-`, and `_`, replacing
+/// everything else with `_`.
+fn fastpath_tool_call_id(rule_name: Option<&str>, index: usize, direct: bool) -> String {
     let mut sanitized = String::new();
     for ch in rule_name.unwrap_or("rule").chars() {
         if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' {
@@ -389,7 +449,8 @@ fn fastpath_tool_call_id(rule_name: Option<&str>, index: usize) -> String {
     if sanitized.is_empty() {
         sanitized.push_str("rule");
     }
-    format!("fp-{sanitized}-{index}")
+    let tag = if direct { "fpd" } else { "fp" };
+    format!("{tag}-{sanitized}-{index}")
 }
 
 #[async_trait]
@@ -443,6 +504,15 @@ impl Provider for CustomWithFastpathProvider {
         model: &str,
         temperature: f64,
     ) -> anyhow::Result<ChatResponse> {
+        if let Some(direct_text) = Self::extract_direct_tool_results(request.messages) {
+            tracing::debug!("fast-path direct response (second hop)");
+            return Ok(ChatResponse {
+                text: Some(direct_text),
+                tool_calls: vec![],
+                usage: None,
+                reasoning_content: None,
+            });
+        }
         if let Some(rule) = self.match_rule(request.messages) {
             tracing::debug!(
                 rule = rule.name.as_deref().unwrap_or("<unnamed>"),
@@ -472,6 +542,14 @@ impl Provider for CustomWithFastpathProvider {
         temperature: f64,
         options: StreamOptions,
     ) -> BoxStream<'static, StreamResult<StreamEvent>> {
+        if let Some(direct_text) = Self::extract_direct_tool_results(request.messages) {
+            tracing::debug!("fast-path direct response (second hop, stream)");
+            let events = vec![
+                Ok(StreamEvent::TextDelta(StreamChunk::delta(&direct_text))),
+                Ok(StreamEvent::Final),
+            ];
+            return stream::iter(events).boxed();
+        }
         if let Some(rule) = self.match_rule(request.messages) {
             tracing::debug!(
                 rule = rule.name.as_deref().unwrap_or("<unnamed>"),
@@ -532,11 +610,22 @@ mod tests {
         response: Option<&str>,
         tool_calls: Vec<FastpathToolCall>,
     ) -> FastpathRule {
+        make_rule_with_direct(name, pattern, response, tool_calls, true)
+    }
+
+    fn make_rule_with_direct(
+        name: Option<&str>,
+        pattern: &str,
+        response: Option<&str>,
+        tool_calls: Vec<FastpathToolCall>,
+        direct_response: bool,
+    ) -> FastpathRule {
         FastpathRule {
             name: name.map(ToString::to_string),
             pattern: Regex::new(pattern).expect("valid regex"),
             response: response.map(ToString::to_string),
             tool_calls,
+            direct_response,
         }
     }
 
@@ -559,6 +648,7 @@ mod tests {
             response: None,
             tool_calls: vec![],
             anchored: None,
+            direct_response: None,
         };
         assert!(compile_with_defaults(spec).is_err());
     }
@@ -571,6 +661,7 @@ mod tests {
             response: Some("x".into()),
             tool_calls: vec![],
             anchored: None,
+            direct_response: None,
         };
         assert!(compile_with_defaults(spec).is_err());
     }
@@ -583,10 +674,12 @@ mod tests {
             response: Some("hello".into()),
             tool_calls: vec![],
             anchored: None,
+            direct_response: None,
         };
         let rule = compile_with_defaults(spec).expect("compiles");
         assert_eq!(rule.response.as_deref(), Some("hello"));
         assert!(rule.tool_calls.is_empty());
+        assert!(rule.direct_response, "default should be true");
     }
 
     #[test]
@@ -600,9 +693,25 @@ mod tests {
                 arguments: serde_json::json!({"x": 1}),
             }],
             anchored: None,
+            direct_response: None,
         };
         let rule = compile_with_defaults(spec).expect("compiles");
         assert_eq!(rule.tool_calls.len(), 1);
+        assert!(rule.direct_response);
+    }
+
+    #[test]
+    fn compile_rule_direct_response_explicit_false() {
+        let spec = RuleSpec {
+            name: Some("no-direct".into()),
+            pattern: "(go)".into(),
+            response: Some("ok".into()),
+            tool_calls: vec![],
+            anchored: None,
+            direct_response: Some(false),
+        };
+        let rule = compile_with_defaults(spec).expect("compiles");
+        assert!(!rule.direct_response);
     }
 
     #[test]
@@ -641,6 +750,7 @@ mod tests {
             response: Some("hi there".into()),
             tool_calls: vec![],
             anchored: Some(false),
+            direct_response: None,
         })
         .expect("compiles");
         let provider = provider_with(vec![rule]);
@@ -657,6 +767,7 @@ mod tests {
             response: Some("A".into()),
             tool_calls: vec![],
             anchored: Some(false),
+            direct_response: None,
         })
         .expect("compiles");
         let b = compile_with_defaults(RuleSpec {
@@ -665,6 +776,7 @@ mod tests {
             response: Some("B".into()),
             tool_calls: vec![],
             anchored: Some(false),
+            direct_response: None,
         })
         .expect("compiles");
         let provider = provider_with(vec![a, b]);
@@ -697,7 +809,7 @@ mod tests {
         assert!(resp.text.is_none());
         assert_eq!(resp.tool_calls.len(), 1);
         assert_eq!(resp.tool_calls[0].name, "sw_get_user_info");
-        assert_eq!(resp.tool_calls[0].id, "fp-r-0");
+        assert_eq!(resp.tool_calls[0].id, "fpd-r-0");
         assert_eq!(resp.tool_calls[0].arguments, "{}");
     }
 
@@ -747,14 +859,14 @@ mod tests {
         }
         match events[1].as_ref().expect("ok") {
             StreamEvent::ToolCall(tc) => {
-                assert_eq!(tc.id, "fp-r-0");
+                assert_eq!(tc.id, "fpd-r-0");
                 assert_eq!(tc.name, "t1");
             }
             other => panic!("expected ToolCall, got {other:?}"),
         }
         match events[2].as_ref().expect("ok") {
             StreamEvent::ToolCall(tc) => {
-                assert_eq!(tc.id, "fp-r-1");
+                assert_eq!(tc.id, "fpd-r-1");
                 assert_eq!(tc.name, "t2");
             }
             other => panic!("expected ToolCall, got {other:?}"),
@@ -780,15 +892,17 @@ mod tests {
 
     #[test]
     fn fastpath_tool_call_id_sanitizes_chinese() {
-        // Each non-ASCII-alphanumeric, non-[-_] char becomes a single `_`:
-        // "备课-1 示例" → "__-1___" → "fp-__-1___-3"
-        let id = fastpath_tool_call_id(Some("备课-1 示例"), 3);
+        let id = fastpath_tool_call_id(Some("备课-1 示例"), 3, true);
+        assert_eq!(id, "fpd-__-1___-3");
+        let id = fastpath_tool_call_id(Some("备课-1 示例"), 3, false);
         assert_eq!(id, "fp-__-1___-3");
     }
 
     #[test]
     fn fastpath_tool_call_id_handles_empty_name() {
-        let id = fastpath_tool_call_id(None, 0);
+        let id = fastpath_tool_call_id(None, 0, true);
+        assert_eq!(id, "fpd-rule-0");
+        let id = fastpath_tool_call_id(None, 0, false);
         assert_eq!(id, "fp-rule-0");
     }
 
@@ -945,6 +1059,7 @@ mod tests {
             response: Some("ok".into()),
             tool_calls: vec![],
             anchored: None, // default = true
+            direct_response: None,
         };
         let rule = compile_with_defaults(spec).expect("compiles");
         assert!(
@@ -965,6 +1080,7 @@ mod tests {
             response: Some("ok".into()),
             tool_calls: vec![],
             anchored: Some(false),
+            direct_response: None,
         };
         let rule = compile_with_defaults(spec).expect("compiles");
         assert!(
@@ -1013,5 +1129,128 @@ mod tests {
         matches!(events[0].as_ref().expect("ok"), StreamEvent::TextDelta(_));
         matches!(events[1].as_ref().expect("ok"), StreamEvent::ToolCall(_));
         matches!(events[2].as_ref().expect("ok"), StreamEvent::Final);
+    }
+
+    // ── direct-response tests ──────────────────────────────────────────
+
+    fn tool_result_msg(tool_call_id: &str, content: &str) -> ChatMessage {
+        ChatMessage::tool(
+            serde_json::json!({ "tool_call_id": tool_call_id, "content": content }).to_string(),
+        )
+    }
+
+    #[test]
+    fn extract_direct_tool_results_returns_content_for_fpd_prefix() {
+        let msgs = vec![
+            ChatMessage::user("调大音量"),
+            ChatMessage::assistant(""),
+            tool_result_msg("fpd-volume_up-0", "音量已调整到60"),
+        ];
+        let result = CustomWithFastpathProvider::extract_direct_tool_results(&msgs);
+        assert_eq!(result.as_deref(), Some("音量已调整到60"));
+    }
+
+    #[test]
+    fn extract_direct_tool_results_joins_multiple_tool_msgs() {
+        let msgs = vec![
+            ChatMessage::user("test"),
+            ChatMessage::assistant(""),
+            tool_result_msg("fpd-rule-0", "result A"),
+            tool_result_msg("fpd-rule-1", "result B"),
+        ];
+        let result = CustomWithFastpathProvider::extract_direct_tool_results(&msgs);
+        assert_eq!(result.as_deref(), Some("result A\nresult B"));
+    }
+
+    #[test]
+    fn extract_direct_tool_results_returns_none_for_fp_prefix() {
+        let msgs = vec![
+            ChatMessage::user("test"),
+            ChatMessage::assistant(""),
+            tool_result_msg("fp-rule-0", "some output"),
+        ];
+        assert!(CustomWithFastpathProvider::extract_direct_tool_results(&msgs).is_none());
+    }
+
+    #[test]
+    fn extract_direct_tool_results_returns_none_when_last_is_user() {
+        let msgs = vec![ChatMessage::user("hello")];
+        assert!(CustomWithFastpathProvider::extract_direct_tool_results(&msgs).is_none());
+    }
+
+    #[test]
+    fn extract_direct_tool_results_returns_none_on_mixed_prefixes() {
+        let msgs = vec![
+            ChatMessage::assistant(""),
+            tool_result_msg("fpd-a-0", "ok"),
+            tool_result_msg("fp-b-0", "not direct"),
+        ];
+        assert!(CustomWithFastpathProvider::extract_direct_tool_results(&msgs).is_none());
+    }
+
+    #[tokio::test]
+    async fn chat_intercepts_second_hop_with_fpd_tool_results() {
+        let provider = provider_with(vec![make_rule(
+            Some("vol"),
+            "(?i)^调大音量",
+            None,
+            vec![FastpathToolCall {
+                name: "changeVolume".into(),
+                arguments: serde_json::json!({"mode": "RELATIVE", "value": 10}),
+            }],
+        )]);
+        let msgs = vec![
+            ChatMessage::user("调大音量"),
+            ChatMessage::assistant(""),
+            tool_result_msg("fpd-vol-0", "音量已调整到60"),
+        ];
+        let request = ChatRequest {
+            messages: &msgs,
+            tools: None,
+        };
+        let resp = provider.chat(request, "model", 0.0).await.unwrap();
+        assert_eq!(resp.text.as_deref(), Some("音量已调整到60"));
+        assert!(resp.tool_calls.is_empty());
+    }
+
+    #[tokio::test]
+    async fn chat_does_not_intercept_non_direct_fp_results() {
+        let provider = provider_with(vec![make_rule_with_direct(
+            Some("vol"),
+            "(?i)^调大音量",
+            None,
+            vec![FastpathToolCall {
+                name: "changeVolume".into(),
+                arguments: serde_json::json!({}),
+            }],
+            false,
+        )]);
+        let resp = CustomWithFastpathProvider::build_response(provider.rules.first().unwrap());
+        assert!(
+            resp.tool_calls[0].id.starts_with("fp-"),
+            "non-direct rule should use fp- prefix"
+        );
+    }
+
+    #[tokio::test]
+    async fn stream_chat_intercepts_second_hop_with_fpd_tool_results() {
+        let provider = provider_with(vec![]);
+        let msgs = vec![
+            ChatMessage::user("调大音量"),
+            ChatMessage::assistant(""),
+            tool_result_msg("fpd-vol-0", "音量已调整到60"),
+        ];
+        let request = ChatRequest {
+            messages: &msgs,
+            tools: None,
+        };
+        let stream = provider.stream_chat(request, "model", 0.0, StreamOptions::new(true));
+        let events: Vec<StreamResult<StreamEvent>> = stream.collect().await;
+        assert_eq!(events.len(), 2);
+        match events[0].as_ref().expect("ok") {
+            StreamEvent::TextDelta(chunk) => assert_eq!(chunk.delta, "音量已调整到60"),
+            other => panic!("expected TextDelta, got {other:?}"),
+        }
+        matches!(events[1].as_ref().expect("ok"), StreamEvent::Final);
     }
 }
