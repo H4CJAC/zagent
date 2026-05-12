@@ -5718,7 +5718,7 @@ impl Default for OutputSanitizerConfig {
 }
 
 fn default_sanitizer_enabled() -> bool {
-    true
+    false
 }
 
 // ── Hooks ────────────────────────────────────────────────────────
