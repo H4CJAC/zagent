@@ -1,0 +1,23 @@
+src/providers/custom_with_fastpath.rs
+  4450641090031674 10-18,21-22,136-140,176-180,309-336,352,358,372,381,424,428-440,452-453,507-515,545-552,613-621,628,651,664,677,682,696,700-714,753,770,779,812,862,869,895-897,903-905,1062,1083,1133-1255
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.14",
+  "base_commit_sha": "c5d910c77169e3516369c7945c6b514d5f5ff999",
+  "prompts": {
+    "4450641090031674": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "96c54415-9c6b-4bbf-bf45-692b2ab61c8f",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "hac <huangweichao@cvte.com>",
+      "messages": [],
+      "total_additions": 254,
+      "total_deletions": 15,
+      "accepted_lines": 254,
+      "overriden_lines": 0
+    }
+  }
+}
