@@ -368,6 +368,27 @@ impl CustomWithFastpathProvider {
         }
     }
 
+    /// Debug-print the full LLM request body just before it is forwarded to
+    /// the wrapped provider. Only runs when the `DEBUG` level is enabled and
+    /// only on the pass-through path (fast-path hits never reach the LLM).
+    fn debug_log_request(request: &ChatRequest<'_>, model: &str, temperature: f64) {
+        if !tracing::enabled!(tracing::Level::DEBUG) {
+            return;
+        }
+        let body = serde_json::json!({
+            "model": model,
+            "temperature": temperature,
+            "messages": request.messages,
+            "tools": request.tools,
+        });
+        match serde_json::to_string_pretty(&body) {
+            Ok(s) => tracing::debug!("custom-with-fastpath LLM request body:\n{}", s),
+            Err(e) => {
+                tracing::debug!("custom-with-fastpath request body serialization failed: {e}")
+            }
+        }
+    }
+
     fn build_stream_events(rule: &FastpathRule) -> Vec<StreamResult<StreamEvent>> {
         let direct = rule.direct_response;
         let mut events: Vec<StreamResult<StreamEvent>> = Vec::new();
@@ -520,6 +541,7 @@ impl Provider for CustomWithFastpathProvider {
             );
             return Ok(Self::build_response(rule));
         }
+        Self::debug_log_request(&request, model, temperature);
         self.inner.chat(request, model, temperature).await
     }
 
@@ -558,6 +580,7 @@ impl Provider for CustomWithFastpathProvider {
             let events = Self::build_stream_events(rule);
             return stream::iter(events).boxed();
         }
+        Self::debug_log_request(&request, model, temperature);
         self.inner.stream_chat(request, model, temperature, options)
     }
 

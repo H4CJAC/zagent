@@ -456,6 +456,13 @@ impl OllamaProvider {
             request.tools.as_ref().map_or(0, |t| t.len()),
         );
 
+        if tracing::enabled!(tracing::Level::DEBUG) {
+            match serde_json::to_string_pretty(&request) {
+                Ok(body) => tracing::debug!("Ollama full request body:\n{}", body),
+                Err(e) => tracing::debug!("Ollama request body serialization failed: {e}"),
+            }
+        }
+
         let mut request_builder = self.http_client().post(&url).json(&request);
 
         if should_auth {
