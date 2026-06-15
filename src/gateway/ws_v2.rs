@@ -537,6 +537,24 @@ async fn handle_socket_v2(
 
 // ── Single turn ──────────────────────────────────────────────────────────
 
+/// Ensure `history` begins with the current system prompt.
+///
+/// System messages are not persisted by the session backend, so a resumed
+/// session arrives without one. This prepends the system prompt when the
+/// first message isn't already a system role (covers both empty/first-turn
+/// and resumed histories), and refreshes a stale leading system message so
+/// connection-level changes (mode, autonomy, identity) take effect.
+fn ensure_system_prompt(history: &mut Vec<ChatMessage>, system_prompt: &str) {
+    match history.first_mut() {
+        Some(first) if first.role == "system" => {
+            if first.content != system_prompt {
+                first.content = system_prompt.to_string();
+            }
+        }
+        _ => history.insert(0, ChatMessage::system(system_prompt.to_string())),
+    }
+}
+
 #[allow(clippy::too_many_lines)]
 async fn process_turn(
     state: &AppState,
@@ -558,12 +576,15 @@ async fn process_turn(
         let _ = backend.set_session_state(session_key, "running", Some(&turn_id));
     }
 
-    // Inject system prompt if this is the first turn.
-    if session.history.is_empty() {
-        session
-            .history
-            .push(ChatMessage::system(session.system_prompt.clone()));
-    }
+    // Guarantee the history starts with the current system prompt. The
+    // system message is never persisted (only user/tool/assistant rows are
+    // appended), so a resumed session loads a history whose first entry is
+    // a user message. A plain `is_empty()` check would then skip injection
+    // and the agent would lose its identity / skills / autonomy rules on
+    // every resume — independent of the provider. Prepending when the first
+    // message isn't a system role covers both the first-turn and resume
+    // cases.
+    ensure_system_prompt(&mut session.history, &session.system_prompt);
 
     // Memory context retrieval.
     let mem_ctx = session
@@ -911,4 +932,46 @@ fn spawn_cloud_report(config: &Config, session_id: &str, name: &str, description
 /// Truncate a string to at most `max` characters (Unicode-aware).
 fn truncate_chars(s: &str, max: usize) -> String {
     s.chars().take(max).collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ensure_system_prompt_inserts_into_empty_history() {
+        let mut history: Vec<ChatMessage> = vec![];
+        ensure_system_prompt(&mut history, "SP");
+        assert_eq!(history.len(), 1);
+        assert_eq!(history[0].role, "system");
+        assert_eq!(history[0].content, "SP");
+    }
+
+    #[test]
+    fn ensure_system_prompt_prepends_when_first_is_user() {
+        // Mirrors a resumed session: stored history has no system message.
+        let mut history = vec![ChatMessage::user("hello"), ChatMessage::assistant("hi")];
+        ensure_system_prompt(&mut history, "SP");
+        assert_eq!(history.len(), 3);
+        assert_eq!(history[0].role, "system");
+        assert_eq!(history[0].content, "SP");
+        assert_eq!(history[1].role, "user");
+    }
+
+    #[test]
+    fn ensure_system_prompt_keeps_single_leading_system() {
+        let mut history = vec![ChatMessage::system("SP"), ChatMessage::user("hi")];
+        ensure_system_prompt(&mut history, "SP");
+        assert_eq!(history.len(), 2);
+        assert_eq!(history[0].role, "system");
+    }
+
+    #[test]
+    fn ensure_system_prompt_refreshes_stale_leading_system() {
+        let mut history = vec![ChatMessage::system("OLD"), ChatMessage::user("hi")];
+        ensure_system_prompt(&mut history, "NEW");
+        assert_eq!(history.len(), 2);
+        assert_eq!(history[0].role, "system");
+        assert_eq!(history[0].content, "NEW");
+    }
 }
