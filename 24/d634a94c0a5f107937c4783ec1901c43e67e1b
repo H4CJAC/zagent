@@ -1,0 +1,41 @@
+src/gateway/ws_v2.rs
+  dd9a7ab298799cca 540-557,579-587,936-977
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.4.2",
+  "base_commit_sha": "24d634a94c0a5f107937c4783ec1901c43e67e1b",
+  "prompts": {
+    "dd9a7ab298799cca": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "49f768fd-534d-460d-bfe8-417620332917",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "hac <huangweichao@cvte.com>",
+      "messages": [],
+      "total_additions": 73,
+      "total_deletions": 10,
+      "accepted_lines": 69,
+      "overriden_lines": 0
+    },
+    "fbd0a7434a0e56c7": {
+      "agent_id": {
+        "tool": "known_human",
+        "id": "known_human_session",
+        "model": "unknown"
+      },
+      "human_author": null,
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 0,
+      "overriden_lines": 0
+    }
+  },
+  "humans": {
+    "h_f38e4123063fc1": {
+      "author": "hac"
+    }
+  }
+}
